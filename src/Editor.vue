@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineComponent, type Ref } from 'vue';
+import { ref, defineComponent, watch, emit, type Ref } from 'vue';
 
 // Load component
 import CodeMirror from 'vue-codemirror6';
@@ -9,11 +9,22 @@ import { javascript } from '@codemirror/lang-javascript';
 import type { LanguageSupport } from '@codemirror/language';
 import type { Extension } from '@codemirror/state';
 import type { ViewUpdate } from '@codemirror/view';
-import {editText} from "./common.js";
+  
+  const props = defineProps({
+  	text: String,
+	});
+	
+const emit = defineEmits(['textChanged'])
 
+function furry() {
 
+ console.log("Furry" + props.text);
+ valRef.value = props.text;
+}
 /** text */
-const value: Ref<string> = ref(editText);
+const valRef: Ref<string> = ref(props.text);
+watch(valRef,(newv)=>emit('textChanged', newv));
+watch(()=> props.text, ()=>{valRef.value = props.text});
 
 /** Dark mode **/
 const dark: Ref<boolean> = ref(
@@ -31,7 +42,7 @@ const lang: LanguageSupport = javascript();
 
 <template>
   <code-mirror
-    v-model="value"
+    v-model="valRef"
     basic
     :dark="dark"
     :lang="lang"

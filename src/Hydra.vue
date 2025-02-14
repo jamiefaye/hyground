@@ -25,7 +25,7 @@ onMounted(() => {
 function render() {
     if (!context.value) return;
 
-    const h = new Hydra({ makeGlobal: false, detectAudio: false, canvas: context.value }).synth;
+    const h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
     // convert all keys in h into strings
     let keys = Object.keys(h);
     let values = [];
