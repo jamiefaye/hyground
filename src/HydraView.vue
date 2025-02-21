@@ -6,23 +6,15 @@
 	import Editor from "./Editor.vue";
   import examples from './examples.json';
 
+  import {openMsgBroker} from "./MsgNode.js";
+  
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-let sketchTab = [
-`osc(20, 0.1, 0.8).rotate(0.8).pixelate(20, 30).colorama().out()`,
-`noise().colorama().out()`,
-`noise(9,0.3,3).thresh(0.3,0.03).diff(o3,0.3).out(o1)
-gradient([0.3,0.3,3]).diff(o0).blend(o1).out(o3)
-voronoi(33,3,30).rotate(3,0.3,0).modulateScale(o2,0.3).color(-3,3,0).brightness(3).out(o0)
-shape(30,0.3,1).invert(({time})=>Math.sin(time)*1).out(o2)
-
-render(o3)`
-];
-
   const sketch = ref("noise().out()");
   const nextSketch = ref("");
+  const title = ref("");
   let flipper = false;
  
   function runHydra(evt) {
@@ -33,30 +25,43 @@ render(o3)`
 		let sketchX = getRandomInt(examples.length);
 		let sketche = examples[sketchX];
 		console.log(sketche.sketch_id);
+		title.value = sketche.sketch_id;
 		let s64 = sketche.code;
 		let ska = decodeURIComponent(atob(s64));
 		sketch.value = ska;
   }
 
+function cb(msg, arg1, arg2) {
+	console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
+}
+
+	function editHydra(evt) {
+	//	window.open("/editor", "_blank", "width=1200,height=800,left=1800");
+		openMsgBroker().then((x)=>{
+			x.assignName("view").then((n)=> {
+						console.log("Created: " + n);
+						window.open("/editor", "editor", "width=800,height=600,left=800");
+						x.registerCallback(n, Comlink.proxy(cb))).then(()=>{
+							x.callback(n, "msg", 1 , {cats: [2, 3, 4]});
+						});
+				});
+
+		});
+	}
+
+
 function changed(e,t) {
 	nextSketch.value = e;
 }
 
+
 </script>
  
 <template>
+{{title}}
 <Hydra :sketch="sketch"/>
 <button type="button" id="Hydra" @click="runHydra">Run</button>&nbsp;
-<button type="button" id="HydraNxt" @click="stepHydra">Next</button><br>
+<button type="button" id="HydraNxt" @click="stepHydra">Next</button>&nbsp;
+<button type="button" id="HydraNxt" @click="editHydra">Edit</button><br>
 <Editor :text="sketch" @textChanged="changed"/>
 </template>
-
-<style>
-
-
-canvas {
-  border:1px solid #000000;
-}
-
-
-</style>

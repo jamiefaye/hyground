@@ -1,6 +1,5 @@
-<template>
-   {{sketch}}<br>
-   <canvas ref="canvasElement" width="480" height="360"></canvas>
+<template><br>
+   <canvas ref="canvasElement" width="320" height="240"></canvas>
    <p/>
 </template>
 
