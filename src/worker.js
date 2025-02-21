@@ -12,7 +12,7 @@ const namesByKind = new Map();
 const callbackTab = new Map();
 
 class MsgBroker {
-	
+
 	constructor() {
 
 	}
@@ -47,10 +47,24 @@ class MsgBroker {
 		else return [];
 	}
 
-	dropCallback(name) {
-		return callbackTab.delete(name);
-	}
-}
+	dropAndNotify(name, kindToDrop, kindToNotify) {
+		callbackTab.delete(name);
+		if (namesByKind.has(kindToDrop)) {
+			let ka = namesByKind.get(kindToDrop);
+			let dropX = ka.indexOf(name);
+			if (dropX >= 0) {
+			   ka.splice(dropX, 1);
+			}
+			if (namesByKind.has(kindToNotify)) {
+				let kn = namesByKind.get(kindToNotify);
+				for (let i = 0; i < kn.length; ++i) {
+					let nameToTell = kn[i];
+					this.callback(nameToTell, "drop", name, kindToDrop);
+				}
+			}
+		}
+	} // method
+} // class
 
 let ourBroker = new MsgBroker();
 

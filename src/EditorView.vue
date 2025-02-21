@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-  import {onMounted, ref} from 'vue';
+  import {onMounted, onBeforeUnmount, ref} from 'vue';
 	import Hyground from "./Hyground.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
@@ -9,6 +9,7 @@
 
 	let targetView;
 	let broker;
+	let n;
 	const sketch = ref("");
 	const nextSketch = ref("");
 	const title = ref("");
@@ -16,11 +17,23 @@
 
 		function editCB(msg, arg1, arg2) {
 			console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
+			if (msg === "drop") {
+	 			locateTarget();
+	 		}
 		}
+
+	async function locateTarget() {
+		let list = await broker.listForKind("view");
+		if (list.length > 0) {
+			targetView = list[list.length - 1];
+			//await broker.callback(targetView, "meow",1,2);
+			//console.log("Back from calling back");
+		}
+	}
 
 	async function openBroker(evt) {
 		broker = await openMsgBroker();
-		let n = await broker.assignName("editor");
+		n = await broker.assignName("editor");
 		console.log("Created: " + n);
 		await broker.registerCallback(n, Comlink.proxy(editCB));
 		let list = await broker.listForKind("view");
@@ -32,10 +45,20 @@
 		// Maybe poll looking for a view if none available now?
 		}
 
+  async function fairwell() {
+    console.log("notify drop sent: " + n);
+  	await broker.dropAndNotify(n, "editor", "editor");
+  	console.log("notify drop done: " + n);
+  }
+
 	onMounted(() => {
 		openBroker();
 	});
 
+	onBeforeUnmount(() => {
+		fairwell();
+		alert("Bye!");
+	});
 
 	function changed(e, t) {
 		nextSketch.value = e;
@@ -63,13 +86,20 @@ function getRandomInt(max) {
 		//sendHydra();
   }
 
+  // Custom code to execute before closing
+  // For example, display a confirmation message
+  window.addEventListener('unload', function (event) {
+	fairwell();
+
+});
+
 </script>
 
 <template>
-{{title}}
 
-  <Editor :text="sketch" @textChanged="changed"/>
   <button type="button" id="HydraNxt" @click="stepHydra">Next</button>&nbsp;
-	<button type="button" id="sender" @click="sendHydra">Send</button>
+	<button type="button" id="sender" @click="sendHydra">Send</button>&nbsp;{{title}}
+  <Editor :text="sketch" @textChanged="changed"/>
+
 </template>
 
