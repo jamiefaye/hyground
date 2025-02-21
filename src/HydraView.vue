@@ -1,41 +1,15 @@
 <script setup lang="ts">
-
   import {onMounted, ref} from 'vue';
-	import Hyground from "./Hyground.vue";
 	import Hydra from "./Hydra.vue";
-	import Editor from "./Editor.vue";
-  import examples from './examples.json';
 	import * as Comlink from "comlink";
-  import {openMsgBroker} from "./MsgNode.js";
-  
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
+  import {openMsgBroker} from "./MsgBroker.js";
 
   const sketch = ref("noise().out()");
-  const nextSketch = ref("");
-  const title = ref("");
-  let flipper = false;
   let broker;
  
-  function runHydra(evt) {
-  	sketch.value = nextSketch.value;
-  }
-
-  function stepHydra(evt) {
-		let sketchX = getRandomInt(examples.length);
-		let sketche = examples[sketchX];
-		console.log(sketche.sketch_id);
-		title.value = sketche.sketch_id;
-		let s64 = sketche.code;
-		let ska = decodeURIComponent(atob(s64));
-		sketch.value = ska;
-  }
-
 function cb(msg, arg1, arg2) {
 	console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
-	nextSketch.value = arg1;
-	runHydra();
+	sketch.value = arg1;
 }
 
 	async function openBroker(evt) {
@@ -45,25 +19,18 @@ function cb(msg, arg1, arg2) {
 		await broker.registerCallback(n, Comlink.proxy(cb));
 	}
 
-function changed(e,t) {
-	nextSketch.value = e;
-}
 
 onMounted(() => {
 	openBroker();
 });
 
 function editHydra() {
-	window.open("/editor", "editor", "width=800,height=600,left=800");
+	window.open("/editor", "editor", "width=800,height=1000,left=80");
 }
 
 </script>
  
 <template>
-{{title}}
-<Hydra :sketch="sketch"/>
-<button type="button" id="Hydra" @click="runHydra">Run</button>&nbsp;
-<button type="button" id="HydraNxt" @click="stepHydra">Next</button>&nbsp;
 <button type="button" id="HydraNxt" @click="editHydra">Edit</button><br>
-<Editor :text="sketch" @textChanged="changed"/>
+<Hydra :sketch="sketch"/>
 </template>

@@ -4,7 +4,7 @@
 	import Hyground from "./Hyground.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
-	import {openMsgBroker} from "./MsgNode.js";
+  import {openMsgBroker} from "./MsgBroker.js";
 	import * as Comlink from "comlink";
 
 	let targetView;

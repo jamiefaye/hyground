@@ -1,5 +1,5 @@
 <template><br>
-   <canvas ref="canvasElement" width="320" height="240"></canvas>
+   <canvas ref="canvasElement" width="1280" height="720"></canvas>
    <p/>
 </template>
 
