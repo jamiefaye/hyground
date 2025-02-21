@@ -5,7 +5,7 @@
 	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
   import examples from './examples.json';
-
+	import * as Comlink from "comlink";
   import {openMsgBroker} from "./MsgNode.js";
   
 function getRandomInt(max) {
@@ -16,6 +16,7 @@ function getRandomInt(max) {
   const nextSketch = ref("");
   const title = ref("");
   let flipper = false;
+  let broker;
  
   function runHydra(evt) {
   	sketch.value = nextSketch.value;
@@ -33,27 +34,28 @@ function getRandomInt(max) {
 
 function cb(msg, arg1, arg2) {
 	console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
+	nextSketch.value = arg1;
+	runHydra();
 }
 
-	function editHydra(evt) {
-	//	window.open("/editor", "_blank", "width=1200,height=800,left=1800");
-		openMsgBroker().then((x)=>{
-			x.assignName("view").then((n)=> {
-						console.log("Created: " + n);
-						window.open("/editor", "editor", "width=800,height=600,left=800");
-						x.registerCallback(n, Comlink.proxy(cb))).then(()=>{
-							x.callback(n, "msg", 1 , {cats: [2, 3, 4]});
-						});
-				});
-
-		});
+	async function openBroker(evt) {
+		broker = await openMsgBroker();
+		let n = await broker.assignName("view");
+		console.log("Created: " + n);
+		await broker.registerCallback(n, Comlink.proxy(cb));
 	}
-
 
 function changed(e,t) {
 	nextSketch.value = e;
 }
 
+onMounted(() => {
+	openBroker();
+});
+
+function editHydra() {
+	window.open("/editor", "editor", "width=800,height=600,left=800");
+}
 
 </script>
  
