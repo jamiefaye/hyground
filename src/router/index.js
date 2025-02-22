@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '../MainView.vue'
-import EditorView from '../EditorView.vue'
+import Editors from '../Editors.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +13,7 @@ const router = createRouter({
     {
       path: '/editor',
       name: 'editor',
-      component: EditorView
+      component: Editors
     },
   ]
 })

@@ -7,6 +7,11 @@
   import {openMsgBroker} from "./MsgBroker.js";
 	import * as Comlink from "comlink";
 
+  const props = defineProps({
+  entry: Object,
+  index: Number
+	});
+
 	let targetView;
 	let broker;
 	let n;
