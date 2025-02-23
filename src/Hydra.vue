@@ -9,6 +9,7 @@
   
   const props = defineProps({
   	sketch: String,
+  	hush:   Boolean
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -21,10 +22,14 @@ onMounted(() => {
 });
 
 
+let h;
+
 function render() {
     if (!context.value) return;
-
-    const h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
+		if (h === undefined) {
+    	h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
+    }
+    if (props.hush) h.hush(); // Call this to get a clean slate?
     // convert all keys in h into strings
     let keys = Object.keys(h);
     let values = [];

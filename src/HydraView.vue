@@ -51,5 +51,5 @@ function editHydra() {
  
 <template>
 <button type="button" id="HydraNxt" @click="editHydra">Edit</button><br>
-<Hydra :sketch="sketch"/>
+<Hydra :sketch="sketch" :hush="false"/>
 </template>

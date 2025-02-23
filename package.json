@@ -8,6 +8,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+  	"acorn": "^8.0.4",
+    "astravel": "^0.5.0",
+    "astring": "^1.4.0",
     "@codemirror/commands": "^6.6.2",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-markdown": "^6.2.5",
