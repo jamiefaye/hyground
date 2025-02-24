@@ -125,8 +125,8 @@ function getRandomInt(max) {
 <template>
 <div class="simpleborder">
 	<IconButton icon="fa--random icon"  :action="randomHydra"/>
+	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="fa--play icon" :action="sendHydra"/>
-	<IconButton icon="fa-solid--dice" :action="mutate"/>
 </div>&nbsp;{{title}}<br/>
 <Editor :text="sketch" @textChanged="changed"/>
 </template>

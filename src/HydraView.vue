@@ -3,7 +3,7 @@
 	import Hydra from "./Hydra.vue";
 	import * as Comlink from "comlink";
   import {openMsgBroker} from "./MsgBroker.js";
-
+  import InActorPanel from "./InActorPanel.vue";
   const sketch = ref("noise().out()");
   let broker;
   let n;
@@ -47,9 +47,12 @@ function editHydra() {
 	window.open("/editor", "editor", "width=800,height=1000,left=80");
 }
 
+function updater(newV) {
+	sketch.value = newV;
+}
 </script>
- 
+
 <template>
-<button type="button" id="HydraNxt" @click="editHydra">Edit</button><br>
+<button type="button" id="HydraNxt" @click="editHydra">Edit</button>&nbsp;<InActorPanel :script="sketch" :updateScript="updater"/>
 <Hydra :sketch="sketch" :hush="false"/>
 </template>
