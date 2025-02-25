@@ -1,6 +1,6 @@
 import {getFileHandle, getNewFileHandle, readFile, verifyPermission, writeFile} from "./fs-helpers.js";
 import {beeper} from "./Beeper.js";
-
+	
 let beepsEnabled = false;
 
 function beep()
@@ -11,14 +11,13 @@ function beep()
 }
 
 class InActorState {
-  constructor (textRef, updateText, statusObj) {
+  constructor (updateText, statusObj) {
     this.playA = []
     this.recordA = []
     this.playerIndex = -1
     this.defaultDuration = 2.0
     this.fastForwardDuration = 3.0
     this.realTimePlayback = false
-    this.textRef = textRef;
     this.updateText = updateText;
     if (statusObj) {this.statusObj = statusObj} else {this.statusObj = {}}
 
@@ -35,12 +34,14 @@ pushSketch(code)
   		sketch:    code
   	}
   	this.recordA.push(snapshot)
+  	this.statusObj.hasrecord = true;
   	beep()
 }
 
 doClear(e)
 {
-	this.recordA = []
+	this.recordA = [];
+	this.statusObj.hasrecord = false;
 }
 
 doFileImport()
@@ -58,6 +59,7 @@ doLoad(e)
 {
 	let asText = this.recordingToText();
 	this.loadPlayer(asText);
+
 }
 	    
 doFastBackward(e)
@@ -320,6 +322,7 @@ async saveFile(e)
 			let lastSketch = working.join("\n")
 			this.playA.push({dur: lastDur, mark: marked, sketch: lastSketch})
 		}
+		this.statusObj.hasplay = this.playA.length > 0;
 		// console.log(this.playA)
 	}
 
