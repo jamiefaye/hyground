@@ -106,7 +106,7 @@ updateCountDownClock()
 	let timeAsString = ""
 	if (tMinus < 1500) {
 		if (tMinus > 0) tMinus = 0
-		timeAsString = Math.round(tMinus / 1000).toString()
+		timeAsString = (Math.round(tMinus / 100) / 10).toString()
 	}
 	this.statusObj.countdown = timeAsString;
 }
@@ -116,7 +116,7 @@ startCountdownClock()
 	if (this.countDownIntervalObject === undefined)
 	{
 	  //let cb = this.updateCountDownClock.bind(this);
-		this.countDownIntervalObject = setInterval(this.updateCountDownClock, 500)
+		this.countDownIntervalObject = setInterval(this.updateCountDownClock, 100)
 	}
 }
 

@@ -8,6 +8,7 @@
 	import * as Comlink from "comlink";
 	import IconButton from "./IconButton.vue";
 	import {Mutator} from "./Mutator.js";
+	import InActorPanel from "./InActorPanel.vue";
 	
   const props = defineProps({
   entry: Object,
@@ -21,7 +22,7 @@
 	const nextSketch = ref("");
 	const title = ref("");
 	let mutator = new Mutator;
-	
+	let filmOpen = ref(false);
 
 		function editCB(msg, arg1, arg2) {
 			console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
@@ -120,14 +121,31 @@ function getRandomInt(max) {
 	 	sendHydra();
 	}
 
+	function toggleFilm(evt) {
+	 filmOpen.value = !filmOpen.value;
+	}
+	
+	function updater(newV) {
+	nextSketch.value = newV;
+	sendHydra();
+}
+
 </script>
 
 <template>
 <div class="simpleborder">
 	<IconButton icon="fa--random icon"  :action="randomHydra"/>
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
-	<IconButton icon="fa--play icon" :action="sendHydra"/>
-</div>&nbsp;{{title}}<br/>
+	<IconButton icon="carbon--send-action-usage icon" :action="sendHydra"/>&nbsp;&nbsp;
+  <IconButton icon="fa--film icon" :action="toggleFilm"/>
+  
+
+</div>
+  <template v-if="filmOpen">
+  &nbsp;
+  <InActorPanel :script="sketch" :updateScript="updater"/>
+  </template>
+&nbsp;{{title}}<br/>
 <Editor :text="sketch" @textChanged="changed"/>
 </template>
 

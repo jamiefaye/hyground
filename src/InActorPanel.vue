@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {InActorState} from "./InActorState.js";
 import IconButton from "./IconButton.vue";
+import IconToggleButton from "./IconToggleButton.vue";
 import {ref, type Ref, reactive, onMounted, watch} from "vue"
 
   const props = defineProps({
@@ -32,13 +33,7 @@ state.pushSketch(props.script)
 	<template v-if="info.hasplay">
 		<IconButton icon="fa6-solid--backward-fast icon" :action="()=>state.doFastBackward()"/>
 		<IconButton icon="fa--step-backward icon" :action="()=>state.doStepBackward()"/>
-	
-		<template v-if="!info.playing">
-			<IconButton icon="fa--play icon" :action="()=>state.doPlay()"/>
-		</template>
-		<template v-if="info.playing"> 
-			<IconButton icon="fa6-regular--circle-pause icon" :action="()=>state.doPlay()"/>
-		</template>
+		<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="()=>{state.doPlay()}"/>
 	<IconButton icon="fa--step-forward icon" :action="()=>state.doStepForward()"/>
 	<IconButton icon="fa6-solid--forward-fast icon" :action="()=>state.doFastForward()"/>
   </template>
