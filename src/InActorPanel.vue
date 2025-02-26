@@ -6,7 +6,8 @@ import {ref, type Ref, reactive, onMounted, watch} from "vue"
 
   const props = defineProps({
   	script: String,
-  	updateScript: Function
+  	updateScript: Function,
+  	hidden: Boolean
 	}); 
 
 let info = reactive({countdown: "", playerIndex: ""});
@@ -20,28 +21,29 @@ state.pushSketch(props.script)
 </script>
 
 <template>
+<template v-if="!hidden">
 <div class="panelborder">
-	<IconButton icon="fa-solid--trash-alt icon" :action="()=>state.doClear()"/>
-	<IconButton icon="fa-solid--file-import icon" :action="()=>state.doFileImport()"/>
+	<IconButton icon="fa-solid--trash-alt icon" :action="(e)=>state.doClear(e)"/>
+	<IconButton icon="fa-solid--file-import icon" :action="(e)=>state.doFileImport(e)"/>
 	
 	<template v-if="info.hasrecord">
-	<IconButton icon="fa-solid--file-export icon" :action="()=>state.doFileExport()"/>
-	<IconButton icon="lets-icons--box-refresh-alt-right icon" :action="()=>state.doLoad()"/>
+	<IconButton icon="fa-solid--file-export icon" :action="(e)=>state.doFileExport(e)"/>
+	<IconButton icon="lets-icons--box-refresh-alt-right icon" :action="(e)=>state.doLoad(e)"/>
 	&nbsp;
 	</template>
 	
 	<template v-if="info.hasplay">
-		<IconButton icon="fa6-solid--backward-fast icon" :action="()=>state.doFastBackward()"/>
-		<IconButton icon="fa--step-backward icon" :action="()=>state.doStepBackward()"/>
-		<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="()=>{state.doPlay()}"/>
-	<IconButton icon="fa--step-forward icon" :action="()=>state.doStepForward()"/>
-	<IconButton icon="fa6-solid--forward-fast icon" :action="()=>state.doFastForward()"/>
+		<IconButton icon="fa6-solid--backward-fast icon" :action="(e)=>state.doFastBackward(e)"/>
+		<IconButton icon="fa--step-backward icon" :action="(e)=>state.doStepBackward(e)"/>
+		<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="(e)=>{state.doPlay(e)}"/>
+	<IconButton icon="fa--step-forward icon" :action="(e)=>state.doStepForward(e)"/>
+	<IconButton icon="fa6-solid--forward-fast icon" :action="(e)=>state.doFastForward(e)"/>
   </template>
 </div>
 
 &nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}
 </template>
-
+</template>
 <style>
 .panelborder {
 display:inline-block;

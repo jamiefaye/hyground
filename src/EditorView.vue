@@ -39,8 +39,6 @@
 		let list = await broker.listForKind("view");
 		if (list.length > 0) {
 			targetView = list[list.length - 1];
-			//await broker.callback(targetView, "meow",1,2);
-			//console.log("Back from calling back");
 		}
 	}
 
@@ -90,7 +88,7 @@
 		nextSketch.value = e;
 	}
 
-  async function sendHydra(evt) {
+  async function sendTargetHydra(evt) {
     sketch.value = nextSketch.value;
   	await broker.callback(targetView, "update", nextSketch.value, 0);
   }
@@ -108,7 +106,7 @@ function getRandomInt(max) {
 		let ska = decodeURIComponent(atob(s64));
 		nextSketch.value = ska;
 		sketch.value = ska;
-		//sendHydra();
+		//sendTargetHydra();
   }
 
   // Custom code to execute before closing
@@ -121,22 +119,30 @@ function getRandomInt(max) {
 	function mutate(evt) {
 	 	let newSk = mutator.mutate({}, sketch.value);
 	 	nextSketch.value = newSk;
-	 	if (evt.shiftKey) sendHydra();
+	 	sketch.value = nextSketch.value;
+	 	if (evt.shiftKey) sendTargetHydra();
 	}
 
 	function toggleFilm(evt) {
 	 filmOpen.value = !filmOpen.value;
 	}
-	
-	function updater(newV) {
+
+
+	function updater(newV, e, what) {
 	nextSketch.value = newV;
-	sendHydra();
+	if (what === "step" || what === "fast") {
+			if (e.shiftKey){sendTargetHydra(e)} 
+					else {sketch.value = nextSketch.value};
+	} else {
+			sendTargetHydra(e)
+	}
+
 }
 
 </script>
 
 <template>
-<table><tr>
+<table><tbody><tr>
 <template v-if="showVid">
 <td>
 <Hydra :sketch="sketch" :hush="false" :width="192" :height="108"/>
@@ -146,15 +152,14 @@ function getRandomInt(max) {
 <div class="simpleborder">
 	<IconButton icon="fa--random icon"  :action="randomHydra"/>
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
-	<IconButton icon="carbon--send-action-usage icon" :action="sendHydra"/>&nbsp;&nbsp;
+	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
 </div>
-  <template v-if="filmOpen">
   &nbsp;
-  <InActorPanel :script="sketch" :updateScript="updater"/>
-  </template>
+  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"/>
+
 &nbsp;{{title}}
-</td></tr></table>
+</td></tr></tbody></table>
 <Editor :text="nextSketch" @textChanged="changed" />
 </template>
 

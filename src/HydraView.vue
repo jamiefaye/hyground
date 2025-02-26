@@ -7,12 +7,14 @@
   const sketch = ref("noise().out()");
   let broker;
   let n;
+  
+  let widthRef = ref(960);
+  let heightRef = ref(540);
  
 function cb(msg, arg1, arg2) {
 	console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
 	if (msg === "update") { sketch.value = arg1; }
 	 else if (msg === "drop") {
-	 		
 	 }
 }
 
@@ -31,9 +33,11 @@ function cb(msg, arg1, arg2) {
 
 onMounted(() => {
 	openBroker();
+	window.addEventListener("resize", resizeCanvas);
 });
 
 onBeforeUnmount(() => {
+	window.removeEventListener("resize", resizeCanvas);
 	fairwell();
 });
 
@@ -50,9 +54,23 @@ function editHydra() {
 function updater(newV) {
 	sketch.value = newV;
 }
+
+let keyctr = ref(0);
+function resizeCanvas() {
+
+	let inW = window.innerWidth;
+	let inH = window.innerHeight - 80;
+	widthRef.value = inW;
+	heightRef.value = inH;
+	console.log("Resized: " + inW + " + " +inH + " keyctr: " + keyctr.value);
+	keyctr.value++;
+}
+
 </script>
 
 <template>
+
 <button type="button" id="HydraNxt" @click="editHydra">Edit</button>&nbsp;<InActorPanel :script="sketch" :updateScript="updater"/>
-<Hydra :sketch="sketch" :hush="false" :width="1000" :height="600"/>
+<Hydra :sketch="sketch" :hush="false" :width="widthRef" :height="heightRef" :key="keyctr"/>
 </template>
+

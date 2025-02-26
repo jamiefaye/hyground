@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-  import {onMounted, Ref, ref, watch} from "vue";
+  import {onMounted, onBeforeUnmount, Ref, ref, watch} from "vue";
   import Hydra from "hydra-synth";
   
   const props = defineProps({
@@ -8,6 +8,7 @@
   	hush:   Boolean,
   	width:	Number,
   	height: Number
+  	
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -17,6 +18,13 @@ onMounted(() => {
     context.value = canvasElement.value;
     render();
     watch(()=> props.sketch, ()=>render());
+
+});
+
+onBeforeUnmount(() => {
+	//h.regl.destroy();
+	h.hush();
+	h = undefined;
 });
 
 
@@ -37,6 +45,7 @@ function render() {
     let fn = new Function(...keys, props.sketch);
     fn(...values);
 }
+
 </script>
 
 
@@ -44,4 +53,6 @@ function render() {
    <canvas ref="canvasElement" :width="width" :height="height"></canvas>
    <p/>
 </template>
+
+
 

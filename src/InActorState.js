@@ -89,12 +89,12 @@ startTimer(dur)
 	this.activeTimer = setTimeout(this.boundTimerHandler, durMS)
 }
 
-timerHandler()
+timerHandler(e)
 {
 	this.activeTimer = null
 	if(this.realTimePlayback)
 	{
-		this.moveDown()
+		this.moveDown(e, "play");
 	}
 }
 
@@ -128,19 +128,19 @@ doPlay(e)
 	{
 	//	this.playButton.className = "fas fa-pause-circle pricon"
 		this.statusObj.playing = true;
-		this.moveDown()
+		this.moveDown(e, "play")
 		this.startCountdownClock()
+		this.statusObj.playing = true;
 	} else {
 		this.clearTimer();
 		this.statusObj.playing = false;
-	//	this.playButton.className = "fas fa-play pricon"
 	}
 
 }
 
 doStepForward(e)
 {
-	this.moveDown(e)
+	this.moveDown(e, "step");
 }
 
 
@@ -252,6 +252,7 @@ async saveFile(e)
 	 loadPlayer(text) {
 		//this.deckDiv.style.opacity = 1;
 		this.playA = [];
+		this.playerIndex = 0;
 		let textA = text.split(/\r\n|\n/)
 		let aSize = textA.length
 		if (aSize > 0 && textA[0].startsWith('{"code":'))
@@ -340,14 +341,15 @@ async saveFile(e)
 
 			}
 		}
-		this.playerIndex = 190
+		this.playerIndex = 0
 	}
 
-	loadAtIndex()
+	loadAtIndex(e, what)
 	{
 		if (this.playA.length === 0) return;
+		console.log("Load at X: " + this.playerIndex);
 		//hush()
-		this.updateText(this.playA[this.playerIndex].sketch);
+		this.updateText(this.playA[this.playerIndex].sketch, e, what);
 		if (this.realTimePlayback)
 		{
 			this.clearTimer()
@@ -366,15 +368,15 @@ async saveFile(e)
   	if (this.playerIndex < 0) {	
 			this.playerIndex = this.playA.length - 1
 		}
-  	this.loadAtIndex();
+  	this.loadAtIndex(e, "step");
   }
 
-  moveDown(e)
+  moveDown(e, what)
   {
 		if (this.playA.length === 0) return;
 		this.playerIndex++;
 		if (this.playerIndex >= this.playA.length) this.playerIndex = 0
-		this.loadAtIndex();
+		this.loadAtIndex(e, what);
   }
 
 	moveFast(e, dir)
@@ -395,7 +397,7 @@ async saveFile(e)
 			if ((ent.mark !== undefined && ent.mark )
 					|| (ent.dur !== undefined && ent.dur >= this.fastForwardDuration))
 			{
-				this.loadAtIndex();
+				this.loadAtIndex(e, "fast");
 				return
 			}
 			loopMax--;
@@ -415,7 +417,7 @@ async saveFile(e)
 		{
 			this.playerIndex = 0
 		}
-		this.loadAtIndex();
+		this.loadAtIndex(e, "fast");
 	}
 
 	mark(e) {
