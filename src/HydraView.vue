@@ -54,5 +54,5 @@ function updater(newV) {
 
 <template>
 <button type="button" id="HydraNxt" @click="editHydra">Edit</button>&nbsp;<InActorPanel :script="sketch" :updateScript="updater"/>
-<Hydra :sketch="sketch" :hush="false"/>
+<Hydra :sketch="sketch" :hush="false" :width="1000" :height="600"/>
 </template>

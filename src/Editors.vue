@@ -6,6 +6,7 @@
 
 let elkey = 0;
 let edList = ref([elkey++]);
+let showVideo = ref(true);
 
 function addEd() {
 	edList.value.push(elkey++);
@@ -14,10 +15,11 @@ function addEd() {
 </script>
 
 <template>
-
 <template v-for="(item, index) in edList" :key="item">
-<EditorView :entry="item" :index="index"/>
+<EditorView :entry="item" :index="index" :showVid="showVideo"/>
 </template>
-<button type="button" id="EdAdd" @click="addEd">New</button>
+<button type="button" id="EdAdd" @click="addEd">New</button>&nbsp;&nbsp;
+<input type="checkbox" id="videocheckbox" v-model="showVideo" /> 
+<label for="videocheckbox">Monitors</label>
 </template>
 

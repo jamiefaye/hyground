@@ -1,7 +1,3 @@
-<template><br>
-   <canvas ref="canvasElement" width="1280" height="720"></canvas>
-   <p/>
-</template>
 
 <script setup lang="ts">
   import {onMounted, Ref, ref, watch} from "vue";
@@ -9,7 +5,9 @@
   
   const props = defineProps({
   	sketch: String,
-  	hush:   Boolean
+  	hush:   Boolean,
+  	width:	Number,
+  	height: Number
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -40,3 +38,10 @@ function render() {
     fn(...values);
 }
 </script>
+
+
+<template><br>
+   <canvas ref="canvasElement" :width="width" :height="height"></canvas>
+   <p/>
+</template>
+

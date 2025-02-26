@@ -2,6 +2,7 @@
 
   import {onMounted, onBeforeUnmount, ref} from 'vue';
 	import Hyground from "./Hyground.vue";
+	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
   import {openMsgBroker} from "./MsgBroker.js";
@@ -10,9 +11,11 @@
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
 	
+	
   const props = defineProps({
   entry: Object,
-  index: Number
+  index: Number,
+  showVid: Boolean
 	});
 
 	let targetView;
@@ -118,7 +121,7 @@ function getRandomInt(max) {
 	function mutate(evt) {
 	 	let newSk = mutator.mutate({}, sketch.value);
 	 	nextSketch.value = newSk;
-	 	sendHydra();
+	 	if (evt.shiftKey) sendHydra();
 	}
 
 	function toggleFilm(evt) {
@@ -133,20 +136,26 @@ function getRandomInt(max) {
 </script>
 
 <template>
+<table><tr>
+<template v-if="showVid">
+<td>
+<Hydra :sketch="sketch" :hush="false" :width="192" :height="108"/>
+</td>
+</template>
+<td>
 <div class="simpleborder">
 	<IconButton icon="fa--random icon"  :action="randomHydra"/>
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="carbon--send-action-usage icon" :action="sendHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
-  
-
 </div>
   <template v-if="filmOpen">
   &nbsp;
   <InActorPanel :script="sketch" :updateScript="updater"/>
   </template>
-&nbsp;{{title}}<br/>
-<Editor :text="sketch" @textChanged="changed"/>
+&nbsp;{{title}}
+</td></tr></table>
+<Editor :text="nextSketch" @textChanged="changed" />
 </template>
 
 <style>
