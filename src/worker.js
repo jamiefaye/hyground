@@ -47,6 +47,16 @@ class MsgBroker {
 		else return [];
 	}
 
+	callbackXfer(name, msg, darray, arg2) {
+		let cb = callbackTab.get(name);
+	  return cb(msg, Comlink.transfer(darray, [darray.buffer]), arg2);
+	}
+
+	callbackXferSA(name, msg, darray, arg2) {
+		let cb = callbackTab.get(name);
+	  return cb(msg,  darray, arg2);
+	}
+	
 	dropAndNotify(name, kindToDrop, kindToNotify) {
 		callbackTab.delete(name);
 		if (namesByKind.has(kindToDrop)) {

@@ -16,7 +16,7 @@ class InActorState {
     this.recordA = []
     this.playerIndex = -1
     this.defaultDuration = 2.0
-    this.fastForwardDuration = 3.0
+    this.fastForwardDuration = 15
     this.realTimePlayback = false
     this.updateText = updateText;
     if (statusObj) {this.statusObj = statusObj} else {this.statusObj = {}}
@@ -102,12 +102,14 @@ timerHandler(e)
 updateCountDownClock()
 {
 	let nowTime = Date.now()
-	let tMinus = nowTime - this.blastOffTime
-	let timeAsString = ""
-	if (tMinus < 1500) {
-		if (tMinus > 0) tMinus = 0
-		timeAsString = (Math.round(tMinus / 100) / 10).toString()
-	}
+	let tMinus = nowTime - this.blastOffTime;
+	if (tMinus > 0) tMinus = 0;
+	let tPlus = Math.abs(tMinus);
+	let timeAsString = "";
+	let secs = Math.round(tPlus / 1000).toString();
+	let tenths =  (Math.round(tPlus / 100) % 10).toString();
+	let sign = tMinus < 0 ? '-' : ' ';
+	timeAsString = sign + secs + "." + tenths;
 	this.statusObj.countdown = timeAsString;
 }
 
@@ -200,6 +202,8 @@ async saveFile(e)
 		let text = await readFile(file);
 	
 		this.loadPlayer(text);
+		
+		this.statusObj.filename = file.name;
  
   }
 
@@ -383,6 +387,7 @@ async saveFile(e)
 	{
 		if(this.playA.length === 0) return
 		let loopMax = this.playA.length
+		let playerXWas = this.playerIndex;
 		while (loopMax > 0) {
 			this.playerIndex += dir
 			if (this.playerIndex < 0)
@@ -404,12 +409,17 @@ async saveFile(e)
 		}
 		// No mark or long-enough. Instead do a classic fastforw or fastrev.
 		// (soon).
+		this.playerIndex = playerXWas;
 		let jump = 16
 		if (this.playA.length <= jump)
 		{
-			jump = 4
+			jump = 4;
 		}
-		this.playerIndex += jump * dir
+		// Stop at 0 if jumping backward
+		if (dir < 0 && playerXWas > 0 && jump > playerXWas) this.playerIndex = 0;
+		else 
+			this.playerIndex += jump * dir;
+		
 		if (this.playerIndex < 0)
 		{
 			this.playerIndex = this.playA.length - 1

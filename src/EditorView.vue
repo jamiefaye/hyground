@@ -15,7 +15,8 @@
   const props = defineProps({
   entry: Object,
   index: Number,
-  showVid: Boolean
+  showVid: Boolean,
+  limit: Boolean
 	});
 
 	let targetView;
@@ -28,10 +29,12 @@
 	let filmOpen = ref(false);
 
 		function editCB(msg, arg1, arg2) {
-			console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
+			//console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
 			if (msg === "drop") {
 				targetView = undefined;
 	 			lookForTarget();
+	 		} else {
+	 			console.log("Edit cb" + msg + " " + arg1 + " " + arg2);
 	 		}
 		}
 
@@ -93,6 +96,47 @@
   	await broker.callback(targetView, "update", nextSketch.value, 0);
   }
 
+	async function runSharedTest() {
+
+let asize = 5000;
+const data = new SharedArrayBuffer(asize);
+const filler = new Uint8Array(data);
+for (let i = 0; i < asize; ++i) filler[i] = i;
+
+const startTime = performance.now();
+let p = broker.callbackXferSA(targetView, "meow", data);
+const timeTaken = performance.now() - startTime;  
+console.log(`Send completed in ${timeTaken}ms.`);
+
+p.then((x)=>{
+	const timeTaken2 = performance.now() - startTime;  
+	console.log(`Tranfer completed in ${timeTaken2}ms.`);
+}).catch((e) => { console.log(e) })
+}
+	
+	async function sendBig(evt) {
+		//getHeaders();
+		let data = new Uint8Array(500000);
+		for (let i = 0; i < data.byteLength; ++i) data[i] = i;
+		//let data = new ArrayBuffer(1980 * 1080 * 4);
+		let t0 = performance.now();
+		//const data = new Uint8Array([1, 2, 3, 4, 5]);
+
+    let r = broker.callbackXfer(targetView, "meow", Comlink.transfer(data, [data.buffer]));
+    //let r =	await broker.callback(targetView, "purr", data, 0);
+
+    console.log(data.byteLength);
+    let t1 = performance.now();
+    let dT1 = t1 - t0;
+    console.log("dT1 = " + dT1);
+    r.then(()=>{
+   
+    let t2 = performance.now();
+    let dT2 = t2 - t0;
+   		 console.log("dT2 = " + dT2);
+    });
+	}
+	
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -130,6 +174,7 @@ function getRandomInt(max) {
 
 	function updater(newV, e, what) {
 	nextSketch.value = newV;
+	title.value="";
 	if (what === "step" || what === "fast") {
 			if (e.shiftKey){sendTargetHydra(e)} 
 					else {sketch.value = nextSketch.value};
@@ -139,7 +184,47 @@ function getRandomInt(max) {
 
 }
 
+
+if (crossOriginIsolated) {
+    console.log("***SharedArrayBuffer is available");
+} else {
+		console.log("***SharedArrayBuffer is not available");
+}
+
+
+   function getHeaders() {
+let req = new XMLHttpRequest();
+req.open('GET', document.location, false);
+req.send(null);
+
+// associate array to store all values
+let data = new Object();
+
+// get all headers in one call and parse each item
+let headers = req.getAllResponseHeaders().toLowerCase();
+let aHeaders = headers.split('\n');
+let i =0;
+for (let i = 0; i < aHeaders.length; i++) {
+    let thisItem = aHeaders[i];
+    let key = thisItem.substring(0, thisItem.indexOf(':'));
+    let value = thisItem.substring(thisItem.indexOf(':')+1);
+    data[key] = value;
+}	    
+/*
+// get referer
+let referer = document.referrer;
+data["Referer"] = referer;
+
+//get useragent
+let useragent = navigator.userAgent;
+data["UserAgent"] = useragent;
+*/
+
+	console.log(data);
+
+}
 </script>
+
 
 <template>
 <table><tbody><tr>
@@ -154,13 +239,15 @@ function getRandomInt(max) {
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
+  <IconButton icon="fa--play-circle-o icon" :action="sendBig"/>
+  <IconButton icon="fa--play-circle-o icon" :action="runSharedTest"/>
 </div>
   &nbsp;
   <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"/>
 
 &nbsp;{{title}}
 </td></tr></tbody></table>
-<Editor :text="nextSketch" @textChanged="changed" />
+<Editor :text="nextSketch" @textChanged="changed" :limit="limit"/>
 </template>
 
 <style>
@@ -169,6 +256,5 @@ display:inline-block;
  border: 1px solid black;
  box-sizing: border-box;
  position: relative;
-
 }
 </style>

@@ -22,8 +22,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	//h.regl.destroy();
-	h.hush();
+	h.hush(true);
 	h = undefined;
 });
 

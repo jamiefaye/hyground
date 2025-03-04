@@ -10,7 +10,7 @@ import {ref, type Ref, reactive, onMounted, watch} from "vue"
   	hidden: Boolean
 	}); 
 
-let info = reactive({countdown: "", playerIndex: ""});
+let info = reactive({countdown: " 0.0", playerIndex: ""});
 
 let state = new InActorState(props.updateScript, info);
 
@@ -41,7 +41,7 @@ state.pushSketch(props.script)
   </template>
 </div>
 
-&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}
+&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}&nbsp{{info.filename}}
 </template>
 </template>
 <style>

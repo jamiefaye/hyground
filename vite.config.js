@@ -6,6 +6,14 @@ import fs from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	
+	
+	    define: {
+        // "process.env": process.env,
+        // // By default, Vite doesn't include shims for NodeJS/
+        // // necessary for segment analytics lib to work
+        "global": {},
+    	},
 	/* uncomment this block to enable https. You may need to change some settings so this will actually work in Chrome. */
 	  server: {
 	  port: 8000,
@@ -24,6 +32,16 @@ export default defineConfig({
   
   plugins: [
     vue(),
+        {
+      name: "configure-response-headers",
+      configureServer: (server) => {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+          res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+          next();
+        });
+      },
+    },
   ],
   resolve: {
     alias: {

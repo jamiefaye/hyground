@@ -12,9 +12,19 @@
   let heightRef = ref(540);
  
 function cb(msg, arg1, arg2) {
-	console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
+	//console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
 	if (msg === "update") { sketch.value = arg1; }
 	 else if (msg === "drop") {
+		 
+	 } 
+	 else if (msg === "meow") {
+
+		 console.log("Callback activated " + msg + " " + arg1.byteLength + " " + arg2);
+		 return "Got It!";
+	 } 	 else if (msg === "purr") {
+
+		 console.log("Callback activated " + msg + " " + arg1.length + " " + arg2);
+		 return "Got It!";
 	 }
 }
 
@@ -48,7 +58,7 @@ onBeforeUnmount(() => {
 	});
 
 function editHydra() {
-	window.open("/editor", "editor", "width=800,height=1000,left=80");
+	window.open("/editor", "editor", "width=640,height=1000,left=20");
 }
 
 function updater(newV) {
@@ -74,3 +84,6 @@ function resizeCanvas() {
 <Hydra :sketch="sketch" :hush="false" :width="widthRef" :height="heightRef" :key="keyctr"/>
 </template>
 
+<style>
+
+</style>

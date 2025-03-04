@@ -12,15 +12,11 @@ import type { ViewUpdate } from '@codemirror/view';
   
   const props = defineProps({
   	text: String,
+  	limit: Boolean
 	});
 	
 const emit = defineEmits(['textChanged'])
 
-function furry() {
-
- console.log("Furry" + props.text);
- valRef.value = props.text;
-}
 /** text */
 const valRef: Ref<string> = ref(props.text);
 watch(valRef,(newv)=>emit('textChanged', newv));
@@ -41,10 +37,21 @@ const lang: LanguageSupport = javascript();
 </script>
 
 <template>
+
   <code-mirror
     v-model="valRef"
     basic
     :dark="dark"
     :lang="lang"
   />
+
 </template>
+
+<style>
+.cm-editor {
+    max-height: v-bind("limit? '80px' : ''");
+    border: 1px solid silver;
+    font-size: 14px;
+}
+
+</style>
