@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainView from '../MainView.vue'
 import Editors from '../Editors.vue'
+import BGREditor from '../BGREditor.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,11 @@ const router = createRouter({
       name: 'editor',
       component: Editors
     },
+    {
+    	path: '/bgr',
+      name: 'bgr',
+      component: BGREditor
+    }
   ]
 })
 
