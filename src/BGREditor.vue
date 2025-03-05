@@ -40,35 +40,76 @@
 
 let BGRWorker;
 let bgrw;
+let bgrw2;
+
+let can1 = new OffscreenCanvas(1280, 720); 
+let can2 = new OffscreenCanvas(1280, 720);
+let bmr1 = can1.getContext("bitmaprenderer");
+let bmr2 = can2.getContext("bitmaprenderer");
+let hp;
+
+let t0; let t1;
+
+function reportHydra(h) {
+	hp = h;
+	console.log ("Hydra reported: " + h);
+	
+	hp.s2.init({src: can1, dynamic: true});
+	hp.s3.init({src: can2, dynamic: true});
+}
 
 function cbHandler(msg, arg1, arg2) {
 	console.log("CallbackHandler triggered");
 }
-	
-	async function test() {
-		bgrw.increment();;
-		console.log(await bgrw.counter);
-		bgrw.callback("test", "meow", 1, 2);
-	
 
+	async function test() {
 		await bgrw.openHydra();
-		await bgrw.setSketch("noise().out()");
+		await bgrw.setSketch("noise(100, 100, 50).colorama().out()");
+		await bgrw2.openHydra();
+		await bgrw2.setSketch("osc(4, 0.1, 1.2).out()");
+
 		await bgrw.tick(16);
-		let img = await bgrw.getFrameData();
-		drawImg(img);
-			
+			setTimeout((dt)=>{
+    		bgrw.tick(16);
+    		bgrw2.tick(16);
+    	}, 16);
+	
 	}
 
-  let instance1
+  let instance1;
 
   async function init() {
   	let url = new URL('./BGRworker.js', import.meta.url);
     BGRWorker = Comlink.wrap(new Worker(url, { type: 'module'}));
     bgrw = await new BGRWorker();
     await bgrw.registerCallback("test", Comlink.proxy(cbHandler));
-
+    await bgrw.registerCallback("frame", Comlink.proxy(frameCB));
+    
+    bgrw2 = await new BGRWorker();
+    await bgrw2.registerCallback("frame", Comlink.proxy(frameCB2));
 	}
-  
+
+ function frameCB(img) {
+  bmr1.transferFromImageBitmap(img);
+ 		setTimeout((dt)=>{
+		  t0 = performance.now();
+    	bgrw.tick(8);
+   }, 8);
+ 	}
+
+ 	function frameCB2(img) {
+ 	
+ 	  bmr2.transferFromImageBitmap(img);
+		t1 = performance.now();
+		let dT = t1 - t0;
+		console.log("dT = " + dT);
+
+ 		setTimeout((dt)=>{
+		  t0 = performance.now();
+    	bgrw2.tick(8);
+   }, 8);
+ 	}
+ 
   init();
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
 const context: Ref<CanvasRenderingContext2D | undefined> = ref();
@@ -79,11 +120,6 @@ onMounted(() => {
 		ctx = context.value.getContext("2d");
 });
 
-function drawImg(img) {
-	let can = context.value;
-	ctx.drawImage(img, 0, 0, 192, 108);
-	img.close();
-}
 
 	onBeforeUnmount(() => {
 	});
@@ -151,45 +187,14 @@ if (crossOriginIsolated) {
 }
 
 
-   function getHeaders() {
-let req = new XMLHttpRequest();
-req.open('GET', document.location, false);
-req.send(null);
-
-// associate array to store all values
-let data = new Object();
-
-// get all headers in one call and parse each item
-let headers = req.getAllResponseHeaders().toLowerCase();
-let aHeaders = headers.split('\n');
-let i =0;
-for (let i = 0; i < aHeaders.length; i++) {
-    let thisItem = aHeaders[i];
-    let key = thisItem.substring(0, thisItem.indexOf(':'));
-    let value = thisItem.substring(thisItem.indexOf(':')+1);
-    data[key] = value;
-}	    
-/*
-// get referer
-let referer = document.referrer;
-data["Referer"] = referer;
-
-//get useragent
-let useragent = navigator.userAgent;
-data["UserAgent"] = useragent;
-*/
-
-	console.log(data);
-
-}
 </script>
 
 
 <template>
 <table><tbody><tr>
 <td>
-//<Hydra :sketch="sketch" :hush="false" :width="192" :height="108"/>
-<canvas ref="canvasElement" width="192" height="108"></canvas>
+<Hydra :sketch="sketch" :hush="false" :width="192" :height="108" :reportHydra="reportHydra"/>
+<canvas ref="canvasElement" width="192" height="109"></canvas>
 </td>
 <td>
 <div class="simpleborder">

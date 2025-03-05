@@ -52,7 +52,6 @@ onBeforeUnmount(() => {
 });
 
   // Custom code to execute before closing
-  // For example, display a confirmation message
   window.addEventListener('unload', function (event) {
 		fairwell();
 	});

@@ -18,6 +18,9 @@ class BGRWorker {
 
   registerCallback(name, cb) {
 		this.callbackTab.set(name, cb);
+		if (name === 'frame') {
+			this.frameCB = cb;
+		}
 	}
 
   setBuffer(buf) {
@@ -53,13 +56,16 @@ class BGRWorker {
     fn(...values);
   }
   
-  
 	async tick(dt) {
 		if (this.h) {
 				this.h.tick(dt);
+				if (this.frameCB) {
+					let fr = this.can.transferToImageBitmap();
+					this.frameCB(Comlink.transfer(fr, [fr]));
+				}
 		}
 	}
-	
+
 	getFrameData() {
 		let img = this.can.transferToImageBitmap();
 		return img;

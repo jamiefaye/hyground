@@ -7,7 +7,8 @@
   	sketch: String,
   	hush:   Boolean,
   	width:	Number,
-  	height: Number
+  	height: Number,
+  	reportHydra: Function,
   	
 	});
 
@@ -33,6 +34,9 @@ function render() {
     if (!context.value) return;
 		if (h === undefined) {
     	h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
+    	if (props.reportHydra) {
+    		props.reportHydra(h);
+    	}
     }
     if (props.hush) h.hush(); // Call this to get a clean slate?
     // convert all keys in h into strings
