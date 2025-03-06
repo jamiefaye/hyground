@@ -92,7 +92,6 @@ function cbHandler(msg, arg1, arg2) {
  function frameCB(img) {
   bmr1.transferFromImageBitmap(img);
  		setTimeout((dt)=>{
-		  t0 = performance.now();
     	bgrw.tick(8);
    }, 8);
  	}

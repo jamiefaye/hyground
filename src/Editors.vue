@@ -23,7 +23,7 @@ function addEd() {
 <button type="button" id="EdAdd" @click="addEd">New</button>&nbsp;&nbsp;
 <input type="checkbox" id="videocheckbox" v-model="showVideo" /> 
 <label for="videocheckbox">Monitors</label>&nbsp;
-<input type="checkbox" id="limitcheckbox" v-model="limitHeight" /> 
+<input type="checkbox" id="limitcheckbox" v-model="limitHeight" />
 <label for="limitcheckbox">Limit Height</label>
 </template>
 
