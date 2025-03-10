@@ -5,12 +5,15 @@
   import {openMsgBroker} from "./MsgBroker.js";
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
-
+  import {Deglobalize} from './Deglobalize.js';
+  
   let stageName;
   let broker;
 
   let fxHydra;
   const fxSketch = ref("src(s2).repeat().out()");
+  
+  let frameTime = 16;
   
   let fx = ref(false);
   
@@ -20,7 +23,7 @@
   let heightRef = ref(540);
 
   let BGRWorker;
-
+	let mouseData = {x: 0, y:0};
 
 	// flipper = 0 means A goes to s2, B goes to s3
 	// flipper = 1 means A goes to s3, B goes to s2
@@ -74,6 +77,10 @@ onBeforeUnmount(() => {
 	fairwell();
 });
 
+document.addEventListener('mousemove', function(event) {  
+  mouseData.x = event.clientX;
+  mouseData.y = event.clientY;
+});
   // Custom code to execute before closing
   window.addEventListener('unload', function (event) {
 		fairwell();
@@ -83,18 +90,19 @@ function openEditor() {
 	window.open("/editor", "editor", "width=640,height=1000,left=20");
 }
 
-function updater(newV) {
+async function updater(newV) {
 	if (!fxActive) {
 		fxSketch.value = newV;
+		console.log(newV);
 	} else {
 		flipIt();
-		hBgworker[flipper].hush();
-		hBgworker[flipper].setSketch(newV);
+		await hBgworker[flipper].hush(); // Sometimes deserializes wrong.
+		await hBgworker[flipper].setSketch(newV);
 
 		if (flipper) 
-			fxSketch.value = `let t0 = Date.now();src(s2).repeat().blend(s3, ()=>{return Math.min((Date.now() - t0) / 500.0, 1.0) }).out()`;
+			fxSketch.value = `let t0 = Date.now();src(s2).blend(s3, ()=>{return Math.min((Date.now()-t0) / 500.0, 1.0) }).out()`;
 			 else
-			fxSketch.value = `let t0 = Date.now();src(s3).repeat().blend(s2, ()=>{return Math.min((Date.now()- t0)/ 500.0, 1.0)}).out()`;
+			fxSketch.value = `let t0 = Date.now();src(s3).blend(s2, ()=>{return Math.min((Date.now()-t0)/ 500.0, 1.0)}).out()`;
 	}
 }
 
@@ -123,8 +131,8 @@ async function openFX() {
     await hBgworker[0].registerCallback("frame", Comlink.proxy(frameCB0));
     await hBgworker[1].registerCallback("frame", Comlink.proxy(frameCB1));
 
-		canv[0] = new OffscreenCanvas(1280, 720); 
-		canv[1] = new OffscreenCanvas(1280, 720);
+		canv[0] = new OffscreenCanvas(1920, 1080); 
+		canv[1] = new OffscreenCanvas(1920, 1080);
 		bmr[0] = canv[0].getContext("bitmaprenderer");
 		bmr[1] = canv[1].getContext("bitmaprenderer");
 		fxHydra.s2.init({src: canv[0], dynamic: true});
@@ -134,28 +142,28 @@ async function openFX() {
 		fxActive = true;
 
 		setTimeout((dt)=>{
-    		hBgworker[0].tick(8);
-    		hBgworker[1].tick(8);
-    }, 16);
+    		hBgworker[0].tick(frameTime, mouseData);
+    		hBgworker[1].tick(frameTime, mouseData);
+    }, frameTime * 2);
 }
 
  function frameCB0(img) {
   	bmr[0].transferFromImageBitmap(img);
  		setTimeout((dt)=>{
-    	hBgworker[0].tick(8);
-   }, 8);
+    	hBgworker[0].tick(frameTime, mouseData);
+   }, frameTime);
  	}
 
  	function frameCB1(img) {
  	  bmr[1].transferFromImageBitmap(img);
 		t1 = performance.now();
 		let dT = t1 - t0;
-		console.log("dT = " + dT);
+		//console.log("dT = " + dT);
 
  		setTimeout((dt)=>{
 		  t0 = performance.now();
-    	hBgworker[1].tick(8);
-   }, 8);
+    	hBgworker[1].tick(frameTime, mouseData);
+   },frameTime);
  	}
 
 
@@ -192,7 +200,3 @@ watch(fx, turnFXOn);
 <InActorPanel :script="fxSketch" :updateScript="updater"/>
 <Hydra :sketch="fxSketch" :hush="false" :width="widthRef" :height="heightRef" :key="keyctr" :reportHydra="reportHydra"/>
 </template>
-
-<style>
-
-</style>

@@ -2,6 +2,7 @@
 <script setup lang="ts">
   import {onMounted, onBeforeUnmount, Ref, ref, watch} from "vue";
   import Hydra from "hydra-synth";
+  import {Deglobalize} from './Deglobalize.js';
   
   const props = defineProps({
   	sketch: String,
@@ -32,6 +33,7 @@ let h;
 
 function render() {
     if (!context.value) return;
+    let text = Deglobalize(props.sketch, "_h");
 		if (h === undefined) {
     	h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
     	if (props.reportHydra) {
@@ -45,7 +47,9 @@ function render() {
     for (let i = 0; i < keys.length; ++i) values.push(h[keys[i]]);
     keys.push("h");
     values.push(h);
-    let fn = new Function(...keys, props.sketch);
+    keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
+    values.push(h);
+    let fn = new Function(...keys, text);
     fn(...values);
 }
 

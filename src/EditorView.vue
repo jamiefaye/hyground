@@ -11,7 +11,6 @@
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
 	
-	
   const props = defineProps({
   entry: Object,
   index: Number,
@@ -92,10 +91,13 @@
 	}
 
   async function sendTargetHydra(evt) {
-    sketch.value = nextSketch.value;
+  	setLocalSketch(nextSketch.value);
   	await broker.callback(targetView, "update", nextSketch.value, 0);
   }
 
+function setLocalSketch(text) {
+	sketch.value = text;
+}
 	
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -109,21 +111,20 @@ function getRandomInt(max) {
 		let s64 = sketche.code;
 		let ska = decodeURIComponent(atob(s64));
 		nextSketch.value = ska;
-		sketch.value = ska;
+		setLocalSketch(ska);
 		//sendTargetHydra();
   }
 
-  // Custom code to execute before closing
-  // For example, display a confirmation message
+
   window.addEventListener('unload', function (event) {
 	fairwell();
 
 });
 
 	function mutate(evt) {
-	 	let newSk = mutator.mutate({}, sketch.value);
+	 	let newSk = mutator.mutate({changeTransform: evt.metaKey}, sketch.value);
 	 	nextSketch.value = newSk;
-	 	sketch.value = nextSketch.value;
+	 	setLocalSketch(nextSketch.value);
 	 	if (evt.shiftKey) sendTargetHydra();
 	}
 
@@ -137,7 +138,7 @@ function getRandomInt(max) {
 	title.value="";
 	if (what === "step" || what === "fast") {
 			if (e.shiftKey){sendTargetHydra(e)} 
-					else {sketch.value = nextSketch.value};
+					else {setLocalSketch(nextSketch.value)};
 	} else {
 			sendTargetHydra(e)
 	}
@@ -152,37 +153,6 @@ if (crossOriginIsolated) {
 }
 
 
-   function getHeaders() {
-let req = new XMLHttpRequest();
-req.open('GET', document.location, false);
-req.send(null);
-
-// associate array to store all values
-let data = new Object();
-
-// get all headers in one call and parse each item
-let headers = req.getAllResponseHeaders().toLowerCase();
-let aHeaders = headers.split('\n');
-let i =0;
-for (let i = 0; i < aHeaders.length; i++) {
-    let thisItem = aHeaders[i];
-    let key = thisItem.substring(0, thisItem.indexOf(':'));
-    let value = thisItem.substring(thisItem.indexOf(':')+1);
-    data[key] = value;
-}	    
-/*
-// get referer
-let referer = document.referrer;
-data["Referer"] = referer;
-
-//get useragent
-let useragent = navigator.userAgent;
-data["UserAgent"] = useragent;
-*/
-
-	console.log(data);
-
-}
 </script>
 
 

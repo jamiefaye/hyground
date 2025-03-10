@@ -60,6 +60,7 @@ class Mutator {
         var comments = [];
         let ast = Parser.parse(text, {
             locations: true,
+            ecmaVersion: "latest",
             onComment: comments}
         );
 

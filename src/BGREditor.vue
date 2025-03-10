@@ -42,8 +42,8 @@ let BGRWorker;
 let bgrw;
 let bgrw2;
 
-let can1 = new OffscreenCanvas(1280, 720); 
-let can2 = new OffscreenCanvas(1280, 720);
+let can1 = new OffscreenCanvas(1920, 1080); 
+let can2 = new OffscreenCanvas(1920, 1080);
 let bmr1 = can1.getContext("bitmaprenderer");
 let bmr2 = can2.getContext("bitmaprenderer");
 let hp;

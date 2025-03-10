@@ -1,19 +1,10 @@
 import * as Comlink from "comlink";
 import Hydra from "hydra-synth";
+import {Deglobalize} from './Deglobalize.js';
   
 class BGRWorker {
-  constructor(init = 0) {
-    console.log(init);
-    this._counter = init;
+  constructor() {
     this.callbackTab = new Map();
-  }
-
-  get counter() {
-    return this._counter;
-  }
-
-  increment(delta = 1) {
-    this._counter += delta;
   }
 
   registerCallback(name, cb) {
@@ -39,25 +30,39 @@ class BGRWorker {
 	
 	async openHydra() {
 			if (this.h === undefined) {
-			this.can = new OffscreenCanvas(1280, 720);
+			this.can = new OffscreenCanvas(1920, 1080);
     	this.h = new Hydra({ makeGlobal: false, canvas: this.can, autoloop: false, detectAudio: false, enableStreamCapture: false }).synth;
     	console.log("Hydra created: " + this.h);
     }
 	}
 
-  async setSketch(str) {
+  async setSketch(inStr) {
   	if (!this.h) return;
+  	let str = Deglobalize(inStr, "_h");
   	let keys = Object.keys(this.h);
     let values = [];
     for (let i = 0; i < keys.length; ++i) values.push(this.h[keys[i]]);
     keys.push("h");
     values.push(this.h);
+    keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
+    values.push(this.h);
     let fn = new Function(...keys, str);
     fn(...values);
+    return true;
   }
   
-	async tick(dt) {
+  async hush() {
+  	 if (!this.h) return;
+  	 this.h.hush();
+  }
+  
+	async tick(dt, mouseData, timeV) {
 		if (this.h) {
+				if (mouseData) {
+					this.h.mouse.x = mouseData.x;
+					this.h.mouse.y = mouseData.y;
+				}
+				//this.h.time+= (dt / 1000.0);
 				this.h.tick(dt);
 				if (this.frameCB) {
 					let fr = this.can.transferToImageBitmap();
@@ -65,6 +70,7 @@ class BGRWorker {
 				}
 		}
 	}
+	
 
 	getFrameData() {
 		let img = this.can.transferToImageBitmap();
