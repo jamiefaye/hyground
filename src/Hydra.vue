@@ -33,7 +33,14 @@ let h;
 
 function render() {
     if (!context.value) return;
-    let text = Deglobalize(props.sketch, "_h");
+    let text; let errFound;
+    try {
+    	 text = Deglobalize(props.sketch, "_h");
+    } catch (err) {
+  		errFound = err;
+  		console.log("Deglobalize error " + err);
+  		text = props.sketch;
+  	}
 		if (h === undefined) {
     	h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
     	if (props.reportHydra) {

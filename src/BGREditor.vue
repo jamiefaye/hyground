@@ -79,8 +79,7 @@ function cbHandler(msg, arg1, arg2) {
   let instance1;
 
   async function init() {
-  	let url = new URL('./BGRworker.js', import.meta.url);
-    BGRWorker = Comlink.wrap(new Worker(url, { type: 'module'}));
+    BGRWorker = Comlink.wrap(new Worker(new URL('./BGRworker.js', import.meta.url), { type: 'module'}));
     bgrw = await new BGRWorker();
     await bgrw.registerCallback("test", Comlink.proxy(cbHandler));
     await bgrw.registerCallback("frame", Comlink.proxy(frameCB));

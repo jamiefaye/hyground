@@ -19,8 +19,8 @@
   
   let fxLoaded = false;
   let fxActive = false;
-  let widthRef = ref(960);
-  let heightRef = ref(540);
+  let widthRef = ref(1920);
+  let heightRef = ref(1080);
 
   let BGRWorker;
 	let mouseData = {x: 0, y:0};
@@ -87,7 +87,7 @@ document.addEventListener('mousemove', function(event) {
 	});
 
 function openEditor() {
-	window.open("/editor", "editor", "width=640,height=1000,left=20");
+	window.open("/editor", "editor", "width=500,height=1080,left=20");
 }
 
 async function updater(newV) {
@@ -119,8 +119,7 @@ async function reportHydra(newH) {
 async function openFX() {
 		if (fxLoaded) return;
 
-	  let url = new URL('./BGRworker.js', import.meta.url);
-    BGRWorker = Comlink.wrap(new Worker(url, { type: 'module'}));
+    BGRWorker = Comlink.wrap(new Worker(new URL('./BGRworker.js', import.meta.url), { type: 'module'}));
     hBgworker[0] = await new BGRWorker();
     hBgworker[1] = await new BGRWorker();
     

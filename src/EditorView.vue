@@ -12,7 +12,6 @@
 	import InActorPanel from "./InActorPanel.vue";
 	
   const props = defineProps({
-  entry: Object,
   index: Number,
   showVid: Boolean,
   limit: Boolean

@@ -38,7 +38,15 @@ class BGRWorker {
 
   async setSketch(inStr) {
   	if (!this.h) return;
-  	let str = Deglobalize(inStr, "_h");
+  	let str;
+  	let errFound = "";
+  	try {
+  		str = Deglobalize(inStr, "_h");
+  	} catch (err) {
+  		errFound = err;
+  		console.log("Deglobalize error " + err);
+  		str = inStr;
+  	}
   	let keys = Object.keys(this.h);
     let values = [];
     for (let i = 0; i < keys.length; ++i) values.push(this.h[keys[i]]);
@@ -48,7 +56,7 @@ class BGRWorker {
     values.push(this.h);
     let fn = new Function(...keys, str);
     fn(...values);
-    return true;
+    return errFound;
   }
   
   async hush() {
