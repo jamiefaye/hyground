@@ -211,11 +211,11 @@ watch(fx, turnFXOn);
 class SourceProxy {
 // targetX = 0 / 1, which buss (side) to send to.
 // sourceX = 0-3 (or whatever), which BGHydraSource to send to.
-	constructor(kind, targetX, sourceX, index, params) {
+	constructor(kind, targetX, sourceX, mediaAddr, params) {
 		this.kind = kind;
 		this.targetX = targetX;
 		this.sourceX = sourceX;
-		this.index = index;
+		this.mediaAddr = mediaAddr;
 		this.params = params;
 		this.open = false;
 		this.openSource();
@@ -225,7 +225,7 @@ class SourceProxy {
 	  const self = this;
 
 		if (this.kind === 'webcam') {
-      Webcam(this.index)
+      Webcam(this.mediaAddr)
       .then(response => {
         self.src = response.video
         self.dynamic = true
@@ -235,7 +235,6 @@ class SourceProxy {
       })
       .catch(err => console.log('could not get camera', err))
 		} else if (this.kind === 'video') {
-		  let url = this.index;
     	const vid = document.createElement('video')
     	vid.crossOrigin = 'anonymous'
     	vid.autoplay = true
@@ -250,16 +249,15 @@ class SourceProxy {
       	self.dynamic = true
       	self.open = true
     	})
-   	 vid.src = url
+   	 vid.src = this.mediaAddr
 		} else if (this.kind === 'image') {
-		  let url = this.index;
     	const img = document.createElement('img')
     	img.crossOrigin = 'anonymous'
-    	img.src = url
+    	img.src = this.mediaAddr
     	img.onload = () => {
       	self.src = img
       	self.dynamic = false
-      	self.offCan = new OffscreenCanvas(640, 480);
+      	self.offCan = new OffscreenCanvas(img.width, img.height);
         self.offCTX = self.offCan.getContext('2d');
         self.dynamic = false
       	self.open = true
@@ -289,13 +287,13 @@ function tickSourceProxies() {
 }
 
 // Create a Hydra Source that can be used to inject Source images into a BGHydraSource.
-function proxyCB0(kind, sourceX, index, params) {
-  	let prx = new SourceProxy(kind, 0, sourceX, index, params);
+function proxyCB0(kind, sourceX, mediaAddr, params) {
+  	let prx = new SourceProxy(kind, 0, sourceX, mediaAddr, params);
   	activeSourceProxies[0].push(prx);
 }
 
-function proxyCB1(kind, sourceX, index, params) {
-  	let prx = new SourceProxy(kind, 1, sourceX, index, params);
+function proxyCB1(kind, sourceX, mediaAddr, params) {
+  	let prx = new SourceProxy(kind, 1, sourceX, mediaAddr, params);
   	activeSourceProxies[1].push(prx);
 }
 

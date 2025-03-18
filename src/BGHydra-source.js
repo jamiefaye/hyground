@@ -27,8 +27,8 @@ class BGHydraSource {
     if ('dynamic' in opts) this.dynamic = opts.dynamic
   }
 
-	activate() {
-		this.offscreencanvas= new OffscreenCanvas(640, 480); 
+	activate(width, height) {
+		this.offscreencanvas= new OffscreenCanvas(width, height); 
 		this.bmr = this.offscreencanvas.getContext("bitmaprenderer");
 		this.init({src: this.offscreencanvas, dynamic: true});
 		console.log("activate complete");
@@ -36,17 +36,12 @@ class BGHydraSource {
 
 
   initCam (index, params) {
-  	this.worker.openSourceProxy("webcam", this.sourceX, index, params).then(()=>{
-  		this.activate();
-  		});
+  	this.worker.openSourceProxy("webcam", this.sourceX, index, params);
   }
 
 
   initVideo (url = '', params) {
-  	this.worker.openSourceProxy("video", this.sourceX, url, params).then(()=>{
-  		this.activate();
-  		});
-
+  	this.worker.openSourceProxy("video", this.sourceX, url, params);
 /*
     // const self = this
     const vid = document.createElement('video')
@@ -65,9 +60,7 @@ class BGHydraSource {
   }
 
   initImage (url = '', params) {
-   	this.worker.openSourceProxy("image", this.sourceX, url, params).then(()=>{
-  		this.activate();
-  	}); 	
+   	this.worker.openSourceProxy("image", this.sourceX, url, params); 	
 /*
     const img = document.createElement('img')
     img.crossOrigin = 'anonymous'
@@ -157,6 +150,10 @@ class BGHydraSource {
 
 
 	injectImage(img) {
+
+		if (!this.offscreencanvas) {
+			this.activate(img.width, img.height);
+		}
 		this.bmr.transferFromImageBitmap(img);
 	}
 

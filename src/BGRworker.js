@@ -88,11 +88,10 @@ class BGRWorker {
 		return img;
 	}
 
-	async openSourceProxy(kind, sourceX, index, params) {
-		console.log("entering openSourceProxy");
+	async openSourceProxy(kind, sourceX, mediaAddr, params) {
 		// Forward open proxy request via proxy callback to the HydraStage
 		if (this.proxyCB) {
-			this.proxyCB(kind, sourceX, index, params);
+			this.proxyCB(kind, sourceX, mediaAddr, params);
 		} else {
 			console.log("No proxy callback registered.");
 		}
