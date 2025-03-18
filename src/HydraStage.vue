@@ -244,7 +244,7 @@ class SourceProxy {
       	self.src = vid
       	vid.play()
       	//self.tex = this.regl.texture({ data: this.src, ...params})
-      	self.offCan = new OffscreenCanvas(640, 480);
+      	self.offCan = new OffscreenCanvas(vid.videoWidth, vid.videoHeight);
         self.offCTX = self.offCan.getContext('2d');
       	self.dynamic = true
       	self.open = true
