@@ -40,6 +40,9 @@
 		let list = await broker.listForKind("stage");
 		if (list.length > 0) {
 			targetView = list[list.length - 1];
+			console.log("Target found: " + targetView);
+		} else {
+				console.log("Target not found");
 		}
 	}
 

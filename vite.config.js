@@ -6,8 +6,22 @@ import fs from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	
-	
+   worker: {
+   rollupOptions: {
+      output: {
+        inlineDynamicImports : true,
+        entryFileNames: `assets/[name].js`,
+        chunkFileNames: `assets/[name].js`,
+        assetFileNames: `assets/[name].[ext]`
+      }
+    }
+  },
+  
+    build: {
+  	minify: false
+  },
+
+//	  base: '/hyground/',
 	    define: {
         // "process.env": process.env,
         // // By default, Vite doesn't include shims for NodeJS/

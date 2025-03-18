@@ -29,6 +29,7 @@ class MsgBroker {
 			namesByKind.set(kind, []);
 		}
 		namesByKind.get(kind).push(vs);
+		console.log("Assigned name:" + vs);
 		return vs;
 	}
 
@@ -38,8 +39,11 @@ class MsgBroker {
 
 	callback(name, msg, arg1, arg2) {
 		let cb = callbackTab.get(name);
-		return cb(msg, arg1, arg2);
+		console.log("Activate callback: " + msg);
+		if (cb) return cb(msg, arg1, arg2);
+		console.log("Undefined callback for: " + name);
 	}
+
 
 	listForKind(kind) {
 		if (namesByKind.has(kind))
@@ -49,6 +53,7 @@ class MsgBroker {
 
 	callbackXfer(name, msg, darray, arg2) {
 		let cb = callbackTab.get(name);
+				console.log("Activate callback xfer: " + name + " msg: " + msg) ;
 	  return cb(msg, Comlink.transfer(darray, [darray.buffer]), arg2);
 	}
 
@@ -71,7 +76,8 @@ class MsgBroker {
 					let nameToTell = kn[i];
 					this.callback(nameToTell, "drop", name, kindToDrop);
 				}
-			}
+			};
+			console.log("Dropping " + kindToDrop + " named " + name)
 		}
 	} // method
 } // class

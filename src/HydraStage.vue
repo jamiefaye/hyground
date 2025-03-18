@@ -6,7 +6,8 @@
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
   import {Deglobalize} from './Deglobalize.js';
-  
+  import {Webcam} from './lib/webcam.js';
+
   let stageName;
   let broker;
 
@@ -43,6 +44,8 @@
 	let hBgworker = new Array(2);
 	let canv = new Array(2);
 	let bmr = new Array(2);
+	let activeSourceProxies = [[], []];
+	let proxiesActive = false;
 	
 	let t0; let t1;
 
@@ -87,7 +90,8 @@ document.addEventListener('mousemove', function(event) {
 	});
 
 function openEditor() {
-	window.open("/editor", "editor", "width=500,height=1080,left=20");
+   	window.open("/index.html?edit=t", "editor", "width=500,height=1080,left=20");
+//  	window.open("/hyground/index.html?edit=t", "editor", "width=500,height=1080,left=20");
 }
 
 async function updater(newV) {
@@ -96,7 +100,12 @@ async function updater(newV) {
 		console.log(newV);
 	} else {
 		flipIt();
-		await hBgworker[flipper].hush(); // Sometimes deserializes wrong.
+		if (!hBgworker[flipper]) {
+			console.log("BGWorker not set up");
+			return;
+		}
+		activeSourceProxies[flipper] = []; // for now, just cancel all the proxies that were active for this side.
+		await hBgworker[flipper].hush();
 		await hBgworker[flipper].setSketch(newV);
 
 		if (flipper) 
@@ -125,11 +134,11 @@ async function openFX() {
     
     await hBgworker[0].openHydra();
     await hBgworker[1].openHydra();
-    
 
     await hBgworker[0].registerCallback("frame", Comlink.proxy(frameCB0));
+    await hBgworker[0].registerCallback("proxy", Comlink.proxy(proxyCB0));
     await hBgworker[1].registerCallback("frame", Comlink.proxy(frameCB1));
-
+    await hBgworker[1].registerCallback("proxy", Comlink.proxy(proxyCB1));
 		canv[0] = new OffscreenCanvas(1920, 1080); 
 		canv[1] = new OffscreenCanvas(1920, 1080);
 		bmr[0] = canv[0].getContext("bitmaprenderer");
@@ -139,6 +148,13 @@ async function openFX() {
 
 		fxLoaded = true;
 		fxActive = true;
+		
+		
+		if (!proxiesActive) {
+			proxiesActive = true;
+			tickSourceProxies();
+		}
+
 
 		setTimeout((dt)=>{
     		hBgworker[0].tick(frameTime, mouseData);
@@ -166,6 +182,7 @@ async function openFX() {
  	}
 
 
+
 let keyctr = ref(0);
 function resizeCanvas() {
 
@@ -182,16 +199,109 @@ async function turnFXOn() {
 	if (fxActive) {
 		if (!fxLoaded) await openFX();
 	}
-	await hBgworker[0].setSketch("hush()");
-	await hBgworker[1].setSketch("hush()");
+	if (hBgworker[0])
+		await hBgworker[0].setSketch("hush()");
+	if (hBgworker[1])
+		await hBgworker[1].setSketch("hush()");
 }
 
 watch(fx, turnFXOn);
 
+
+class SourceProxy {
+// targetX = 0 / 1, which buss (side) to send to.
+// sourceX = 0-3 (or whatever), which BGHydraSource to send to.
+	constructor(kind, targetX, sourceX, index, params) {
+		this.kind = kind;
+		this.targetX = targetX;
+		this.sourceX = sourceX;
+		this.index = index;
+		this.params = params;
+		this.open = false;
+		this.openSource();
+	}
+
+	openSource() {
+	  const self = this;
+
+		if (this.kind === 'webcam') {
+      Webcam(this.index)
+      .then(response => {
+        self.src = response.video
+        self.dynamic = true
+        self.offCan = new OffscreenCanvas(640, 480);
+        self.offCTX = self.offCan.getContext('2d');
+        self.open = true;
+      })
+      .catch(err => console.log('could not get camera', err))
+		} else if (this.kind === 'video') {
+		  let url = this.index;
+    	const vid = document.createElement('video')
+    	vid.crossOrigin = 'anonymous'
+    	vid.autoplay = true
+    	vid.loop = true
+    	vid.muted = true // mute in order to load without user interaction
+    	const onload = vid.addEventListener('loadeddata', () => {
+      	self.src = vid
+      	vid.play()
+      	//self.tex = this.regl.texture({ data: this.src, ...params})
+      	self.offCan = new OffscreenCanvas(640, 480);
+        self.offCTX = self.offCan.getContext('2d');
+      	self.dynamic = true
+      	self.open = true
+    	})
+   	 vid.src = url
+		} else if (this.kind === 'image') {
+		  let url = this.index;
+    	const img = document.createElement('img')
+    	img.crossOrigin = 'anonymous'
+    	img.src = url
+    	img.onload = () => {
+      	self.src = img
+      	self.dynamic = false
+      	self.offCan = new OffscreenCanvas(640, 480);
+        self.offCTX = self.offCan.getContext('2d');
+        self.dynamic = false
+      	self.open = true
+      //this.tex = this.regl.texture({ data: this.src, ...params})
+      }
+		}
+	}
+
+	sendFrame() {
+		if (!this.open) return;
+
+		this.offCTX.drawImage(this.src, 0, 0,  this.offCan.width, this.offCan.height);
+		let imgBM = this.offCan.transferToImageBitmap();
+		hBgworker[this.targetX].proxyFrameUpdate(this.sourceX, Comlink.transfer(imgBM, [imgBM]));
+	}
+}
+
+function tickSourceProxies() {
+	for (let p = 0; p < 2; ++p) {
+		for (let i = 0; i < activeSourceProxies[p].length; ++i) {
+			activeSourceProxies[p][i].sendFrame();
+		}
+	}
+	setTimeout((dt)=>{
+		tickSourceProxies();
+  }, frameTime * 2);
+}
+
+// Create a Hydra Source that can be used to inject Source images into a BGHydraSource.
+function proxyCB0(kind, sourceX, index, params) {
+  	let prx = new SourceProxy(kind, 0, sourceX, index, params);
+  	activeSourceProxies[0].push(prx);
+}
+
+function proxyCB1(kind, sourceX, index, params) {
+  	let prx = new SourceProxy(kind, 1, sourceX, index, params);
+  	activeSourceProxies[1].push(prx);
+}
+
 </script>
 
 <template>
-
 <button type="button" id="HydraNxt" @click="openEditor">Edit</button>&nbsp;
 <input type="checkbox" id="fx" v-model="fx" />
 <label for="fx">Fx</label>

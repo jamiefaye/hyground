@@ -1,7 +1,9 @@
 import * as Comlink from "comlink";
-import Hydra from "hydra-synth";
+import HydraSynth from "hydra-synth";
+import {BGHydraSynth} from "./BGHydra-synth.js";
+
 import {Deglobalize} from './Deglobalize.js';
-  
+
 class BGRWorker {
   constructor() {
     this.callbackTab = new Map();
@@ -11,6 +13,8 @@ class BGRWorker {
 		this.callbackTab.set(name, cb);
 		if (name === 'frame') {
 			this.frameCB = cb;
+		} else if (name === 'proxy') {
+			this.proxyCB = cb;
 		}
 	}
 
@@ -31,8 +35,8 @@ class BGRWorker {
 	async openHydra() {
 			if (this.h === undefined) {
 			this.can = new OffscreenCanvas(1920, 1080);
-    	this.h = new Hydra({ makeGlobal: false, canvas: this.can, autoloop: false, detectAudio: false, enableStreamCapture: false }).synth;
-    	console.log("Hydra created: " + this.h);
+    	this.h = new BGHydraSynth({ worker: this, makeGlobal: false, canvas: this.can, autoloop: false, detectAudio: false, enableStreamCapture: false }).synth;
+    	console.log("BGHydraSynth created: " + this.h);
     }
 	}
 
@@ -78,11 +82,31 @@ class BGRWorker {
 				}
 		}
 	}
-	
 
 	getFrameData() {
 		let img = this.can.transferToImageBitmap();
 		return img;
+	}
+
+	async openSourceProxy(kind, sourceX, index, params) {
+		console.log("entering openSourceProxy");
+		// Forward open proxy request via proxy callback to the HydraStage
+		if (this.proxyCB) {
+			this.proxyCB(kind, sourceX, index, params);
+		} else {
+			console.log("No proxy callback registered.");
+		}
+	}
+
+	async proxyFrameUpdate(sourceX, img) {
+		let h = this.h;
+		if (h) {
+			let sName = 's' + sourceX;
+			let st = h[sName];
+			st.injectImage(img);
+		} else {
+			console.log("No hydra to update in BGRWorker");
+		}
 	}
 }
 
