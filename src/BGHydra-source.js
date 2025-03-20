@@ -42,35 +42,10 @@ class BGHydraSource {
 
   initVideo (url = '', params) {
   	this.worker.openSourceProxy("video", this.sourceX, url, params);
-/*
-    // const self = this
-    const vid = document.createElement('video')
-    vid.crossOrigin = 'anonymous'
-    vid.autoplay = true
-    vid.loop = true
-    vid.muted = true // mute in order to load without user interaction
-    const onload = vid.addEventListener('loadeddata', () => {
-      this.src = vid
-      vid.play()
-      this.tex = this.regl.texture({ data: this.src, ...params})
-      this.dynamic = true
-    })
-    vid.src = url
-*/
   }
 
   initImage (url = '', params) {
    	this.worker.openSourceProxy("image", this.sourceX, url, params); 	
-/*
-    const img = document.createElement('img')
-    img.crossOrigin = 'anonymous'
-    img.src = url
-    img.onload = () => {
-      this.src = img
-      this.dynamic = false
-      this.tex = this.regl.texture({ data: this.src, ...params})
-    }
-*/
   }
 
   initStream (streamName, params) {
@@ -91,7 +66,8 @@ class BGHydraSource {
 
   // index only relevant in atom-hydra + desktop apps
   initScreen (index = 0, params) {
-
+   	this.worker.openSourceProxy("screen", index, 0, params);
+/*
     const self = this
     Screen()
       .then(function (response) {
@@ -101,6 +77,7 @@ class BGHydraSource {
         //  console.log("received screen input")
       })
       .catch(err => console.log('could not get screen', err))
+  */
   }
 
   resize (width, height) {

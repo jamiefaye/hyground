@@ -63,4 +63,32 @@ function Deglobalize(text, prefix) {
         return regen;
 }
 
-export {Deglobalize}
+function lookForAudioObjectUse(text) {
+	let audioFound = false;
+	
+	 let audioTraveler = makeTraveler({
+  	go: function(node, state) {
+        if (node.type === 'Identifier') {
+        	if (node.name === 'a') {
+        		audioFound = true;
+        	}
+      }
+        // Call the parent's `go` method
+        this.super.go.call(this, node, state);
+      }
+     //MemberExpression: ignore
+    });
+
+   let ast = Parser.parse(text, {
+     			locations: false,
+     			ecmaVersion: "latest",
+        }
+      );
+        
+		// find the places to change.
+    audioTraveler.go(ast, {});
+    
+    return audioFound;
+  }
+	
+export {Deglobalize, lookForAudioObjectUse}

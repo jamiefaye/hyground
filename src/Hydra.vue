@@ -24,10 +24,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-	h.hush(true);
+	h._destroy();
 	h = undefined;
 });
-
 
 let h;
 
