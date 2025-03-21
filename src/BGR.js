@@ -4,6 +4,9 @@ import {BGHydraSynth} from "./BGHydra-synth.js";
 
 import {Deglobalize} from './Deglobalize.js';
 
+const GeneratorFunction = function* () {}.constructor;
+
+
 class BGR {
   constructor() {
     //this.callbackTab = new Map();
@@ -31,24 +34,7 @@ class BGR {
 		}
 	}
 
-/*
-  setBuffer(buf) {
-  	this.buffer = buf;
-  //	console.log(this.buffer);
-  }
- 
-  getBuffer() {
-  	return this.buffer;
-  }
-  
-  	callback(name, msg, arg1, arg2) {
-		let cb = this.callbackTab.get(name);
-		return cb(msg, arg1, arg2);
-	}
-*/
 
-
-	
 	async openHydra() {
 			if (this.h === undefined) {
 			this.can = new OffscreenCanvas(1920, 1080);
@@ -56,6 +42,7 @@ class BGR {
     	console.log("BGHydraSynth created: " + this.h);
     }
 	}
+
 
   async setSketch(inStr) {
   	if (!this.h) return;
@@ -75,11 +62,47 @@ class BGR {
     values.push(this.h);
     keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
     values.push(this.h);
-    let fn = new Function(...keys, str);
-    fn(...values);
+  
+    let fn = new GeneratorFunction(...keys, str);
+    this.h.generator = fn(...values);
+    this.stopEarlierTimer();
+    let reply = this.h.generator.next();
+    this.planNext(reply);
     return errFound;
   }
-  
+
+
+ stopEarlierTimer() {
+	if(this.timeOutKey !== undefined) {
+		clearTimeout(this.timeOutKey);
+		this.timeOutKey = undefined;
+	}
+}
+
+ generatorTick() {
+	if (!this.h || !this.h.generator) return;
+	let f = this.h.generator;
+	let reply = f.next();
+	this.planNext(reply);
+}
+
+ planNext(reply) {
+	 if (!reply) return;
+
+   if (!reply.done) {
+    		let wT = reply.value;
+    		if (wT === undefined) {
+    			wT = 10;
+    		} else {
+    			wT = wT * 1000; // Convert to ms.
+    		}
+    		let that = this;
+    		this.timeOutKey = setTimeout(()=>that.generatorTick(), wT);
+    } else {
+    		delete this.h.generator;
+    		this.timeOutKey = undefined;
+    }
+}
   async hush() {
   	 if (!this.h) return;
   	 this.h.hush();
