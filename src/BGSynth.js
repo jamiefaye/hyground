@@ -5,9 +5,10 @@ import {BGR} from "./BGR.js";
 
 class SourceProxy {
 // sourceX = 0-3 (or whatever), which BGHydraSource to send to.
-	constructor(kind, worker, sourceX, mediaAddr, params) {
+	constructor(kind, worker, local, sourceX, mediaAddr, params) {
 		this.kind = kind;
 		this.bgWorker = worker;
+		this.local = local;
 		this.sourceX = sourceX;
 		this.mediaAddr = mediaAddr;
 		this.params = params;
@@ -81,7 +82,7 @@ class SourceProxy {
 
 		this.offCTX.drawImage(this.src, 0, 0,  this.offCan.width, this.offCan.height);
 		let imgBM = this.offCan.transferToImageBitmap();
-		if (local) {
+		if (this.local) {
 			this.bgWorker.proxyFrameUpdate(this.sourceX, imgBM);
 		} else {
 			this.bgWorker.proxyFrameUpdate(this.sourceX, Comlink.transfer(imgBM, [imgBM]));
@@ -112,6 +113,12 @@ class SourceProxy {
 		document.addEventListener('mousemove', this.trackMouse);
 
 		this.activeSourceProxies = [];
+	}
+
+	destroy() {
+		this.activeSourceProxies = [];
+		this.destroyed = true;
+		this.bgWorker.destroy();
 	}
 
 	trackMouse(event) {
@@ -150,6 +157,7 @@ class SourceProxy {
 
 	// called from worker when a new frame is ready.
 	frameReadyFromWorker(frame) {
+		if (this.destroyed) return;
 		this.bmr.transferFromImageBitmap(frame);
 		this.tickSourceProxies();
 		setTimeout ((dT)=>{
@@ -173,7 +181,7 @@ class SourceProxy {
 	// called from worker when it requests an webcam, video, or image source
 	// that can only be provided by main.
 	requestProxySource(kind, sourceX, mediaAddr, params) {
-		let prx = new SourceProxy(kind, this.bgWorker, sourceX, mediaAddr, params);
+		let prx = new SourceProxy(kind, this.bgWorker, this.local, sourceX, mediaAddr, params);
   	this.activeSourceProxies.push(prx);
 	}
 

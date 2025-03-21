@@ -92,7 +92,11 @@ function openEditor() {
 }
 
 async function updater(newV) {
-	let hasA = lookForAudioObjectUse(newV);
+let hasA = false;
+try {
+	hasA = lookForAudioObjectUse(newV);
+	} catch (err) {}
+
 	if (!fxActive || hasA) {
 		fxSketch.value = newV;
 		lastSketchIsDirect = true;
@@ -163,18 +167,27 @@ function resizeCanvas() {
 	keyctr.value++;
 }
 
-async function turnFXOn() {
+async function toggleFX() {
 	fxActive = fx.value;
-	if (fxActive) {
-		if (!fxLoaded) await openFX();
-	}
-	if (hBGSynth[0])
-		await hBGSynth[0].setSketch("hush()");
-	if (hBGSynth[1])
-		await hBGSynth[1].setSketch("hush()");
+	if (!fxActive) {
+	// FX turned off, so tear everything down.
+		if (hBGSynth[0])
+	 		hBGSynth[0].destroy();
+	 	if (hBGSynth[1])
+	 		hBGSynth[1].destroy();
+	 	hBGSynth = new Array(2);
+	 	fxActive = false;
+	 	fxLoaded = false;
+	} else {
+		await openFX();
+		if (hBGSynth[0])
+			await hBGSynth[0].setSketch("hush()");
+		if (hBGSynth[1])
+			await hBGSynth[1].setSketch("hush()");
+  }
 }
 
-watch(fx, turnFXOn);
+watch(fx, toggleFX);
 
 </script>
 

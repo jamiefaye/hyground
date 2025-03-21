@@ -16,6 +16,13 @@ class BGR {
 		}
   } 
 
+	destroy() {
+		if (this._h) {
+			this._h._destroy();
+		}
+	}
+		
+
   registerCallback(name, cb) {
 		if (name === 'frame') {
 			this.frameCB = cb;

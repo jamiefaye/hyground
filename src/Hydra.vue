@@ -10,7 +10,6 @@
   	width:	Number,
   	height: Number,
   	reportHydra: Function,
-  	
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -29,6 +28,9 @@ onBeforeUnmount(() => {
 });
 
 let h;
+let timeOutKey;
+
+const GeneratorFunction = function* () {}.constructor;
 
 function render() {
     if (!context.value) return;
@@ -55,10 +57,43 @@ function render() {
     values.push(h);
     keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
     values.push(h);
-    let fn = new Function(...keys, text);
-    fn(...values);
+
+    let fn = new GeneratorFunction(...keys, text);
+    h.generator = fn(...values);
+    stopEarlierTimer();
+    let reply = h.generator.next();
+    planNext(reply);
 }
 
+function stopEarlierTimer() {
+	if(timeOutKey !== undefined) {
+		clearTimeout(timeOutKey);
+		timeOutKey = undefined;
+	}
+}
+
+function generatorTick() {
+	if (!h || !h.generator) return;
+	let f = h.generator;
+	let reply = f.next();
+	planNext(reply);
+}
+
+function planNext(reply) {
+	 if (!reply) return;
+
+   if (!reply.done) {
+    		let wT = reply.value;
+    		if (wT === undefined) {
+    			wT = 10;
+    		} else {
+    			wT = wT * 1000; // Convert to ms.
+    		}
+    		timeOutKey = setTimeout(()=>generatorTick(), wT)
+    } else {
+    		delete h.generator;
+    }
+}
 </script>
 
 
