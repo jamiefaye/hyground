@@ -10,6 +10,7 @@ function beep()
 	}
 }
 
+
 class InActorState {
   constructor (updateText, statusObj) {
     this.playA = []
@@ -27,6 +28,7 @@ class InActorState {
     this.updateCountDownClock = this.updateCountDownClock.bind(this)
 }
 
+
 pushSketch(code)
 {
   	let snapshot = {
@@ -38,16 +40,19 @@ pushSketch(code)
   	beep()
 }
 
+
 doClear(e)
 {
 	this.recordA = [];
 	this.statusObj.hasrecord = false;
 }
 
+
 doFileImport()
 {
 	this.openFile();
 }
+
 
 doFileExport(e)
 {
@@ -61,16 +66,19 @@ doLoad(e)
 	this.loadPlayer(asText);
 
 }
+	  
 	    
 doFastBackward(e)
 {
 	this.moveFast(e, -1)
 }
 
+
 doStepBackward(e)
 {
 	this.moveUp(e)
 }
+
 
 clearTimer()
 {
@@ -81,6 +89,7 @@ clearTimer()
 	}
 }
 
+
 startTimer(dur)
 {
 	this.clearTimer()
@@ -88,6 +97,7 @@ startTimer(dur)
 	this.blastOffTime = Date.now() + durMS
 	this.activeTimer = setTimeout(this.boundTimerHandler, durMS)
 }
+
 
 timerHandler(e)
 {
@@ -113,14 +123,15 @@ updateCountDownClock()
 	this.statusObj.countdown = timeAsString;
 }
 
+
 startCountdownClock()
 {
 	if (this.countDownIntervalObject === undefined)
 	{
-	  //let cb = this.updateCountDownClock.bind(this);
 		this.countDownIntervalObject = setInterval(this.updateCountDownClock, 100)
 	}
 }
+
 
 doPlay(e)
 {
@@ -128,7 +139,6 @@ doPlay(e)
 
 	if (this.realTimePlayback)
 	{
-	//	this.playButton.className = "fas fa-pause-circle pricon"
 		this.statusObj.playing = true;
 		this.moveDown(e, "play")
 		this.startCountdownClock()
@@ -137,8 +147,8 @@ doPlay(e)
 		this.clearTimer();
 		this.statusObj.playing = false;
 	}
-
 }
+
 
 doStepForward(e)
 {
@@ -148,7 +158,6 @@ doStepForward(e)
 
 doFastForward(e)
 {
-//	this.playerIndex = 195
 	this.moveFast(e, 1)
 }
 
@@ -159,15 +168,7 @@ doMark(e)
 }
 
 
-doSettings(e)
-{
-	
-}
-
-
-/**
- * Saves a recording to disk.
- */
+// Saves a recording to disk.
 async saveFile(e)
 {
   let fileHandle;
@@ -204,8 +205,8 @@ async saveFile(e)
 		this.loadPlayer(text);
 		
 		this.statusObj.filename = file.name;
- 
   }
+
 
 	recordingToText()
 	{
@@ -235,26 +236,28 @@ async saveFile(e)
 				}
 			}
 
-   		stringBuff.push("//+ dur=" + dT);
+   		stringBuff.push("//+ " + dT);
 
- 			let labelString = "";
+ 			if (ent.key)
+ 			{
+				stringBuff += " key"
+ 			}
+
  			if (ent.mark)
  			{
-				labelString += "mark"
+				stringBuff += " mark"
  			}
- 			if (labelString !== "")
-  		{
-  			stringBuff.push("; label='" + labelString + "'")
-  		}
-			stringBuff.push( " // " + i + " " + new Date(ent.timeStamp).toLocaleString() + "\n");
+
+			stringBuff.push( " " + i + " " + new Date(ent.timeStamp).toISOString() + "\n");
 			stringBuff.push(ent.sketch)
 			stringBuff.push("\n\n\n\n")
 		}
 		return stringBuff.join("")
 	}
 
+
 	 loadPlayer(text) {
-		//this.deckDiv.style.opacity = 1;
+
 		this.playA = [];
 		this.playerIndex = 0;
 		let textA = text.split(/\r\n|\n/)
@@ -266,7 +269,7 @@ async saveFile(e)
 		let ix = 0
 		let working = []
 		let runL = 0;
-		let lastDur = 0; let marked = false;
+		let lastDur = 0; let marked = false; let keyFlag = false;
 		for (ix = 0; ix < aSize; ++ix) {
 			let ln = textA[ix]
 			if (ln.trim() === '' || ln.startsWith ("----")) {
@@ -276,42 +279,36 @@ async saveFile(e)
 			{
 				// We have a frame boundary indicator, strip out the comment prefix and evaluate
 				// to pickup mark & duration.
-				let restOfLine = ln.substring(3)
-				// ** JFF Hack Alert!
-
-				// Note that this is a dangerous opprotunity for evil code injection.
-				// But since Hydra uses eval() all over the place, we are not the only sinners in this congregation.
-
-				// fake global variables and return results
-				// We can replace the eval with aomething like this:
-				/*
-					var result = function(str){
-  					return eval(str);
-				}.call(context,somestring);
-				*/
-				let hackLine = "let label;let dur; " + restOfLine + "\n let cat = {}; cat.label = label; cat.dur = dur; cat";
-
-				let result = {}
-				try {
-					result = eval(hackLine)
-   		 	} catch (e) {
-					console.log("//+ error: " + e)
-  		 	}
-				if (result.label !== undefined && result.label.toLowerCase().includes("mark"))
-				{
-					marked = true;
+				let restOfLine = ln.substring(3).trim();
+				// Get rid of old-format dur=
+				if (restOfLine.startsWith('dur=')) {
+					restOfLine = restOfLine.substring(4).trim();
 				}
-				if (result.dur !== undefined && result.dur >= 0)
+				let tokens = restOfLine.split(' ');
+
+				let dur;
+				keyFlag = false;
+				marked = false;
+				if (tokens.length > 0) {
+					 dur = Number.parseFloat(tokens[0]);
+					 if (isNaN(dur)) dur = 1.0;
+				}
+				for (let i = 1; i < tokens.length; ++i) {
+					let s = tokens[i];
+					if (s === "key") keyFlag = true;
+					else if (s === "mark") marked = true;
+				}
+				if (dur !== undefined && dur >= 0)
 				{
-					lastDur = result.dur;
-			}
+					lastDur = dur;
+				}
 			} else
 			{
 				if (runL >= 3) {
 					// we have a split
 					if (working.length > 0) {
 						let sketch = working.join("\n")
-						this.playA.push({dur: lastDur, mark: marked, sketch: sketch})
+						this.playA.push({dur: lastDur, mark: marked, key: keyFlag, sketch: sketch})
 						working = []
 						}
 				}
@@ -325,39 +322,58 @@ async saveFile(e)
 		// Deal with last entry if we must.
 		if (working.length > 0) {
 			let lastSketch = working.join("\n")
-			this.playA.push({dur: lastDur, mark: marked, sketch: lastSketch})
+			this.playA.push({dur: lastDur, mark: marked, key: keyFlag, sketch: lastSketch})
 		}
 		this.statusObj.hasplay = this.playA.length > 0;
 		// console.log(this.playA)
 	}
 
+
 	// Load a file in the JSON, base64 encoded scheme Olivia sent me for the archive.
 	loadJSONBase64(textA)
 	{
 		for (let ix = 0; ix < textA.length; ++ix) {
-			let aLine = JSON.parse(textA[ix]);
+			let aLine
+			try {
+				 aLine = JSON.parse(textA[ix]);
+			} catch (err) {
+				console.log("Parse error in loadJSONBase64: " + err);
+			}
 			if (aLine !== undefined && aLine.code !== undefined)
 			{
 				try {
 					let aSketch = decodeURIComponent(atob(aLine.code))
-					this.playA.push({sketch: aSketch, dur: 1})
-				} catch (exs) {}
-
+					if (aSketch.indexOf("initScreen") < 0) {
+						this.playA.push({sketch: aSketch, dur: 2})
+					} else {
+						console.log("Skipped sketch with initScreen at line " + ix);
+					}
+				} catch (exs) {
+				  console.log("Error decoding URI Component in loadJSONBase64: " + exs);
+				}
 			}
 		}
 		this.playerIndex = 0
+		this.statusObj.hasplay = this.playA.length > 0;
 	}
+
 
 	loadAtIndex(e, what)
 	{
 		if (this.playA.length === 0) return;
 		console.log("Load at X: " + this.playerIndex);
-		//hush()
-		this.updateText(this.playA[this.playerIndex].sketch, e, what);
+		let entry = this.playA[this.playerIndex];
+		if (!entry) return;
+
+		let sketchInfo = {};
+		sketchInfo.key = entry.key === true;
+		sketchInfo.mark = entry.mark === true;
+		sketchInfo.dur = entry.dur;
+		this.updateText(entry.sketch, sketchInfo, e, what);
 		if (this.realTimePlayback)
 		{
 			this.clearTimer()
-			let dur = this.playA[this.playerIndex].dur
+			let dur = entry.dur
 			if (dur <= 0){dur = this.defaultDuration}
 			this.startTimer(dur)
 		}
@@ -365,15 +381,17 @@ async saveFile(e)
 		this.statusObj.playerIndex = xStr;
 	}
 
+
   moveUp(e)
   {
 		if (this.playA.length === 0) return;
   	this.playerIndex--;
-  	if (this.playerIndex < 0) {	
+  	if (this.playerIndex < 0) {
 			this.playerIndex = this.playA.length - 1
 		}
   	this.loadAtIndex(e, "step");
   }
+
 
   moveDown(e, what)
   {
@@ -382,6 +400,7 @@ async saveFile(e)
 		if (this.playerIndex >= this.playA.length) this.playerIndex = 0
 		this.loadAtIndex(e, what);
   }
+
 
 	moveFast(e, dir)
 	{
@@ -429,6 +448,7 @@ async saveFile(e)
 		}
 		this.loadAtIndex(e, "fast");
 	}
+
 
 	mark(e) {
 		if (this.recordA.length === 0) return;

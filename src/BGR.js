@@ -9,9 +9,6 @@ const GeneratorFunction = function* () {}.constructor;
 
 class BGR {
   constructor() {
-    //this.callbackTab = new Map();
-    
-    
     if (!(typeof self !== "undefined" && self.constructor && self.constructor.name === "DedicatedWorkerGlobalScope")) {
     	this.isWebWorker = false;
 		} else {
@@ -62,28 +59,45 @@ class BGR {
     values.push(this.h);
     keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
     values.push(this.h);
-  
-    let fn = new GeneratorFunction(...keys, str);
-    this.h.generator = fn(...values);
+    try {
+    	let fn = new GeneratorFunction(...keys, str);
+    	this.h.generator = fn(...values);
+    } catch (err) {
+    		console.log("Error compiling generator function");
+    		console.log(err);
+    		this.stopEarlierTimer();
+    		return;
+    }
     this.stopEarlierTimer();
-    let reply = this.h.generator.next();
-    this.planNext(reply);
-    return errFound;
-  }
+    try {
+    	let reply = this.h.generator.next();
+    	this.planNext(reply);
+    } catch (err) {
+    	console.log("Error calling initial generator function.next()");
+    	console.log(err);
+    	delete this.h.generator;
+    	return;
+    }
+}
 
-
- stopEarlierTimer() {
-	if(this.timeOutKey !== undefined) {
-		clearTimeout(this.timeOutKey);
-		this.timeOutKey = undefined;
-	}
+  stopEarlierTimer() {
+	  if(this.timeOutKey !== undefined) {
+		  clearTimeout(this.timeOutKey);
+		  this.timeOutKey = undefined;
+	  }
 }
 
  generatorTick() {
 	if (!this.h || !this.h.generator) return;
-	let f = this.h.generator;
-	let reply = f.next();
-	this.planNext(reply);
+	try {
+		let f = this.h.generator;
+		let reply = f.next();
+		this.planNext(reply);
+	} catch (err) {
+    	console.log("Error calling generator function.next()");
+    	console.log(err);
+    	delete this.h.generator;
+	}
 }
 
  planNext(reply) {
@@ -107,7 +121,7 @@ class BGR {
   	 if (!this.h) return;
   	 this.h.hush();
   }
-  
+
 	async tick(dt, mouseData, timeV) {
 		if (this.h) {
 				if (mouseData && this.isWebWorker) {

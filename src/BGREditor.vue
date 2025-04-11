@@ -112,6 +112,7 @@ function cbHandler(msg, arg1, arg2) {
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
 const context: Ref<CanvasRenderingContext2D | undefined> = ref();
 let ctx;
+let sketchInfo = {};
 
 onMounted(() => {
     context.value = canvasElement.value;
@@ -165,7 +166,7 @@ function getRandomInt(max) {
 	}
 
 
-	function updater(newV, e, what) {
+	function updater(newV, sketchInfo, e, what) {
 	nextSketch.value = newV;
 	title.value="";
 	if (what === "step" || what === "fast") {
@@ -191,7 +192,7 @@ if (crossOriginIsolated) {
 <template>
 <table><tbody><tr>
 <td>
-<Hydra :sketch="sketch" :hush="false" :width="192" :height="108" :reportHydra="reportHydra"/>
+<Hydra :sketch="sketch" :sketchInfo="{}" :width="192" :height="108" :reportHydra="reportHydra"/>
 <canvas ref="canvasElement" width="192" height="109"></canvas>
 </td>
 <td>

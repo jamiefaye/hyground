@@ -6,10 +6,11 @@
   
   const props = defineProps({
   	sketch: String,
-  	hush:   Boolean,
+  	sketchInfo:  Object,
   	width:	Number,
   	height: Number,
   	reportHydra: Function,
+  	wgsl:		Boolean,
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -19,20 +20,42 @@ onMounted(() => {
     context.value = canvasElement.value;
     render();
     watch(()=> props.sketch, ()=>render());
+    //watch(()=> props.wgsl, ()=>render());
 
 });
 
 onBeforeUnmount(() => {
+	stopAnimationTimer();
 	h._destroy();
 	h = undefined;
 });
 
-let h;
-let timeOutKey;
+let h; // hydra-synth instance for this Hydra Vue object.
 
+let timeOutKey; // used for pacing the sketch generator function.
 const GeneratorFunction = function* () {}.constructor;
 
-function render() {
+// For the hydra-synth tick timer. Used instead of RAF.
+let frameTime = 16.6;
+let frameTimerKey;
+
+
+function stopAnimationTimer() {
+	if(frameTimerKey !== undefined) {
+		clearInterval(frameTimerKey);
+		frameTimerKey = undefined;
+	}
+}
+
+
+function animationTick() {
+	if (h) {
+		h.tick(frameTime);
+	}
+}
+
+
+async function render() {
     if (!context.value) return;
     let text; let errFound;
     try {
@@ -43,12 +66,16 @@ function render() {
   		text = props.sketch;
   	}
 		if (h === undefined) {
-    	h = new Hydra({ makeGlobal: false, canvas: context.value }).synth;
+    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, genWGSL: props.wgsl }).synth;
+    	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
     		props.reportHydra(h);
     	}
+    	stopAnimationTimer();
+    	frameTimerKey = setInterval(animationTick, frameTime);
     }
-    if (props.hush) h.hush(); // Call this to get a clean slate?
+
+    if (props.sketchInfo.key) h.hush(); // hush if a key frame is requested.
     // convert all keys in h into strings
     let keys = Object.keys(h);
     let values = [];
@@ -57,12 +84,26 @@ function render() {
     values.push(h);
     keys.push("_h"); // _h used for fixing-up primitive-valued 'global' references, like "time".
     values.push(h);
-
-    let fn = new GeneratorFunction(...keys, text);
-    h.generator = fn(...values);
+    try {
+    	let fn = new GeneratorFunction(...keys, text);
+    	h.done = false;
+    	h.generator = fn(...values);
+    } catch (err) {
+    	console.log("Error compiling generator function");
+    	console.log(err);
+    	stopEarlierTimer();
+    	return;
+    }
     stopEarlierTimer();
-    let reply = h.generator.next();
-    planNext(reply);
+    try {
+    	let reply = h.generator.next();
+    	planNext(reply);
+    } catch (err) {
+    	console.log("Error calling initial generator function.next()");
+    	console.log(err);
+    	delete h.generator;
+    	return;
+    }
 }
 
 function stopEarlierTimer() {
@@ -75,8 +116,14 @@ function stopEarlierTimer() {
 function generatorTick() {
 	if (!h || !h.generator) return;
 	let f = h.generator;
-	let reply = f.next();
-	planNext(reply);
+	try {
+		let reply = f.next();
+		planNext(reply);
+	} catch (err) {
+    	console.log("Error calling generator function.next()");
+    	console.log(err);
+    	delete h.generator;
+	}
 }
 
 function planNext(reply) {
@@ -91,6 +138,7 @@ function planNext(reply) {
     		}
     		timeOutKey = setTimeout(()=>generatorTick(), wT)
     } else {
+        h.done = true;
     		delete h.generator;
     }
 }

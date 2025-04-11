@@ -25,6 +25,7 @@
 	const title = ref("");
 	let mutator = new Mutator;
 	let filmOpen = ref(false);
+	let sketchInfoRef = ref({});
 
 		function editCB(msg, arg1, arg2) {
 			//console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
@@ -94,7 +95,7 @@
 
   async function sendTargetHydra(evt) {
   	setLocalSketch(nextSketch.value);
-  	await broker.callback(targetView, "update", nextSketch.value, 0);
+  	await broker.callback(targetView, "update", nextSketch.value, {...sketchInfoRef.value});
   }
 
 function setLocalSketch(text) {
@@ -135,8 +136,9 @@ function getRandomInt(max) {
 	}
 
 
-	function updater(newV, e, what) {
+	function updater(newV, sketchInfo, e, what) {
 	nextSketch.value = newV;
+	sketchInfoRef.value = sketchInfo;
 	title.value="";
 	if (what === "step" || what === "fast") {
 			if (e.shiftKey){sendTargetHydra(e)} 
@@ -162,7 +164,7 @@ if (crossOriginIsolated) {
 <table><tbody><tr>
 <template v-if="showVid">
 <td>
-<Hydra :sketch="sketch" :hush="false" :width="192" :height="108"/>
+<Hydra :sketch="sketch" :sketchInfo="sketchInfoRef" :width="192" :height="108"/>
 </td>
 </template>
 <td>

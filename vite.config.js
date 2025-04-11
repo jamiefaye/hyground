@@ -17,7 +17,7 @@ export default defineConfig({
     }
   },
   
-    build: {
+  build: {
   	minify: false
   },
 

@@ -12,11 +12,15 @@
   let broker;
 
   let fxHydra;
-  const fxSketch = ref("src(s2).out()");
-  
+//  const fxSketch = ref("src(s2).out()");
+  const fxSketch = ref("");
+
+	let fxsketchInfo = {};
+
   let frameTime = 16;
   
   let fx = ref(false);
+  let wgsl = ref(false);
   
   let fxLoaded = false;
   let fxActive = false;
@@ -48,7 +52,7 @@
 
 function cb(msg, arg1, arg2) {
 	//console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
-	if (msg === "update") { updater(arg1) }
+	if (msg === "update") { updater(arg1, arg2) }
 	 else if (msg === "drop") {
 		 
 	 }
@@ -91,7 +95,7 @@ function openEditor() {
 //  	window.open("/hyground/index.html?edit=t", "editor", "width=500,height=1080,left=20");
 }
 
-async function updater(newV) {
+async function updater(newV, sketchInfo, e, what) {
 let hasA = false;
 try {
 	hasA = lookForAudioObjectUse(newV);
@@ -99,16 +103,15 @@ try {
 
 	if (!fxActive || hasA) {
 		fxSketch.value = newV;
+		fxsketchInfo = sketchInfo;
 		lastSketchIsDirect = true;
 	} else {
 		flipIt();
 		if (!hBGSynth[flipper]) {
 			console.log("BGWorker not set up");
-
 			return;
 		}
-
-		await hBGSynth[flipper].hush();
+		if (sketchInfo.key) await hBGSynth[flipper].hush();
 		await hBGSynth[flipper].setSketch(newV); // Maybe hush()?
 
 	// If coming out of a "direct to fxSketch" activation, we don't want to do a blend-in since it would reference the wrong BGRworker source.
@@ -187,7 +190,12 @@ async function toggleFX() {
   }
 }
 
+async function toggleWgsl() {
+		keyctr.value++;
+}
+
 watch(fx, toggleFX);
+watch(wgsl, toggleWgsl);
 
 </script>
 
@@ -196,6 +204,9 @@ watch(fx, toggleFX);
 <input type="checkbox" id="fx" v-model="fx" />
 <label for="fx">Fx</label>
 &nbsp;
+<input type="checkbox" id="wgsl" v-model="wgsl" />
+<label for="fx">wgsl</label>
+&nbsp;
 <InActorPanel :script="fxSketch" :updateScript="updater"/>
-<Hydra :sketch="fxSketch" :hush="false" :width="widthRef" :height="heightRef" :key="keyctr" :reportHydra="reportHydra"/>
+<Hydra :sketch="fxSketch" :wgsl="wgsl" :sketchInfo="fxsketchInfo" :width="widthRef" :height="heightRef" :key="keyctr" :reportHydra="reportHydra"/>
 </template>
