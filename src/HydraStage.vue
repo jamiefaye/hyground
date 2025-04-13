@@ -24,8 +24,8 @@
   
   let fxLoaded = false;
   let fxActive = false;
-  let widthRef = ref(1920);
-  let heightRef = ref(1080);
+  let widthRef = ref(640);
+  let heightRef = ref(480);
 
   let BGRWorker;
 	let mouseData = {x: 0, y:0};
