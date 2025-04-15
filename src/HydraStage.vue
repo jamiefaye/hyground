@@ -148,8 +148,8 @@ async function reportHydra(newH) {
 async function openFX() {
 		if (fxLoaded) return;
 
-    hBGSynth[0] = await new BGSynth(fxHydra, "s2", true);
-    hBGSynth[1] = await new BGSynth(fxHydra, "s3", true);
+    hBGSynth[0] = await new BGSynth(fxHydra, "s2", false);
+    hBGSynth[1] = await new BGSynth(fxHydra, "s3", false);
     
     await hBGSynth[0].openWorker();
     await hBGSynth[1].openWorker();

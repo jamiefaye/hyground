@@ -12,7 +12,7 @@ class Mutator {
     this.funcTab = {};
     this.transMap = {};
 		this.scanFuncs();
-		this.dumpDict();
+	//	this.dumpDict();
   }
 
   dumpList() {
