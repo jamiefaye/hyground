@@ -1,0 +1,179 @@
+commit 92be6257bde979d1479f74a86b22915401189577
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Apr 15 15:22:11 2025 -0500
+
+    Before crunching the background stuff.
+
+commit 4b3bcc71c196b142a9b0133a932ed5076e80660f
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Sat Apr 12 21:02:58 2025 -0500
+
+    change stage resolution.
+
+commit 21864d4356c40f1fb99c689ff97325e2cb35b55e
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Apr 11 17:49:28 2025 -0500
+
+    Use new variation of hydra-synth library.
+
+commit bf38585c7f5d8752ef25569eeefa2def98bf3e48
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Mar 21 15:52:58 2025 -0500
+
+    Add Gen functions to BGR.js too.
+
+commit de6dbc4026ee5cb329ccb9cfad1b3923b4efe277
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Mar 21 15:27:04 2025 -0500
+
+    Experimental (JS) generator functions.
+
+commit 951bb5335437e13330fe461c7e9836edc18a3606
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Mar 20 16:38:37 2025 -0500
+
+    Added separate files for BGRsynth/worker stuff and made version that can run on the main thread too.
+
+commit cc00924e7ffabc51312b6428587f4793559f2982
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Mar 18 14:42:22 2025 -0500
+
+    Use videoHeight & videoWidth for canvas size.
+
+commit 23780c6d264514e2303493e8f6a45338a45c3452
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Mar 18 14:13:15 2025 -0500
+
+    size canvases to media source dimensions.
+
+commit f16ee57db5879825002ca18901e4540f317bad09
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Mar 18 13:41:48 2025 -0500
+
+    Media source proxies for web worker threads.
+
+commit 9b16339e0549f35258038bac7e9fc595806e9574
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Wed Mar 12 18:53:30 2025 -0500
+
+    Window positioning and fixes for npm run build & npm run preview.
+
+commit 3ea4a055bf5feced334d8f140595387776cbe587
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Mon Mar 10 17:28:08 2025 -0500
+
+    Improve HydraStage and deglobalization.
+
+commit 8d15c7ecc6d1d71f84cbffaca90dd7e8314da8dc
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Mar 6 15:58:37 2025 -0600
+
+    Transition sketches running with workers.
+
+commit 03c1a1696e12c5d8aab26967fa78e7c6fbf84b13
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Wed Mar 5 16:22:15 2025 -0600
+
+    Blending offscreen render results starts to work.
+
+commit 0f1050d5b6bb9dc6e2a1493e9e1c19e9aa17ec7e
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Mar 4 16:38:12 2025 -0600
+
+    web worker rendering starting to work.
+
+commit 977b9830bcb1a708d07429ed938843470ed73683
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Mar 4 11:21:46 2025 -0600
+
+    Just before experiments with worker rendering.
+
+commit a0ff282d9fde94a061b04ac25026a76326ade0af
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Wed Feb 26 15:57:53 2025 -0600
+
+    Resizing almost working.
+
+commit 47e6eccd897308bc67a1ec58a1aeff766f35cd9f
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Feb 25 19:24:53 2025 -0600
+
+    Monitors.
+
+commit 18a4ed7d583780e1593a10008e66a052aa4a46c7
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Feb 25 14:21:15 2025 -0600
+
+    InAct running from remote window too..
+
+commit 61c1bc23126ea33ef5e5bafb7ba21d070c36458c
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Tue Feb 25 12:30:04 2025 -0600
+
+    InAct capture working too.
+
+commit a293cc3ac081a9d274beeb2d0c8304724140034a
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Mon Feb 24 16:25:56 2025 -0600
+
+    InAct playback starting to work.
+
+commit f752d96d00eb300206a698e6389eeb8b753bb091
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Sun Feb 23 13:19:44 2025 -0600
+
+    Icon buttons and Mutator.
+
+commit 45910f98158cb5d4c019a1fa6cda9f781a330a0d
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Feb 21 21:38:37 2025 -0600
+
+    Multi-editors per page.
+
+commit 318398fec316803e31190824eca565973bc87c62
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Feb 21 16:16:27 2025 -0600
+
+    Add edit and view dropping.
+
+commit e7dad47b1242d4cf886d359ccfc6caced5da6712
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Feb 21 13:09:01 2025 -0600
+
+    Rename MsgNode.js to MsgBroker.js
+
+commit bd22c628ef5957c84338793fe092c1868a5ede31
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Feb 21 12:54:29 2025 -0600
+
+    Edit window updating view window.
+
+commit 7904ffa25a563bf9d3b8582b82be0852b5008470
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Fri Feb 21 10:56:26 2025 -0600
+
+    sharedworker start.
+
+commit de616ffcf4d62901673feed374dc5ac7a6b6022d
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Feb 13 20:15:01 2025 -0600
+
+    Add examples loading.
+
+commit 047098e10d67bf2b9109ec1951e6916812f0cc69
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Feb 13 12:59:34 2025 -0600
+
+    First commit of source files.
+
+commit e9bb9a4edd0096ec1064e5ab48b1a60c84a2a024
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Feb 13 12:50:13 2025 -0600
+
+    Create README.md
+
+commit 7955af8c3c3d67bac3fdcc0d23b093da22eb9f18
+Author: Jamie Fenton <jamie@fentonia.com>
+Date:   Thu Feb 13 12:41:59 2025 -0600
+
+    Initial commit

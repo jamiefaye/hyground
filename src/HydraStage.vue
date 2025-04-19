@@ -6,12 +6,14 @@
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
   import {lookForAudioObjectUse} from './Deglobalize.js';
-  import {BGSynth} from './BGSynth.js';
+  import {BGSynth, setBGWorkerClass} from 'hydra-synth';
 
   let stageName;
   let broker;
 
   let fxHydra;
+  let fxCanvas;
+
 //  const fxSketch = ref("src(s2).out()");
   const fxSketch = ref("");
 
@@ -135,24 +137,29 @@ try {
 }
 
 // Hydras can be changed by the resize process, so we may need to fix stuff.
-async function reportHydra(newH) {
+async function reportHydra(newH, newCanvas) {
 	fxHydra = newH;
+	fxCanvas = newCanvas;
 	console.log("New Hydra instance reported.");
-
-	if (fxActive) {
-			hBGSynth[0].changeDestination(fxHydra, 's2');
-			hBGSynth[1].changeDestination(fxHydra, 's3');
-	}
 }
+
 
 async function openFX() {
 		if (fxLoaded) return;
 
-    hBGSynth[0] = await new BGSynth(fxHydra, "s2", false);
-    hBGSynth[1] = await new BGSynth(fxHydra, "s3", false);
+    hBGSynth[0] = await new BGSynth(fxCanvas, wgsl, false);
+    hBGSynth[1] = await new BGSynth(fxCanvas, wgsl, false);
     
     await hBGSynth[0].openWorker();
     await hBGSynth[1].openWorker();
+
+ 		hBGSynth[0].requestFrameCallbacks(
+ 		(frame)=>{
+ 			fxHydra.s2.injectImage(frame);
+ 		});
+ 		hBGSynth[1].requestFrameCallbacks((frame)=>{
+ 			fxHydra.s3.injectImage(frame);
+ 		});
 
 		fxLoaded = true;
 		fxActive = true;

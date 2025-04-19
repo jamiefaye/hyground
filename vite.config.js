@@ -35,6 +35,9 @@ export default defineConfig({
       key: fs.readFileSync('./certs/key.pem'),
       cert: fs.readFileSync('./certs/certificate.pem'),
     },
+    fs: {
+      strict: false,
+    }
   },
   	preview: {
 	  port: 8000,
@@ -45,8 +48,8 @@ export default defineConfig({
   },
   
   plugins: [
-    vue(),
-    {
+    vue()
+    ,{
       name: "configure-response-headers",
       configureServer: (server) => {
         server.middlewares.use((_req, res, next) => {

@@ -18,7 +18,7 @@
     "astravel": "^0.5.0",
     "astring": "^1.4.0",
     "codemirror": "^6.0.1",
-    "comlink": "file:../latest/comlink",
+    "comlink": "^4.4.2",
     "hydra-synth": "file:../hyv",
     "jquery": "^3.7.1",
     "raf-loop": "^1.1.3",

@@ -1,7 +1,5 @@
 import * as Comlink from "comlink";
-
-import {BGR} from './BGR.js';
-
-let BGRWorker = BGR;
-
+import {BGRWorkerCode} from 'hydra-synth';
+let BGRWorker = BGRWorkerCode;
 Comlink.expose(BGRWorker);
+export {BGRWorker}

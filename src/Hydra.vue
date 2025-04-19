@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
   import {onMounted, onBeforeUnmount, Ref, ref, watch} from "vue";
-  import Hydra from "hydra-synth";
+  import {Hydra} from "hydra-synth";
   import {Deglobalize} from './Deglobalize.js';
   
   const props = defineProps({
@@ -69,7 +69,7 @@ async function render() {
     	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, genWGSL: props.wgsl }).synth;
     	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
-    		props.reportHydra(h);
+    		props.reportHydra(h, context.value);
     	}
     	stopAnimationTimer();
     	frameTimerKey = setInterval(animationTick, frameTime);
