@@ -5,9 +5,9 @@
   import {openMsgBroker} from "./MsgBroker.js";
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
-  import {lookForAudioObjectUse} from './Deglobalize.js';
   import {BGSynth, setBGWorkerClass} from 'hydra-synth';
-
+  import {lookForAudioObjectUse} from './CheckForAudioUse.js';
+  
   let stageName;
   let broker;
 
@@ -98,9 +98,9 @@ function openEditor() {
 }
 
 async function updater(newV, sketchInfo, e, what) {
-let hasA = false;
-try {
-	hasA = lookForAudioObjectUse(newV);
+	let hasA = false;
+	try {
+		hasA = lookForAudioObjectUse(newV);
 	} catch (err) {}
 
 	if (!fxActive || hasA) {
@@ -138,9 +138,13 @@ try {
 
 // Hydras can be changed by the resize process, so we may need to fix stuff.
 async function reportHydra(newH, newCanvas) {
-	fxHydra = newH;
+	fxHydra = newH.synth;
 	fxCanvas = newCanvas;
 	console.log("New Hydra instance reported.");
+	if (fxLoaded) {
+		hBGSynth[0].setResolution(newCanvas.width, newCanvas.height);
+		hBGSynth[1].setResolution(newCanvas.width, newCanvas.height);
+	}
 }
 
 
@@ -149,7 +153,7 @@ async function openFX() {
 
     hBGSynth[0] = await new BGSynth(fxCanvas, wgsl, false);
     hBGSynth[1] = await new BGSynth(fxCanvas, wgsl, false);
-    
+
     await hBGSynth[0].openWorker();
     await hBGSynth[1].openWorker();
 

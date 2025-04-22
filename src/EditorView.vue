@@ -99,6 +99,7 @@
   }
 
 function setLocalSketch(text) {
+//console.log("Set Local Sketch to: " + text);
 	sketch.value = text;
 }
 	
@@ -164,7 +165,7 @@ if (crossOriginIsolated) {
 <table><tbody><tr>
 <template v-if="showVid">
 <td>
-<Hydra :sketch="sketch" :sketchInfo="sketchInfoRef" :width="192" :height="108"/>
+<Hydra :sketch="sketch" :key="sketch" :sketchInfo="sketchInfoRef" :width="192" :height="108"/>
 </td>
 </template>
 <td>
