@@ -2,10 +2,11 @@
   import {onMounted, onBeforeUnmount, ref, watch} from 'vue';
 	import Hydra from "./Hydra.vue";
 	import * as Comlink from "comlink";
-  import {openMsgBroker} from "./MsgBroker.js";
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
-  import {BGSynth, setBGWorkerClass} from 'hydra-synth';
+  import {openMsgBroker} from "./MsgBroker.js";
+  
+  import {BGSynth} from 'hydra-synth';
   import {lookForAudioObjectUse} from './CheckForAudioUse.js';
   
   let stageName;
@@ -49,7 +50,7 @@
 	}
 
 	let hBGSynth = new Array(2);
-	
+
 	let t0; let t1;
 
 function cb(msg, arg1, arg2) {

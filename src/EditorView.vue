@@ -5,7 +5,8 @@
 	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
-  import {openMsgBroker} from "./MsgBroker.js";
+	import {openMsgBroker} from "./MsgBroker.js";
+//  import {openMsgBroker} from "hydra-synth";
 	import * as Comlink from "comlink";
 	import IconButton from "./IconButton.vue";
 	import {Mutator} from "./Mutator.js";
@@ -69,7 +70,7 @@
 		}
 	}
 
-	async function openBroker(evt) {
+	async function openOurBroker(evt) {
 		broker = await openMsgBroker();
 		n = await broker.assignName("editor");
 		console.log("Created: " + n);
@@ -82,7 +83,7 @@
   }
 
 	onMounted(() => {
-		openBroker();
+		openOurBroker();
 	});
 
 	onBeforeUnmount(() => {
