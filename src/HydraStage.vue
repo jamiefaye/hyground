@@ -4,7 +4,7 @@
 	import * as Comlink from "comlink";
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
-  import {openMsgBroker} from "./MsgBroker.js";
+  import {openMsgBroker} from "hydra-synth";
   
   import {BGSynth} from 'hydra-synth';
   import {lookForAudioObjectUse} from './CheckForAudioUse.js';

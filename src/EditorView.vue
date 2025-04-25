@@ -5,8 +5,8 @@
 	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
-	import {MsgBrokerClass} from "./MsgBroker.js";
-	import {openMsgBroker} from "./MsgBroker.js";
+//	import {MsgBrokerClass} from "./MsgBroker.js";
+	import {openMsgBroker} from "hydra-synth";
 
 	import * as Comlink from "comlink";
 	import IconButton from "./IconButton.vue";
