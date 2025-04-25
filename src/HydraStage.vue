@@ -10,7 +10,7 @@
   import {lookForAudioObjectUse} from './CheckForAudioUse.js';
   
   let stageName;
-  let broker;
+  let brokerObj;
 
   let fxHydra;
   let fxCanvas;
@@ -62,15 +62,15 @@ function cb(msg, arg1, arg2) {
 }
 
 	async function openBroker(evt) {
-		broker = await openMsgBroker();
-		stageName = await broker.assignName("stage");
+	
+		brokerObj = await openMsgBroker("stage", "editor", cb);
+		stageName = brokerObj.name;
 		console.log("Created: " + stageName);
-		await broker.registerCallback(stageName, Comlink.proxy(cb));
 	}
 
   async function fairwell() {
     console.log("notify drop sent: " + stageName);
-  	await broker.dropAndNotify(stageName, "stage", "editor");
+  	await brokerObj.dropAndNotify(true);
   	console.log("notify drop done: " + stageName);
   }
 

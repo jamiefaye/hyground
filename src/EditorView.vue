@@ -5,21 +5,23 @@
 	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
 	import examples from './examples.json';
+	import {MsgBrokerClass} from "./MsgBroker.js";
 	import {openMsgBroker} from "./MsgBroker.js";
-//  import {openMsgBroker} from "hydra-synth";
+
 	import * as Comlink from "comlink";
 	import IconButton from "./IconButton.vue";
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
-	
+
   const props = defineProps({
   index: Number,
   showVid: Boolean,
   limit: Boolean
 	});
 
-	let targetView;
-	let broker;
+
+	let brokerObj;
+  let broker;
 	let n;
 	const sketch = ref("");
 	const nextSketch = ref("");
@@ -31,55 +33,24 @@
 		function editCB(msg, arg1, arg2) {
 			//console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
 			if (msg === "drop") {
-				targetView = undefined;
-	 			lookForTarget();
+				brokerObj.targetView = undefined;
+	 			brokerObj.lookForTarget();
 	 		} else {
 	 			console.log("Edit cb" + msg + " " + arg1 + " " + arg2);
 	 		}
 		}
 
-	async function locateTarget() {
-		let list = await broker.listForKind("stage");
-		if (list.length > 0) {
-			targetView = list[list.length - 1];
-			console.log("Target found: " + targetView);
-		} else {
-				console.log("Target not found");
-		}
-	}
-
-	async function checkTarget() {
-		let list = await broker.listForKind("stage");
-		if (list.length > 0) {
-			targetView = list[list.length - 1];
-		}
-		return targetView;
-	}
-
-	async function lookForTarget() {
-	console.log("lookForTarget");
-		if (targetView === undefined) {
-			await checkTarget();
-			if (targetView === undefined) {
-			  console.log("Target checking in 1 second.");
-				setTimeout(()=>lookForTarget(), 1000);
-			}
-		}
-		if (targetView === undefined) {
-			console.log("Target undefined");
-		}
-	}
-
 	async function openOurBroker(evt) {
-		broker = await openMsgBroker();
-		n = await broker.assignName("editor");
+		brokerObj = await openMsgBroker("editor", "stage", editCB);
+		broker = brokerObj.broker;
+		n = brokerObj.name;
 		console.log("Created: " + n);
-		await broker.registerCallback(n, Comlink.proxy(editCB));
-		await lookForTarget();
+		await brokerObj.lookForTarget();
 		}
 
   async function fairwell() {
-  	await broker.dropAndNotify(n, "editor", "editor");
+    await brokerObj.dropAndNotify(false);
+  	//await broker.dropAndNotify(n, "editor", "editor");
   }
 
 	onMounted(() => {
@@ -96,7 +67,7 @@
 
   async function sendTargetHydra(evt) {
   	setLocalSketch(nextSketch.value);
-  	await broker.callback(targetView, "update", nextSketch.value, {...sketchInfoRef.value});
+  	await broker.callback(brokerObj.targetView, "update", nextSketch.value, {...sketchInfoRef.value});
   }
 
 function setLocalSketch(text) {
