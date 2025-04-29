@@ -204,7 +204,7 @@ if (crossOriginIsolated) {
   <IconButton icon="fa--play-circle-o icon" :action="test"/>
 </div>
   &nbsp;
-  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"/>
+InActorState  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"/>
 
 &nbsp;{{title}}
 </td></tr></tbody></table>

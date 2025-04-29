@@ -9,6 +9,7 @@
   	width:	Number,
   	height: Number,
   	reportHydra: Function,
+  	evalDone:	Function,
   	wgsl:		Boolean,
 	});
 
@@ -66,7 +67,11 @@ async function render() {
     }
     if (props.sketchInfo.key) h.synth.hush(); // hush if a key frame is requested.
     //console.log("Eval: " + text);
+    let countB4 = h.modCounter;
  		await h.eval(text);
+ 		if (props.evalDone) {
+ 			props.evalDone(h, text, countB4);
+ 		}
  }
 </script>
 

@@ -53,6 +53,15 @@
   	//await broker.dropAndNotify(n, "editor", "editor");
   }
 
+let hydraRenderer;
+let hydraCanvas;
+
+async function reportHydra(newH, newCanvas) {
+	hydraRenderer = newH;
+	hydraCanvas = newCanvas;
+}
+
+
 	onMounted(() => {
 		openOurBroker();
 	});
@@ -129,6 +138,20 @@ if (crossOriginIsolated) {
 		console.log("***SharedArrayBuffer is not available");
 }
 
+function getHydraRenderer() {
+	return hydraRenderer;
+}
+
+let inActState;
+
+function reportInActorState(state) {
+	inActState = state;
+}
+
+function evalDone(hydraRenderer, text, countB4) {
+		console.log(`evalDone ${countB4}`);
+	 inActState.evalDone(hydraRenderer, text, countB4);
+}
 
 </script>
 
@@ -137,7 +160,7 @@ if (crossOriginIsolated) {
 <table><tbody><tr>
 <template v-if="showVid">
 <td>
-<Hydra :sketch="sketch" :key="sketch" :sketchInfo="sketchInfoRef" :width="192" :height="108"/>
+<Hydra :sketch="sketch" :key="sketch" :sketchInfo="sketchInfoRef" :reportHydra="reportHydra" :evalDone="evalDone" :width="192" :height="108"/>
 </td>
 </template>
 <td>
@@ -149,7 +172,8 @@ if (crossOriginIsolated) {
 
 </div>
   &nbsp;
-  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"/>
+  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"
+  :reportInActorState="reportInActorState"/>
 
 &nbsp;{{title}}
 </td></tr></tbody></table>

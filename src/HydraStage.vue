@@ -5,13 +5,14 @@
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
   import {openMsgBroker} from "hydra-synth";
-  
+
   import {BGSynth} from 'hydra-synth';
   import {lookForAudioObjectUse} from './CheckForAudioUse.js';
-  
+
   let stageName;
   let brokerObj;
 
+	let hydraRenderer;
   let fxHydra;
   let fxCanvas;
 
@@ -21,10 +22,10 @@
 	let fxsketchInfo = {};
 
   let frameTime = 16;
-  
+
   let fx = ref(false);
   let wgsl = ref(false);
-  
+
   let fxLoaded = false;
   let fxActive = false;
   let widthRef = ref(640);
@@ -139,6 +140,7 @@ async function updater(newV, sketchInfo, e, what) {
 
 // Hydras can be changed by the resize process, so we may need to fix stuff.
 async function reportHydra(newH, newCanvas) {
+	hydraRenderer = newH;
 	fxHydra = newH.synth;
 	fxCanvas = newCanvas;
 	console.log("New Hydra instance reported.");
@@ -202,6 +204,18 @@ async function toggleFX() {
   }
 }
 
+let inActState;
+
+function reportInActorState(state) {
+	inActState = state;
+}
+
+function evalDone(hydraRenderer, text, countB4) {
+		console.log(`Stage evalDone ${countB4}`);
+		inActState.evalDone(hydraRenderer, text, countB4);
+}
+
+
 async function toggleWgsl() {
 		keyctr.value++;
 }
@@ -219,6 +233,8 @@ watch(wgsl, toggleWgsl);
 <input type="checkbox" id="wgsl" v-model="wgsl" />
 <label for="fx">wgsl</label>
 &nbsp;
-<InActorPanel :script="fxSketch" :updateScript="updater"/>
-<Hydra :sketch="fxSketch" :wgsl="wgsl" :sketchInfo="fxsketchInfo" :width="widthRef" :height="heightRef" :key="keyctr" :reportHydra="reportHydra"/>
+<InActorPanel :script="fxSketch" :updateScript="updater" 
+  :reportInActorState="reportInActorState"/>
+<Hydra :sketch="fxSketch" :wgsl="wgsl" :sketchInfo="fxsketchInfo" :width="widthRef"
+ :height="heightRef" :key="keyctr" :reportHydra="reportHydra" :evalDone="evalDone"/>
 </template>

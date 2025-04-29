@@ -7,17 +7,20 @@ import {ref, type Ref, reactive, onMounted, watch} from "vue"
   const props = defineProps({
   	script: String,
   	updateScript: Function,
+  	reportInActorState: Function,
   	hidden: Boolean
 	}); 
 
 let info = reactive({countdown: " 0.0", playerIndex: ""});
 
 let state = new InActorState(props.updateScript, info);
-
+if (props.reportInActorState) props.reportInActorState(state);
+/*
 watch(()=>props.script,
 ()=>{
 state.pushSketch(props.script)
 });
+*/
 </script>
 
 <template>
@@ -31,7 +34,7 @@ state.pushSketch(props.script)
 	<IconButton icon="lets-icons--box-refresh-alt-right icon" :action="(e)=>state.doLoad(e)"/>
 	&nbsp;
 	</template>
-	
+
 	<template v-if="info.hasplay">
 		<IconButton icon="fa6-solid--backward-fast icon" :action="(e)=>state.doFastBackward(e)"/>
 		<IconButton icon="fa--step-backward icon" :action="(e)=>state.doStepBackward(e)"/>

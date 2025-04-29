@@ -35,11 +35,25 @@ pushSketch(code)
   		timeStamp: Date.now(),
   		sketch:    code
   	}
+		let hydra;
   	this.recordA.push(snapshot)
   	this.statusObj.hasrecord = true;
   	beep()
 }
 
+evalDone(hydraRenderer, text, countB4) {
+	let outA = []
+	let preamble = hydraRenderer.activeFromBefore(countB4);
+	if (preamble !== '') {
+		outA.push('/*\n');
+		outA.push(preamble);
+		outA.push('*/\n');
+	}
+	outA.push(text);
+	let code = outA.join('');
+	this.pushSketch(code);
+	
+}
 
 doClear(e)
 {
