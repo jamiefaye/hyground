@@ -57,7 +57,7 @@ async function render() {
     let text = props.sketch;
 
 		if (h === undefined) {
-    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, genWGSL: props.wgsl });
+    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, genWGSL: props.wgsl, regen: true});
     	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);
@@ -67,10 +67,10 @@ async function render() {
     }
     if (props.sketchInfo.key) h.synth.hush(); // hush if a key frame is requested.
     //console.log("Eval: " + text);
-    let countB4 = h.modCounter;
+    let timeB4 = performance.now();
  		await h.eval(text);
  		if (props.evalDone) {
- 			props.evalDone(h, text, countB4);
+ 			props.evalDone(h, text, timeB4);
  		}
  }
 </script>

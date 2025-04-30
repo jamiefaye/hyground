@@ -210,9 +210,9 @@ function reportInActorState(state) {
 	inActState = state;
 }
 
-function evalDone(hydraRenderer, text, countB4) {
-		console.log(`Stage evalDone ${countB4}`);
-		inActState.evalDone(hydraRenderer, text, countB4);
+function evalDone(hydraRenderer, text, timeB4) {
+		console.log(`Stage evalDone ${timeB4}`);
+		inActState.evalDone(hydraRenderer, text, timeB4);
 }
 
 

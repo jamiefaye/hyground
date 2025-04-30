@@ -41,9 +41,9 @@ pushSketch(code)
   	beep()
 }
 
-evalDone(hydraRenderer, text, countB4) {
+evalDone(hydraRenderer, text, timeB4) {
 	let outA = []
-	let preamble = hydraRenderer.activeFromBefore(countB4);
+	let preamble = hydraRenderer.activeFromBefore(timeB4 + performance.timeOrigin);
 	if (preamble !== '') {
 		outA.push('/*\n');
 		outA.push(preamble);
@@ -52,7 +52,6 @@ evalDone(hydraRenderer, text, countB4) {
 	outA.push(text);
 	let code = outA.join('');
 	this.pushSketch(code);
-	
 }
 
 doClear(e)
