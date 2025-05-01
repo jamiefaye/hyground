@@ -243,7 +243,7 @@ async saveFile(e)
 			} else {
 				if (ent.dur)
 				{
-					dT = dur;
+					dT = ent.dur;
 				} else {
 					dT = 1.0
 				}
@@ -261,7 +261,12 @@ async saveFile(e)
 				stringBuff += " mark"
  			}
 
-			stringBuff.push( " " + i + " " + new Date(ent.timeStamp).toISOString() + "\n");
+			if (ent.timeStamp) {
+				stringBuff.push( " " + i + " " + new Date(ent.timeStamp).toISOString() + "\n");
+			}
+			  else {
+			  	stringBuff.push(" " + i + "\n");
+			  }
 			stringBuff.push(ent.sketch)
 			stringBuff.push("\n\n\n\n")
 		}
@@ -338,6 +343,7 @@ async saveFile(e)
 			this.playA.push({dur: lastDur, mark: marked, key: keyFlag, sketch: lastSketch})
 		}
 		this.statusObj.hasplay = this.playA.length > 0;
+		
 		// console.log(this.playA)
 	}
 
@@ -368,6 +374,8 @@ async saveFile(e)
 		}
 		this.playerIndex = 0
 		this.statusObj.hasplay = this.playA.length > 0;
+	//	this.recordA = this.playA; // Used to export compressed hydra to uncompressed hydra.
+
 	}
 
 

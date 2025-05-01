@@ -31,7 +31,7 @@
   let widthRef = ref(640);
   let heightRef = ref(480);
 
-  let BGRWorker;
+
 	let mouseData = {x: 0, y:0};
 
 	// flipper = 0 means A goes to s2, B goes to s3
@@ -154,8 +154,8 @@ async function reportHydra(newH, newCanvas) {
 async function openFX() {
 		if (fxLoaded) return;
 
-    hBGSynth[0] = await new BGSynth(fxCanvas, wgsl, false);
-    hBGSynth[1] = await new BGSynth(fxCanvas, wgsl, false);
+    hBGSynth[0] = await new BGSynth(fxCanvas, wgsl, false, true);
+    hBGSynth[1] = await new BGSynth(fxCanvas, wgsl, false, true);
 
     await hBGSynth[0].openWorker();
     await hBGSynth[1].openWorker();
