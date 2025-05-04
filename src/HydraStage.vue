@@ -7,7 +7,6 @@
   import {openMsgBroker} from "hydra-synth";
 
   import {BGSynth} from 'hydra-synth';
-  import {lookForAudioObjectUse} from './CheckForAudioUse.js';
 
   let stageName;
   let brokerObj;
@@ -100,12 +99,7 @@ function openEditor() {
 }
 
 async function updater(newV, sketchInfo, e, what) {
-	let hasA = false;
-	try {
-		hasA = lookForAudioObjectUse(newV);
-	} catch (err) {}
-
-	if (!fxActive || hasA) {
+	if (!fxActive) {
 		fxSketch.value = newV;
 		fxsketchInfo = sketchInfo;
 		lastSketchIsDirect = true;

@@ -57,6 +57,7 @@ async function render() {
     let text = props.sketch;
 
 		if (h === undefined) {
+		console.log("New Hydra instance created.");
     	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, genWGSL: props.wgsl, regen: true});
     	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
