@@ -24,6 +24,7 @@
 
   let fx = ref(false);
   let wgsl = ref(false);
+  let quad = ref(false);
 
   let fxLoaded = false;
   let fxActive = false;
@@ -207,6 +208,7 @@ function reportInActorState(state) {
 function evalDone(hydraRenderer, text, timeB4) {
 		console.log(`Stage evalDone ${timeB4}`);
 		inActState.evalDone(hydraRenderer, text, timeB4);
+		if (quad.value) hydraRenderer.synth.render();
 }
 
 
@@ -226,6 +228,9 @@ watch(wgsl, toggleWgsl);
 &nbsp;
 <input type="checkbox" id="wgsl" v-model="wgsl" />
 <label for="fx">wgsl</label>
+&nbsp;
+<input type="checkbox" id="show4" v-model="quad" />
+<label for="quad">Quad</label>
 &nbsp;
 <InActorPanel :script="fxSketch" :updateScript="updater" 
   :reportInActorState="reportInActorState"/>
