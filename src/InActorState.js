@@ -17,9 +17,11 @@ class InActorState {
     this.recordA = []
     this.playerIndex = -1
     this.defaultDuration = 2.0
+    this.maxDuration = 0;
     this.fastForwardDuration = 15
     this.realTimePlayback = false
     this.updateText = updateText;
+
     if (statusObj) {this.statusObj = statusObj} else {this.statusObj = {}}
 
     this.blastOffTime = Date.now()
@@ -129,11 +131,12 @@ updateCountDownClock()
 	if (tMinus > 0) tMinus = 0;
 	let tPlus = Math.abs(tMinus);
 	let timeAsString = "";
-	let secs = Math.round(tPlus / 1000).toString();
-	let tenths =  (Math.round(tPlus / 100) % 10).toString();
+	let secs = Math.trunc(tPlus / 1000).toString();
+	let tenths =  (Math.trunc(tPlus / 100) % 10).toString();
 	let sign = tMinus < 0 ? '-' : ' ';
 	timeAsString = sign + secs + "." + tenths;
 	this.statusObj.countdown = timeAsString;
+	//console.log(timeAsString);
 }
 
 
@@ -395,7 +398,8 @@ async saveFile(e)
 		{
 			this.clearTimer()
 			let dur = entry.dur
-			if (dur <= 0){dur = this.defaultDuration}
+			if (dur <= 0){dur = this.statusObj.defaultDur}
+			if (this.statusObj.maxDur && dur > this.statusObj.maxDur) dur = this.statusObj.maxDur;
 			this.startTimer(dur)
 		}
 		let xStr = this.playerIndex.toString();
@@ -477,5 +481,13 @@ async saveFile(e)
 		// Hack until a better UI gets made:
 	}
 
+
+ openSettings(e) {
+    this.maxDuration = 1;
 }
+
+} // end of InActorState class.
+
+
+
 export {InActorState}

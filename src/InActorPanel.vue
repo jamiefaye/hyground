@@ -11,7 +11,7 @@ import {ref, type Ref, reactive, onMounted, watch} from "vue"
   	hidden: Boolean
 	}); 
 
-let info = reactive({countdown: " 0.0", playerIndex: ""});
+let info = reactive({countdown: " 0.0", playerIndex: "", defaultDur: 2.0, maxDur: 0.0});
 
 let state = new InActorState(props.updateScript, info);
 if (props.reportInActorState) props.reportInActorState(state);
@@ -21,6 +21,13 @@ watch(()=>props.script,
 state.pushSketch(props.script)
 });
 */
+	let settingsOpen = ref(false);
+
+function openStateMenu(state, e) {
+	settingsOpen.value = !settingsOpen.value;
+}
+
+
 </script>
 
 <template>
@@ -36,16 +43,28 @@ state.pushSketch(props.script)
 	</template>
 
 	<template v-if="info.hasplay">
-		<IconButton icon="fa6-solid--backward-fast icon" :action="(e)=>state.doFastBackward(e)"/>
-		<IconButton icon="fa--step-backward icon" :action="(e)=>state.doStepBackward(e)"/>
-		<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="(e)=>{state.doPlay(e)}"/>
+	<IconButton icon="fa6-solid--backward-fast icon" :action="(e)=>state.doFastBackward(e)"/>
+	<IconButton icon="fa--step-backward icon" :action="(e)=>state.doStepBackward(e)"/>
+	<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="(e)=>{state.doPlay(e)}"/>
 	<IconButton icon="fa--step-forward icon" :action="(e)=>state.doStepForward(e)"/>
 	<IconButton icon="fa6-solid--forward-fast icon" :action="(e)=>state.doFastForward(e)"/>
+	<IconButton icon="fa--cog icon" :action="(e)=>openStateMenu(state, e)"/>
   </template>
-</div>
 
+
+</div>
+  <template v-if="settingsOpen">
+   <br/>    Default: <input type="number" min="0" max="60"  v-model="info.defaultDur">&nbsp&nbsp
+   Max: <input type="number"  min="0" max="300" v-model="info.maxDur"><br/>
+
+
+
+  </template>
 &nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}&nbsp{{info.filename}}
 </template>
+
+
+<p>Value: {{ info.maxDur }}</p>
 </template>
 <style>
 .panelborder {
