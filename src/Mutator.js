@@ -1,56 +1,54 @@
-//const {Parser} = require("acorn");
 import {Parser} from "acorn";
 import {generate}  from "astring";
 import { defaultTraveler, attachComments, makeTraveler } from 'astravel';
 import {hydraFunctions} from './hydra-functions.js';
 
 class Mutator {
-
   constructor() {
     this.initialVector = [];
 
     this.funcTab = {};
     this.transMap = {};
-		this.scanFuncs();
-	//	this.dumpDict();
+    this.scanFuncs();
+//  this.dumpDict();
   }
 
   dumpList() {
-  	let hydraTab = hydraFunctions;
-  	hydraTab.forEach (v => {
-  		var argList = "";
-  		v.inputs.forEach((a) => {
-  			if (argList != "") argList += ", ";
-  			let argL = a.name + ": " + a.type + " {" + a.default + "}";
-  			argList = argList + argL;
-  		});
-  		console.log(v.name + " [" + v.type + "] ("+ argList + ")");
-  	});
+    let hydraTab = hydraFunctions;
+    hydraTab.forEach (v => {
+      var argList = "";
+      v.inputs.forEach((a) => {
+        if (argList != "") argList += ", ";
+        let argL = a.name + ": " + a.type + " {" + a.default + "}";
+        argList = argList + argL;
+      });
+      console.log(v.name + " [" + v.type + "] ("+ argList + ")");
+    });
   }
 
   scanFuncs() {
-  	let hydraTab = hydraFunctions;
-  	hydraTab.forEach (f => {
-  		this.transMap[f.name] = f;
-  		if (this.funcTab[f.type] === undefined) {this.funcTab[f.type] = []}
-			this.funcTab[f.type].push(f);
-  	});
+    let hydraTab = hydraFunctions;
+    hydraTab.forEach (f => {
+      this.transMap[f.name] = f;
+      if (this.funcTab[f.type] === undefined) {this.funcTab[f.type] = []}
+      this.funcTab[f.type].push(f);
+    });
   }
 
-	dumpDict() {
-		for(let tn in this.funcTab)
-		{
-			this.funcTab[tn].forEach(f => {
-  		var argList = "";
-  		f.inputs.forEach((a) => {
-  			if (argList != "") argList += ", ";
-  			let argL = a.name + ": " + a.type + " {" + a.default + "}";
-  			argList = argList + argL;
-  		});
-  		console.log(f.name + " [" + f.type + "] ("+ argList + ")");
-			});
+  dumpDict() {
+    for(let tn in this.funcTab)
+    {
+      this.funcTab[tn].forEach(f => {
+      var argList = "";
+      f.inputs.forEach((a) => {
+        if (argList != "") argList += ", ";
+        let argL = a.name + ": " + a.type + " {" + a.default + "}";
+        argList = argList + argL;
+      });
+      console.log(f.name + " [" + f.type + "] ("+ argList + ")");
+      });
     }
-	}
+  }
 
   mutate(options, text) {
     let needToRun = true;
@@ -73,9 +71,9 @@ class Mutator {
         // Generate JS from AST and return value
         let regen = generate(ast, {comments: true});
 
-				return regen;
-			}
-			return text; // give up, return unchanged.
+        return regen;
+      }
+      return text; // give up, return unchanged.
   }
 
 
@@ -120,15 +118,15 @@ class Mutator {
         this.initialVector = nextVect;
     }
     if (options.changeTransform) {
-    	this.glitchTrans(state, options);
+      this.glitchTrans(state, options);
     }
     else this.glitchLiteral(state, options);
 
 }
 
-	glitchLiteral(state, options)
-	{
-		let litx = 0;
+  glitchLiteral(state, options)
+  {
+    let litx = 0;
     if (options.reroll) {
         if (this.lastLitX !== undefined) {
             litx = this.lastLitX;
@@ -147,7 +145,7 @@ class Mutator {
         modLit.raw = "" + glitched;
         console.log("Literal: " + litx + " changed from: " + was + " to: " + glitched);
     }
-	}
+  }
 
   glitchNumber(num) {
     if (num === 0) {
@@ -168,42 +166,42 @@ class Mutator {
     let rndVal = Math.round(Math.random() * initVal * 2 * 1000) / 1000;
     return rndVal;
 }
-	glitchTrans(state, options)
-	{
-		let funx = Math.floor(Math.random() * this.funCount);
-		if (state.functionTab[funx] === undefined || state.functionTab[funx].callee === undefined || state.functionTab[funx].callee.property === undefined) {
-				  	console.log("No valid functionTab for index: " + funx);
-	  				return;
-		}
-		let oldName = state.functionTab[funx].callee.property.name;
+  glitchTrans(state, options)
+  {
+    let funx = Math.floor(Math.random() * this.funCount);
+    if (state.functionTab[funx] === undefined || state.functionTab[funx].callee === undefined || state.functionTab[funx].callee.property === undefined) {
+            console.log("No valid functionTab for index: " + funx);
+            return;
+    }
+    let oldName = state.functionTab[funx].callee.property.name;
 
-	  if (oldName == undefined) {
-	  	console.log("No name for callee");
-	  	return;
-	  }
-		let ftype = this.transMap[oldName].type;
-		if (ftype == undefined) {
-			console.log("ftype undefined for: " + oldName);
-			return;
-		}
-		let others = this.funcTab[ftype];
-		if (others == undefined) {
-			console.log("no funcTab entry for: " + ftype);
-			return;
-		}
-		let changeX = Math.floor(Math.random() * others.length);
-		let become = others[changeX].name;
+    if (oldName == undefined) {
+      console.log("No name for callee");
+      return;
+    }
+    let ftype = this.transMap[oldName].type;
+    if (ftype == undefined) {
+      console.log("ftype undefined for: " + oldName);
+      return;
+    }
+    let others = this.funcTab[ftype];
+    if (others == undefined) {
+      console.log("no funcTab entry for: " + ftype);
+      return;
+    }
+    let changeX = Math.floor(Math.random() * others.length);
+    let become = others[changeX].name;
 
-		// check blacklisted combinations.
-		if (oldName === "modulate" && become === "modulateScrollX")
-		{
-			console.log("Function: " + funx + " changing from: " + oldName + " can't change to: " + become);
-			return;
-		}
+    // check blacklisted combinations.
+    if (oldName === "modulate" && become === "modulateScrollX")
+    {
+      console.log("Function: " + funx + " changing from: " + oldName + " can't change to: " + become);
+      return;
+    }
 
-		state.functionTab[funx].callee.property.name = become;
+    state.functionTab[funx].callee.property.name = become;
     console.log("Function: " + funx + " changed from: " + oldName + " to: " + become);
-	}
+  }
 
 } //  End of class Mutator.
 

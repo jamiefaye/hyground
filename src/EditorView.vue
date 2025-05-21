@@ -11,6 +11,7 @@
 	import IconButton from "./IconButton.vue";
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
+	import {RandomHydra} from "./RandomHydra.js";
 
   const props = defineProps({
   index: Number,
@@ -82,18 +83,27 @@ function setLocalSketch(text) {
 //console.log("Set Local Sketch to: " + text);
 	sketch.value = text;
 }
-	
+
+let hydraGen = new RandomHydra();
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
-
+// Connected to the crossing arrows icon.
+// shiftKey means call the generator.
+// maybe use altKey to open the probability popup?
   function randomHydra(evt) {
+    let ska;
+    if (evt.shiftKey) {
+      ska = hydraGen.generateCode(3, 5);
+    } else {
 		let sketchX = getRandomInt(examples.length);
 		let sketche = examples[sketchX];
 		console.log(sketche.sketch_id);
 		title.value = sketche.sketch_id;
 		let s64 = sketche.code;
-		let ska = decodeURIComponent(atob(s64));
+		ska = decodeURIComponent(atob(s64));
+	}
 		nextSketch.value = ska;
 		setLocalSketch(ska);
 		//sendTargetHydra();
@@ -168,6 +178,7 @@ function evalDone(hydraRenderer, text, timeB4) {
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
+  
 
 </div>
   &nbsp;
