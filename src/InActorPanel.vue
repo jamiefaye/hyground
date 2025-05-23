@@ -62,9 +62,6 @@ function openStateMenu(state, e) {
   </template>
 &nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}&nbsp{{info.filename}}
 </template>
-
-
-<p>Value: {{ info.maxDur }}</p>
 </template>
 <style>
 .panelborder {

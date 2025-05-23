@@ -1,23 +1,30 @@
 // This came from a project by:
 // Ale Cominotti - 2020.
-// https://github.com/alecominotti/hydracodegenerator
-// It was converted from Python using: 
-// https://www.codeconvert.ai/python-to-javascript-converter
+// https://github.com/alecominotti/hydracodegenerator.
 
+// It was converted from Python using:
+// https://www.codeconvert.ai/python-to-javascript-converter
+// mistakes belong to jamie (at) fentonia.com
+
+
+//   let r = reactive({minValue: 0, // Set your minValue
+// maxValue: 100, // Set your maxValue
+// arrowFunctionProb: 10, // Set your arrowFunctionProb
+// mouseFunctionProb: 0, // Set your mouseFunctionProb
+// mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
+// modulateItselfProb: 20, // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
+// exclusiveSourceList: [],
+// exclusiveFunctionList: [],
+// ignoredList: ["solid", "brightness", "luma", "invert", "posterize", "thresh", "layer", "modulateScrollX", "modulateScrollY"] });
 
 class RandomHydra {
-    constructor() {
+    constructor(r) {
         this.info = `// Random Hydra  (by alecominotti's generator).
 `
-        this.minValue = 0; // Set your minValue
-        this.maxValue = 100; // Set your maxValue
-        this.arrowFunctionProb = 10; // Set your arrowFunctionProb
-        this.mouseFunctionProb = 0; // Set your mouseFunctionProb
+        this.r = r; // r tracks the reactive state manipulated by this class.
+
         this.mathFunctions = ['sin', 'cos', 'tan']; // Add your math functions
         this.mouseList = ['mouseX', 'mouseY']; // Add your mouse functions
-        
-        this.mouseFunctionProb = 0 // Probabilities of generating an arrow function that uses mouse position (ex.: () => mouse.x)
-        this.modulateItselfProb = 20 // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
 
         this.mathFunctions = ["sin", "cos", "tan"];
         this.sourcesList = ["gradient", "noise", "osc", "shape", "solid", "voronoi"];
@@ -26,15 +33,10 @@ class RandomHydra {
         this.modulatorsList = ["modulate", "modulateHue", "modulateKaleid", "modulatePixelate", "modulateRepeat", "modulateRepeatX", "modulateRepeatY", "modulateRotate", "modulateScale", "modulateScrollX", "modulateScrollY"];
         this.operatorsList = ["add", "blend", "diff", "layer", "mask", "mult"];
         this.functionsList = ["genColor", "genGeometry", "genModulator", "genOperator"];
-        this.ignoredList = ["solid", "brightness", "luma", "invert", "posterize", "thresh", "layer", "modulateScrollX", "modulateScrollY"];
-        this.exclusiveSourceList = [];
-        this.exclusiveFunctionList = [];
-
     }
 
-    truncate(value, decimalPlaces) {
-        const factor = Math.pow(10, decimalPlaces);
-        return Math.round(value * factor) / factor;
+    getAllElements() {
+      return this.colorList.concat(this.geometryList, this.modulatorsList , this.operatorsList);
     }
 
     truncate(number, digits) {
@@ -43,22 +45,22 @@ class RandomHydra {
     }
 
     isIgnored(chosen) {
-        return this.ignoredList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
+        return this.r.ignoredList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
     }
 
     isExclusiveSource(chosen) {
-        if (this.exclusiveSourceList.length === 0) {
+        if (this.r.exclusiveSourceList.length === 0) {
             return true;
         } else {
-            return this.exclusiveSourceList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
+            return this.r.exclusiveSourceList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
         }
     }
 
     isExclusiveFunction(chosen) {
-        if (this.exclusiveFunctionList.length === 0) {
+        if (this.r.exclusiveFunctionList.length === 0) {
             return true;
         } else {
-            return this.exclusiveFunctionList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
+            return this.r.exclusiveFunctionList.map(x => x.toLowerCase()).includes(chosen.toLowerCase());
         }
     }
 
@@ -74,20 +76,21 @@ class RandomHydra {
     printError(message) {
         console.log("ERROR: " + message);
     }
+
     genNormalValue() {
         const randomTruncate = Math.floor(Math.random() * 4);
-        const val = this.truncate(Math.random() * (this.maxValue - this.minValue) + this.minValue, randomTruncate);
+        const val = this.truncate(Math.random() * (this.r.maxValue - this.r.minValue) + this.r.minValue, randomTruncate);
         return String(val);
     }
 
     genArrowFunctionValue() {
         const randomTimeMultiplier = this.truncate(Math.random() * (1 - 0.1) + 0.1, Math.floor(Math.random() * 2) + 1);
         // probabilities of generating an arrow function
-        if (Math.floor(Math.random() * 100) + 1 <= this.arrowFunctionProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.arrowFunctionProb) {
             return `() => Math.${this.mathFunctions[Math.floor(Math.random() * this.mathFunctions.length)]}(time * ${randomTimeMultiplier})`;
         }
         // probabilities of generating a mouse function
-        if (Math.floor(Math.random() * 100) + 1 <= this.mouseFunctionProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.mouseFunctionProb) {
             return `() => ${this.mouseList[Math.floor(Math.random() * this.mouseList.length)]} * ${randomTimeMultiplier}`;
         }
         return "";
@@ -136,7 +139,7 @@ class RandomHydra {
         if (arrow !== "") {
             return arrow;
         } else {
-            return String(this.truncate(Math.random() * (this.maxValue - 0.1) + 0.1, 2));
+            return String(this.truncate(Math.random() * (this.r.maxValue - 0.1) + 0.1, 2));
         }
     }
 
@@ -332,7 +335,7 @@ scrollY() {
     }
 
     modulate() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulate(o0, " + this.genValue() + ")";
         } else {
             return ".modulate(" + this.genSource() + ", " + this.genValue() + ")";
@@ -340,7 +343,7 @@ scrollY() {
     }
 
     modulateHue() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateHue(o0, " + this.genValue() + ")";
         } else {
             return ".modulateHue(" + this.genSource() + ", " + this.genValue() + ")";
@@ -348,7 +351,7 @@ scrollY() {
     }
 
     modulateKaleid() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateKaleid(o0, " + this.genValue() + ")";
         } else {
             return ".modulateKaleid(" + this.genSource() + ", " + this.genValue() + ")";
@@ -356,7 +359,7 @@ scrollY() {
     }
 
     modulatePixelate() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulatePixelate(o0, " + this.genValue() + ")";
         } else {
             return ".modulatePixelate(" + this.genSource() + ", " + this.genValue() + ")";
@@ -364,7 +367,7 @@ scrollY() {
     }
 
     modulateRepeat() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateRepeat(o0, " + this.genValue() + ", " + this.genValue() + ", " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";
         } else {
             return ".modulateRepeat(" + this.genSource() + ", " + this.genValue() + ", " + this.genValue() + ", " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";
@@ -372,7 +375,7 @@ scrollY() {
     }
 
     modulateRepeatX() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateRepeatX(o0, " + this.genValue() + ", " + this.genCeroOneValue() + ")";
         } else {
             return ".modulateRepeatX(" + this.genSource() + ", " + this.genValue() + ", " + this.genCeroOneValue() + ")";
@@ -380,7 +383,7 @@ scrollY() {
     }
 
     modulateRepeatY() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateRepeatY(o0, " + this.genValue() + ", " + this.genCeroOneValue() + ")";
         } else {
             return ".modulateRepeatY(" + this.genSource() + ", " + this.genValue() + ", " + this.genCeroOneValue() + ")";
@@ -388,7 +391,7 @@ scrollY() {
     }
 
     modulateRotate() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateRotate(o0, " + this.genValue() + ")";
         } else {
             return ".modulateRotate(" + this.genSource() + ", " + this.genValue() + ")";
@@ -396,7 +399,7 @@ scrollY() {
     }
 
     modulateScale() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateScale(o0, " + this.genValue() + ")";
         } else {
             return ".modulateScale(" + this.genSource() + ", " + this.genValue() + ")";
@@ -404,7 +407,7 @@ scrollY() {
     }
 
     modulateScrollX() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateScrollX(o0, " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";
         } else {
             return ".modulateScrollX(" + this.genSource() + ", " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";
@@ -412,7 +415,7 @@ scrollY() {
     }
 
     modulateScrollY() {
-        if (Math.floor(Math.random() * 100) + 1 <= this.modulateItselfProb) {
+        if (Math.floor(Math.random() * 100) + 1 <= this.r.modulateItselfProb) {
             return ".modulateScrollY(o0, " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";
         } else {
             return ".modulateScrollY(" + this.genSource() + ", " + this.genCeroOneValue() + ", " + this.genCeroOneValue() + ")";

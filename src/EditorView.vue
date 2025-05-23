@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-  import {onMounted, onBeforeUnmount, ref} from 'vue';
+  import {onMounted, onBeforeUnmount, ref, reactive} from 'vue';
 	import Hyground from "./Hyground.vue";
 	import Hydra from "./Hydra.vue";
 	import Editor from "./Editor.vue";
@@ -12,6 +12,7 @@
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
 	import {RandomHydra} from "./RandomHydra.js";
+	import GenPanel from "./GenPanel.vue";
 
   const props = defineProps({
   index: Number,
@@ -29,6 +30,21 @@
 	let mutator = new Mutator;
 	let filmOpen = ref(false);
 	let sketchInfoRef = ref({});
+	let genPopupOpen = ref(false);
+	
+
+
+  let stateObject = reactive({minValue: 0, // Set your minValue
+maxValue: 100, // Set your maxValue
+arrowFunctionProb: 10, // Set your arrowFunctionProb
+mouseFunctionProb: 0, // Set your mouseFunctionProb
+mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
+modulateItselfProb: 20, // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
+exclusiveSourceList: [],
+exclusiveFunctionList: [],
+ignoredList: ["solid", "brightness", "luma", "invert", "posterize", "thresh", "layer", "modulateScrollX", "modulateScrollY"] });
+
+
 
 		function editCB(msg, arg1, arg2) {
 			//console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
@@ -84,7 +100,7 @@ function setLocalSketch(text) {
 	sketch.value = text;
 }
 
-let hydraGen = new RandomHydra();
+let hydraGen = new RandomHydra(stateObject);
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -94,8 +110,12 @@ function getRandomInt(max) {
 // maybe use altKey to open the probability popup?
   function randomHydra(evt) {
     let ska;
+    if (evt.altKey) {
+      genPopupOpen.value = !genPopupOpen.value;
+      return;
+    }
     if (evt.shiftKey) {
-      ska = hydraGen.generateCode(3, 5);
+      ska = hydraGen.generateCode(3, 8);
     } else {
 		let sketchX = getRandomInt(examples.length);
 		let sketche = examples[sketchX];
@@ -178,9 +198,12 @@ function evalDone(hydraRenderer, text, timeB4) {
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
-  
+
 
 </div>
+  <template v-if="genPopupOpen">
+  <GenPanel :state='stateObject' :obj="hydraGen" />
+  </template>
   &nbsp;
   <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"
   :reportInActorState="reportInActorState"/>
