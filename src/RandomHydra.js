@@ -7,7 +7,10 @@
 // mistakes belong to jamie (at) fentonia.com
 
 
-//   let r = reactive({minValue: 0, // Set your minValue
+//   let r = reactive({
+// minFunctions: 3,
+// maxFunctions: 8
+// minValue: 0, // Set your minValue
 // maxValue: 100, // Set your maxValue
 // arrowFunctionProb: 10, // Set your arrowFunctionProb
 // mouseFunctionProb: 0, // Set your mouseFunctionProb
@@ -24,7 +27,7 @@ class RandomHydra {
         this.r = r; // r tracks the reactive state manipulated by this class.
 
         this.mathFunctions = ['sin', 'cos', 'tan']; // Add your math functions
-        this.mouseList = ['mouseX', 'mouseY']; // Add your mouse functions
+        this.mouseList = ['mouse.x', 'mouse.y']; // Add your mouse functions
 
         this.mathFunctions = ["sin", "cos", "tan"];
         this.sourcesList = ["gradient", "noise", "osc", "shape", "solid", "voronoi"];
@@ -36,9 +39,12 @@ class RandomHydra {
     }
 
     getAllElements() {
-      return this.colorList.concat(this.geometryList, this.modulatorsList , this.operatorsList);
+      return this.sourcesList.concat(this.colorList, this.geometryList, this.modulatorsList , this.operatorsList);
     }
 
+    getAllFunctions() {
+      return this.colorList.concat(this.geometryList, this.modulatorsList , this.operatorsList);
+    }
     truncate(number, digits) {
         const stepper = Math.pow(10, digits);
         return Math.trunc(stepper * number) / stepper;
@@ -152,8 +158,8 @@ class RandomHydra {
         }
     }
 
-    generateCode(minFunctions, maxFunctions) {
-        const functionsAmount = Math.floor(Math.random() * (maxFunctions - minFunctions + 1)) + minFunctions;
+    generateCode() {
+        const functionsAmount = Math.floor(Math.random() * (this.r.maxFunctions - this.r.minFunctions + 1)) + this.r.minFunctions;
         let code = "";
         code += this.info;
         code += this.genSource() + "\n";

@@ -34,8 +34,12 @@
 	
 
 
-  let stateObject = reactive({minValue: 0, // Set your minValue
-maxValue: 100, // Set your maxValue
+  let stateObject = reactive({
+minFunctions: 3,
+maxFunctions: 8,
+minValue: 0, // Set your minValue
+maxValue: 5, // Set your maxValue
+
 arrowFunctionProb: 10, // Set your arrowFunctionProb
 mouseFunctionProb: 0, // Set your mouseFunctionProb
 mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
@@ -107,15 +111,10 @@ function getRandomInt(max) {
 }
 // Connected to the crossing arrows icon.
 // shiftKey means call the generator.
-// maybe use altKey to open the probability popup?
   function randomHydra(evt) {
     let ska;
-    if (evt.altKey) {
-      genPopupOpen.value = !genPopupOpen.value;
-      return;
-    }
-    if (evt.shiftKey) {
-      ska = hydraGen.generateCode(3, 8);
+    if (genPopupOpen.value || evt.altKey) {
+      ska = hydraGen.generateCode();
     } else {
 		let sketchX = getRandomInt(examples.length);
 		let sketche = examples[sketchX];
@@ -126,8 +125,13 @@ function getRandomInt(max) {
 	}
 		nextSketch.value = ska;
 		setLocalSketch(ska);
-		//sendTargetHydra();
+		if (evt.shiftKey) sendTargetHydra();
   }
+
+
+ function openGen(evt) {
+   genPopupOpen.value = !genPopupOpen.value;
+}
 
 
   window.addEventListener('unload', function (event) {
@@ -197,6 +201,7 @@ function evalDone(hydraRenderer, text, timeB4) {
 	<IconButton icon="fa--random icon"  :action="randomHydra"/>
 	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
 	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
+  <IconButton icon="fa--cog icon" :action="(e)=>openGen(e)"/>
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
 
 
