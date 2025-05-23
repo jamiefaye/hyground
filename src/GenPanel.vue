@@ -11,17 +11,17 @@
 </script>
 
 <template>
-   <br/> min&nbsp;f():&nbsp;<input type="number" min="1" max="32"  v-model="props.state.minFunctions">
-   max&nbsp;f():&nbsp;<input type="number"  min="1" max="32" v-model="props.state.maxFunctions">
-   <br/> min&nbsp;val:&nbsp;<input type="number" min="0" max="100"  v-model="props.state.minValue">
-   &nbsp;max&nbsp;val:&nbsp;<input type="number"  min="1" max="100" v-model="props.state.maxValue">
-   <br/>P=>:&nbsp;<input type="number" min="0" max="100"  v-model="props.state.arrowFunctionProb">
+   <br/> min&nbsp;f():&nbsp;<input type="number" min="1" max="25"  v-model="props.state.minFunctions">
+   max&nbsp;f():&nbsp;<input type="number"  min="1" max="25" v-model="props.state.maxFunctions">
+   <br/> min&nbsp;arg:&nbsp;<input type="number" min="0" max="1000"  v-model="props.state.minValue">
+   &nbsp;max&nbsp;arg:&nbsp;<input type="number" min="1" max="1000" v-model="props.state.maxValue">
+   <br/>P=>:&nbsp;<input type="number" min="0" max="100" v-model="props.state.arrowFunctionProb">
    P=>xy:&nbsp;<input type="number"  min="0" max="100" v-model="props.state.mouseFunctionProb">
-   P(o0):&nbsp;<input type="number" min="0" max="100"  v-model="props.state.modulateItselfProb">
+   P(o0):&nbsp;<input type="number" min="0" max="100" v-model="props.state.modulateItselfProb">
    <p/>
-    <Multiselect v-model="props.state.exclusiveSourceList" :options="props.obj.sourcesList" :close-on-select="false" :show-labels="false" :multiple="true"/>
-    <Multiselect v-model="props.state.exclusiveFunctionList" :options="props.obj.getAllFunctions()" :close-on-select="false" :show-labels="false" :multiple="true"/>
-    <Multiselect v-model="props.state.ignoredList" :options="props.obj.getAllElements()" :close-on-select="false" :show-labels="false" :multiple="true"/>
+    <Multiselect v-model="props.state.exclusiveSourceList" :options="props.obj.sourcesList" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Only use these sources"/>
+    <Multiselect v-model="props.state.exclusiveFunctionList" :options="props.obj.getAllFunctions()" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Only use these functions"/>
+    <Multiselect v-model="props.state.ignoredList" :options="props.obj.getAllElements()" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Don't use these elements" />
     <p/>
 </template>
 
@@ -31,7 +31,10 @@
   .multiselect__single {
     font-size: 12px;
   }
-
+  .multiselect__tag-icon {
+    line-height: 16px;
+  }
+  
   .multiselect__tag-icon::after {
     font-size: 10px;
   }
