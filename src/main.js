@@ -1,12 +1,24 @@
-import './assets/main.css'
+/**
+ * main.js
+ *
+ * Bootstraps Vuetify and other plugins then mounts the App`
+ */
+
+// Plugins
+import { registerPlugins } from '@/plugins'
+
+// Components
+import App from './App.vue'
+
+// Composables
 import { createApp } from 'vue'
-import router from './router/index.js'
-import App from './Hyground.vue'
 
-createApp(App)
-.use(router)
-.mount('#app')
+// Styles
+import 'unfonts.css'
+import "./assets/icons.css"
 
-const urlParams = new URLSearchParams(window.location.search);  
-const myParam = urlParams.get('edit');
-if (myParam) router.push({name: 'editor'});
+const app = createApp(App)
+
+registerPlugins(app)
+
+app.mount('#app')

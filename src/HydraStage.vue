@@ -1,12 +1,15 @@
 <script setup lang="ts">
-  import {onMounted, onBeforeUnmount, ref, watch} from 'vue';
+  import {onMounted, onBeforeUnmount, ref, reactive, watch} from 'vue';
 	import Hydra from "./Hydra.vue";
 	import * as Comlink from "comlink";
   import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
-  import {openMsgBroker} from "hydra-synth";
+  import {openMsgBroker, BGSynth} from "hydra-synth";
+  import StagePanel from "./StagePanel.vue";
 
-  import {BGSynth} from 'hydra-synth';
+  const props = defineProps({
+  	show: Boolean
+	});
 
   let stageName;
   let brokerObj;
@@ -22,14 +25,18 @@
 
   let frameTime = 16;
 
-  let fx = ref(false);
-  let wgsl = ref(false);
-  let quad = ref(false);
-
   let fxLoaded = false;
   let fxActive = false;
-  let widthRef = ref(640);
-  let heightRef = ref(480);
+  let widthRef = ref(window.innerWidth);
+  let heightRef = ref(window.innerHeight);
+
+  const hidePanel = ref(false);
+
+  let panelParams = reactive({
+    fx: false,
+    wgsl: false,
+    quad: false,
+  });
 
 
 	let mouseData = {x: 0, y:0};
@@ -74,6 +81,7 @@ function cb(msg, arg1, arg2) {
   	await brokerObj.dropAndNotify(true);
   	console.log("notify drop done: " + stageName);
   }
+
 
 onMounted(() => {
 	openBroker();
@@ -146,11 +154,13 @@ async function reportHydra(newH, newCanvas) {
 }
 
 
+
+
 async function openFX() {
 		if (fxLoaded) return;
 
-    hBGSynth[0] = await new BGSynth(fxCanvas, wgsl, false, true);
-    hBGSynth[1] = await new BGSynth(fxCanvas, wgsl, false, true);
+    hBGSynth[0] = await new BGSynth(fxCanvas, panelParams.wgsl, false, true);
+    hBGSynth[1] = await new BGSynth(fxCanvas, panelParams.wgsl, false, true);
 
     await hBGSynth[0].openWorker();
     await hBGSynth[1].openWorker();
@@ -172,7 +182,7 @@ let keyctr = ref(0);
 function resizeCanvas() {
 
 	let inW = window.innerWidth;
-	let inH = window.innerHeight - 80;
+	let inH = window.innerHeight; // - 80;
 	widthRef.value = inW;
 	heightRef.value = inH;
 	console.log("Resized: " + inW + " + " +inH + " keyctr: " + keyctr.value);
@@ -180,7 +190,7 @@ function resizeCanvas() {
 }
 
 async function toggleFX() {
-	fxActive = fx.value;
+	fxActive = panelParams.fx;
 	if (!fxActive) {
 	// FX turned off, so tear everything down.
 		if (hBGSynth[0])
@@ -206,9 +216,9 @@ function reportInActorState(state) {
 }
 
 function evalDone(hydraRenderer, text, timeB4) {
-		console.log(`Stage evalDone ${timeB4}`);
-		inActState.evalDone(hydraRenderer, text, timeB4);
-		if (quad.value) hydraRenderer.synth.render();
+  console.log(`Stage evalDone ${timeB4}`);
+  if (inActState && inActState.evalDone) inActState.evalDone(hydraRenderer, text, timeB4);
+  if (panelParams.quad) hydraRenderer.synth.render();
 }
 
 
@@ -216,24 +226,17 @@ async function toggleWgsl() {
 		keyctr.value++;
 }
 
-watch(fx, toggleFX);
-watch(wgsl, toggleWgsl);
+watch(()=>panelParams.fx, toggleFX);
+watch(()=>panelParams.wgsl, toggleWgsl);
 
 </script>
 
+
 <template>
-<button type="button" id="HydraNxt" @click="openEditor">Edit</button>&nbsp;
-<input type="checkbox" id="fx" v-model="fx" />
-<label for="fx">Fx</label>
-&nbsp;
-<input type="checkbox" id="wgsl" v-model="wgsl" />
-<label for="fx">wgsl</label>
-&nbsp;
-<input type="checkbox" id="show4" v-model="quad" />
-<label for="quad">Quad</label>
-&nbsp;
-<InActorPanel :script="fxSketch" :updateScript="updater" 
-  :reportInActorState="reportInActorState"/>
-<Hydra :sketch="fxSketch" :wgsl="wgsl" :sketchInfo="fxsketchInfo" :width="widthRef"
+<template v-if='props.show'>
+<StagePanel :params="panelParams" :sketch="fxSketch" :reportInActorState="reportInActorState"
+:updateScript="updater" />
+</template>
+<Hydra :sketch="fxSketch" :wgsl="panelParams.wgsl" :sketchInfo="fxsketchInfo" :width="widthRef"
  :height="heightRef" :key="keyctr" :reportHydra="reportHydra" :evalDone="evalDone"/>
 </template>

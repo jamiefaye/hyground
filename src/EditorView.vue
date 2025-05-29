@@ -31,8 +31,6 @@
 	let filmOpen = ref(false);
 	let sketchInfoRef = ref({});
 	let genPopupOpen = ref(false);
-	
-
 
   let stateObject = reactive({
 minFunctions: 3,
@@ -203,7 +201,6 @@ function evalDone(hydraRenderer, text, timeB4) {
 	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
   <IconButton icon="fa--cog icon" :action="(e)=>openGen(e)"/>
   <IconButton icon="fa--film icon" :action="toggleFilm"/>
-
 
 </div>
   <template v-if="genPopupOpen">
