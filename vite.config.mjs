@@ -76,6 +76,7 @@ export default defineConfig({
       '.vue',
     ],
   },
+//  base: '/hyg/',
 	server: {
 	  port: 8000,
     https: {

@@ -2,7 +2,6 @@
   import {onMounted, onBeforeUnmount, ref, reactive, watch} from 'vue';
 	import Hydra from "./Hydra.vue";
 	import * as Comlink from "comlink";
-  import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
   import {openMsgBroker, BGSynth} from "hydra-synth";
   import StagePanel from "./StagePanel.vue";

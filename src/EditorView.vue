@@ -8,7 +8,6 @@
 	import {openMsgBroker} from "hydra-synth";
 
 	import * as Comlink from "comlink";
-	import IconButton from "./IconButton.vue";
 	import {Mutator} from "./Mutator.js";
 	import InActorPanel from "./InActorPanel.vue";
 	import {RandomHydra} from "./RandomHydra.js";
@@ -195,31 +194,23 @@ function evalDone(hydraRenderer, text, timeB4) {
 </td>
 </template>
 <td>
-<div class="simpleborder">
-	<IconButton icon="fa--random icon"  :action="randomHydra"/>
-	<IconButton icon="fa-solid--dice" :action="mutate"/>&nbsp;
-	<IconButton icon="carbon--send-action-usage icon" :action="sendTargetHydra"/>&nbsp;&nbsp;
-  <IconButton icon="fa--cog icon" :action="(e)=>openGen(e)"/>
-  <IconButton icon="fa--film icon" :action="toggleFilm"/>
-
-</div>
+<v-container fluid ><v-row class='ga-1'>
+	<v-icon icon="fa:fas fa--random"  @click="randomHydra"/>
+	<v-icon icon="fa:fas fa-solid--dice" @click="mutate"/>
+	<v-icon icon="fa:fas carbon--send-action-usage" @click="sendTargetHydra"/>
+  <v-icon icon="fa:fas fa--cog" @click="(e)=>openGen(e)"/>
+  <v-icon icon="fa:fas fa--film" @click="toggleFilm"/>
+</v-row>
+</v-container>
   <template v-if="genPopupOpen">
   <GenPanel :state='stateObject' :obj="hydraGen" />
   </template>
-  &nbsp;
+
   <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"
   :reportInActorState="reportInActorState"/>
 
-&nbsp;{{title}}
+{{title}}
 </td></tr></tbody></table>
 <Editor :text="nextSketch" @textChanged="changed" :limit="limit"/>
 </template>
 
-<style>
-.simpleborder {
-display:inline-block;
- border: 1px solid black;
- box-sizing: border-box;
- position: relative;
-}
-</style>

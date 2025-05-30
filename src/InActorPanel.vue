@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import {InActorState} from "./InActorState.js";
-import IconButton from "./IconButton.vue";
-import IconToggleButton from "./IconToggleButton.vue";
 import {ref, type Ref, reactive, onMounted, watch} from "vue"
 
   const props = defineProps({
@@ -31,44 +29,37 @@ function openStateMenu(state, e) {
 </script>
 
 <template>
+<v-container fluid><v-row class='ga-1'>
 <template v-if="!hidden">
-<div class="panelborder">
-	<IconButton icon="fa-solid--trash-alt icon" :action="(e)=>state.doClear(e)"/>
-	<IconButton icon="fa-solid--file-import icon" :action="(e)=>state.doFileImport(e)"/>
-	
+	<v-icon icon="fa:fas fa-solid--trash-alt" size="small" @click="(e)=>state.doClear(e)"/>
+	<v-icon icon="fa:fas fa-solid--file-import" size="small" @click="(e)=>state.doFileImport(e)"/>
 	<template v-if="info.hasrecord">
-	<IconButton icon="fa-solid--file-export icon" :action="(e)=>state.doFileExport(e)"/>
-	<IconButton icon="lets-icons--box-refresh-alt-right icon" :action="(e)=>state.doLoad(e)"/>
-	&nbsp;
+	<v-icon icon="fa:fas fa-solid--file-export" size="small" @click="(e)=>state.doFileExport(e)"/>
+	<v-icon icon="fa:fas lets-icons--box-refresh-alt-right" size="small" @click="(e)=>state.doLoad(e)"/>
 	</template>
 
 	<template v-if="info.hasplay">
-	<IconButton icon="fa6-solid--backward-fast icon" :action="(e)=>state.doFastBackward(e)"/>
-	<IconButton icon="fa--step-backward icon" :action="(e)=>state.doStepBackward(e)"/>
-	<IconToggleButton onicon="fa6-regular--circle-pause icon" officon="fa--play icon" :onstate = "info.playing" :action="(e)=>{state.doPlay(e)}"/>
-	<IconButton icon="fa--step-forward icon" :action="(e)=>state.doStepForward(e)"/>
-	<IconButton icon="fa6-solid--forward-fast icon" :action="(e)=>state.doFastForward(e)"/>
-	<IconButton icon="fa--cog icon" :action="(e)=>openStateMenu(state, e)"/>
+	<v-icon icon="fa:fas fa6-solid--backward-fast" @click="(e)=>state.doFastBackward(e)"/>
+	<v-icon icon="fa:fas fa--step-backward" size="small" @click="(e)=>state.doStepBackward(e)"/>
+	<template v-if="info.playing">
+	<v-icon icon="fa:fas fa6-regular--circle-pause" size="small" @click="(e)=>{state.doPlay(e)}" />
+	</template>
+	<template v-if="!info.playing">
+		<v-icon icon="fa:fas fa--play" size="small" @click="(e)=>{state.doPlay(e)}" />
+	</template>
+	<v-icon icon="fa:fas fa--step-forward" size="small" @click="(e)=>state.doStepForward(e)"/>
+	<v-icon icon="fa:fas fa6-solid--forward-fast" size="small" @click="(e)=>state.doFastForward(e)"/>
+	<v-icon icon="fa:fas fa--cog" size="small" @click="(e)=>openStateMenu(state, e)"/>
   </template>
 
-
-</div>
   <template v-if="settingsOpen">
    <br/>    Default: <input type="number" min="0" max="60"  v-model="info.defaultDur">&nbsp&nbsp
    Max: <input type="number"  min="0" max="300" v-model="info.maxDur"><br/>
 
-
-
   </template>
-&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}&nbsp{{info.filename}}
+&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}} {{info.filename}}
 </template>
+</v-row>
+</v-container>
 </template>
-<style>
-.panelborder {
-display:inline-block;
- border: 1px solid black;
- box-sizing: border-box;
- position: relative;
- margin-bottom: 4px;
-}
-</style>
+

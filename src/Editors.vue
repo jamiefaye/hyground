@@ -19,9 +19,9 @@ function addEd() {
 <template v-for="(item, index) in edList" :key="item">
 <EditorView :index="index" :showVid="showVideo" :limit="limitHeight"/>
 </template>
-<button type="button" id="EdAdd" @click="addEd">New</button>&nbsp;&nbsp;
+<button type="button" id="EdAdd" @click="addEd">New</button>
 <input type="checkbox" id="videocheckbox" v-model="showVideo" /> 
-<label for="videocheckbox">Monitors</label>&nbsp;
+<label for="videocheckbox">Monitors</label>
 <input type="checkbox" id="limitcheckbox" v-model="limitHeight" />
 <label for="limitcheckbox">Limit Height</label>
 

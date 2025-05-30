@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import {onMounted, onBeforeUnmount, ref, watch} from 'vue';
 	import Hydra from "./Hydra.vue";
-  import IconButton from "./IconButton.vue";
   import InActorPanel from "./InActorPanel.vue";
 
   const props = defineProps({
@@ -12,23 +11,20 @@
  });
 
 function openEditor() {
-   	window.open("/index.html?edit=t", "editor", "width=500,height=1080,left=20");
+   	window.open("/editor", "editor", "width=500,height=1080,left=20");
 //  	window.open("/hyground/index.html?edit=t", "editor", "width=500,height=1080,left=20");
 }
 
 </script>
 
 <template>
-<button type="button" id="HydraNxt" @click="openEditor">Edit</button>&nbsp;
-<input type="checkbox" id="fx" v-model="props.params.fx" />
-<label for="fx">Fx</label>
-&nbsp;
-<input type="checkbox" id="wgsl" v-model="props.params.wgsl" />
-<label for="wgsl">wgsl</label>
-&nbsp;
-<input type="checkbox" id="show4" v-model="props.params.quad" />
-<label for="quad">Quad</label>
-&nbsp;
+<v-container fluid height='20px'><v-row><v-col><v-row>
+<v-btn @click="openEditor" size='x-small'>Edit</v-btn>
+<v-checkbox density='compact' hide-details v-model="props.params.fx" label='Fx'/>
+<v-checkbox density='compact' hide-details v-model="props.params.wgsl" label='wgsl'/>
+<v-checkbox density='compact' hide-details v-model="props.params.quad" label='Quad'/>
+</v-row></v-col><v-col>
 <InActorPanel :script="props.sketch" :updateScript="props.updateScript" 
   :reportInActorState="props.reportInActorState"/>
+ </v-col></v-row></v-container>
 </template>

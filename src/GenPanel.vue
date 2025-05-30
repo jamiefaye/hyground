@@ -19,9 +19,12 @@
    P=>xy:&nbsp;<input type="number"  min="0" max="100" v-model="props.state.mouseFunctionProb">
    P(o0):&nbsp;<input type="number" min="0" max="100" v-model="props.state.modulateItselfProb">
    <p/>
-    <Multiselect v-model="props.state.exclusiveSourceList" :options="props.obj.sourcesList" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Only use these sources"/>
-    <Multiselect v-model="props.state.exclusiveFunctionList" :options="props.obj.getAllFunctions()" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Only use these functions"/>
-    <Multiselect v-model="props.state.ignoredList" :options="props.obj.getAllElements()" :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Don't use these elements" />
+    <v-combobox v-model="props.state.exclusiveSourceList" :items="props.obj.sourcesList" density='compact'
+      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Use sources"/>
+    <v-combobox  v-model="props.state.exclusiveFunctionList" :items="props.obj.getAllFunctions()" density='compact'
+      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Use functions"/>
+    <v-combobox  v-model="props.state.ignoredList" :items="props.obj.getAllElements()"  density='compact'
+      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Don't Use" />
     <p/>
 </template>
 
