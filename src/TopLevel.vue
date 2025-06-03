@@ -8,14 +8,13 @@
       <v-app-bar-title>Hydra</v-app-bar-title>
     </v-app-bar>
     <v-main>
-      <HydraStage :show='drawer'/>
+      <HydraStage :show='false'/>
     </v-main>
   </v-app>
 </template>
 
 <script setup>
   import { ref } from 'vue'
-  import Editors from './Editors.vue'
   import HydraStage from './HydraStage.vue'
   const drawer = ref(null)
 //  const panelFlag = ref(true)

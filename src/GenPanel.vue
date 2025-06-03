@@ -1,7 +1,6 @@
 
 <script setup>
   import {onMounted, onBeforeUnmount, ref, reactive} from 'vue';
-  import Multiselect from 'vue-multiselect';
 
   const props = defineProps({
   state: Object,
@@ -11,60 +10,140 @@
 </script>
 
 <template>
-   <br/> min&nbsp;f():&nbsp;<input type="number" min="1" max="25"  v-model="props.state.minFunctions">
-   max&nbsp;f():&nbsp;<input type="number"  min="1" max="25" v-model="props.state.maxFunctions">
-   <br/> min&nbsp;arg:&nbsp;<input type="number" min="0" max="1000"  v-model="props.state.minValue">
-   &nbsp;max&nbsp;arg:&nbsp;<input type="number" min="1" max="1000" v-model="props.state.maxValue">
-   <br/>P=>:&nbsp;<input type="number" min="0" max="100" v-model="props.state.arrowFunctionProb">
-   P=>xy:&nbsp;<input type="number"  min="0" max="100" v-model="props.state.mouseFunctionProb">
-   P(o0):&nbsp;<input type="number" min="0" max="100" v-model="props.state.modulateItselfProb">
-   <p/>
-    <v-combobox v-model="props.state.exclusiveSourceList" :items="props.obj.sourcesList" density='compact'
-      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Use sources"/>
-    <v-combobox  v-model="props.state.exclusiveFunctionList" :items="props.obj.getAllFunctions()" density='compact'
-      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Use functions"/>
-    <v-combobox  v-model="props.state.ignoredList" :items="props.obj.getAllElements()"  density='compact'
-      :close-on-select="false" :show-labels="false" :multiple="true" placeholder="Don't Use" />
-    <p/>
+  <v-container fluid class="pa-1">
+    <v-row dense class="mb-1">
+      <v-col cols="6" class="py-1">
+        <v-text-field
+          v-model.number="props.state.minFunctions"
+          label="Min f()"
+          type="number"
+          min="1"
+          max="25"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+      <v-col cols="6" class="py-1">
+        <v-text-field
+          v-model.number="props.state.maxFunctions"
+          label="Max f()"
+          type="number"
+          min="1"
+          max="25"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+
+    <v-row dense class="mb-1">
+      <v-col cols="6" class="py-1">
+        <v-text-field
+          v-model.number="props.state.minValue"
+          label="Min arg"
+          type="number"
+          min="0"
+          max="1000"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+      <v-col cols="6" class="py-1">
+        <v-text-field
+          v-model.number="props.state.maxValue"
+          label="Max arg"
+          type="number"
+          min="1"
+          max="1000"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+
+    <v-row dense class="mb-1">
+      <v-col cols="4" class="py-1">
+        <v-text-field
+          v-model.number="props.state.arrowFunctionProb"
+          label="P=>"
+          type="number"
+          min="0"
+          max="100"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+      <v-col cols="4" class="py-1">
+        <v-text-field
+          v-model.number="props.state.mouseFunctionProb"
+          label="P=>xy"
+          type="number"
+          min="0"
+          max="100"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+      <v-col cols="4" class="py-1">
+        <v-text-field
+          v-model.number="props.state.modulateItselfProb"
+          label="P(o0)"
+          type="number"
+          min="0"
+          max="100"
+          density="compact"
+          variant="outlined"
+          hide-details
+        />
+      </v-col>
+    </v-row>
+
+    <v-divider class="my-1" />
+
+    <v-combobox
+      v-model="props.state.exclusiveSourceList"
+      :items="props.obj.sourcesList"
+      label="Use sources"
+      density="compact"
+      variant="outlined"
+      :close-on-select="false"
+      multiple
+      chips
+      hide-details
+      class="mb-1"
+    />
+
+    <v-combobox
+      v-model="props.state.exclusiveFunctionList"
+      :items="props.obj.getAllFunctions()"
+      label="Use functions"
+      density="compact"
+      variant="outlined"
+      :close-on-select="false"
+      multiple
+      chips
+      hide-details
+      class="mb-1"
+    />
+
+    <v-combobox
+      v-model="props.state.ignoredList"
+      :items="props.obj.getAllElements()"
+      label="Don't use"
+      density="compact"
+      variant="outlined"
+      :close-on-select="false"
+      multiple
+      chips
+      hide-details
+      class="mb-1"
+    />
+  </v-container>
 </template>
 
-<style>
-  .multiselect,
-  .multiselect__input,
-  .multiselect__single {
-    font-size: 12px;
-  }
-  .multiselect__tag-icon {
-    line-height: 16px;
-  }
-  
-  .multiselect__tag-icon::after {
-    font-size: 10px;
-  }
-
-  .multiselect__tag {
-    position: relative;
-    display: inline-block;
-    padding: 4px 26px 4px 10px;
-    border-radius: 5px;
-    margin-right: 10px;
-    color: #fff;
-    line-height: 1;
-    background: #41b883;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 100%;
-    text-overflow: ellipsis;
-  }
-
-  .multiselect__tags {
-
-    font-size: 10px;
-  }
-
-  .multiselect__option::after {
-
-    font-size: 9px;
-  }
-</style>

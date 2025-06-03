@@ -5,7 +5,8 @@
   import InActorPanel from "./InActorPanel.vue";
   import {openMsgBroker, BGSynth} from "hydra-synth";
   import StagePanel from "./StagePanel.vue";
-
+  import Splitter from './Splitter.vue';
+  import Editors from './Editors.vue'
   const props = defineProps({
   	show: Boolean
 	});
@@ -231,11 +232,23 @@ watch(()=>panelParams.wgsl, toggleWgsl);
 </script>
 
 
+
 <template>
-<template v-if='props.show'>
+    <v-content>
+      <Splitter value="500" gutter-size="4" min-width="0">
+        <template v-slot:panel1>
+<Editors />
+        </template>
+
+        <template v-slot:panel2="{ right }">
+          <v-container id="blah">
 <StagePanel :params="panelParams" :sketch="fxSketch" :reportInActorState="reportInActorState"
 :updateScript="updater" />
-</template>
 <Hydra :sketch="fxSketch" :wgsl="panelParams.wgsl" :sketchInfo="fxsketchInfo" :width="widthRef"
  :height="heightRef" :key="keyctr" :reportHydra="reportHydra" :evalDone="evalDone"/>
+          </v-container>
+        </template>
+      </Splitter>
+    </v-content>
 </template>
+
