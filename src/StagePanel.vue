@@ -19,10 +19,26 @@ function openEditor() {
 
 <template>
 <v-container fluid height='20px'><v-row><v-col><v-row>
-<v-btn @click="openEditor" size='x-small'>Edit</v-btn>
-<v-checkbox density='compact' hide-details v-model="props.params.fx" label='Fx'/>
-<v-checkbox density='compact' hide-details v-model="props.params.wgsl" label='wgsl'/>
-<v-checkbox density='compact' hide-details v-model="props.params.quad" label='Quad'/>
+<v-tooltip text="Open Code Editor">
+	<template v-slot:activator="{ props: tooltipProps }">
+		<v-btn v-bind="tooltipProps" @click="openEditor" size='x-small'>Edit</v-btn>
+	</template>
+</v-tooltip>
+<v-tooltip text="Enable Transition Effects">
+	<template v-slot:activator="{ props: tooltipProps }">
+		<v-checkbox v-bind="tooltipProps" density='compact' hide-details v-model="props.params.fx" label='Fx'/>
+	</template>
+</v-tooltip>
+<v-tooltip text="Use WebGPU Shading Language">
+	<template v-slot:activator="{ props: tooltipProps }">
+		<v-checkbox v-bind="tooltipProps" density='compact' hide-details v-model="props.params.wgsl" label='wgsl'/>
+	</template>
+</v-tooltip>
+<v-tooltip text="Enable Quad Rendering">
+	<template v-slot:activator="{ props: tooltipProps }">
+		<v-checkbox v-bind="tooltipProps" density='compact' hide-details v-model="props.params.quad" label='Quad'/>
+	</template>
+</v-tooltip>
 </v-row></v-col><v-col>
 <InActorPanel :script="props.sketch" :updateScript="props.updateScript" 
   :reportInActorState="props.reportInActorState"/>

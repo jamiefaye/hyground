@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <v-navigation-drawer  :width='400' v-model="drawer">
+    <v-navigation-drawer  :width='450' v-model="drawer">
       <Editors />
     </v-navigation-drawer>
     <v-app-bar :height='40'>

@@ -195,11 +195,31 @@ function evalDone(hydraRenderer, text, timeB4) {
 </template>
 <td>
 <v-container fluid ><v-row class='ga-1'>
-	<v-icon icon="fa:fas fa--random"  @click="randomHydra"/>
-	<v-icon icon="fa:fas fa-solid--dice" @click="mutate"/>
-	<v-icon icon="fa:fas carbon--send-action-usage" @click="sendTargetHydra"/>
-  <v-icon icon="fa:fas fa--cog" @click="(e)=>openGen(e)"/>
-  <v-icon icon="fa:fas fa--film" @click="toggleFilm"/>
+	<v-tooltip text="Load Random Example (Alt: Generate Code)">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--random"  @click="randomHydra"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Mutate Current Code">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--dice" @click="mutate"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Send to Stage">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas carbon--send-action-usage" @click="sendTargetHydra"/>
+		</template>
+	</v-tooltip>
+  <v-tooltip text="Generator Settings">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--cog" @click="(e)=>openGen(e)"/>
+		</template>
+	</v-tooltip>
+  <v-tooltip text="Record/Play Controls">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--film" @click="toggleFilm"/>
+		</template>
+	</v-tooltip>
 </v-row>
 </v-container>
   <template v-if="genPopupOpen">

@@ -31,31 +31,100 @@ function openStateMenu(state, e) {
 <template>
 <v-container fluid><v-row class='ga-1'>
 <template v-if="!hidden">
-	<v-icon icon="fa:fas fa-solid--trash-alt" size="small" @click="(e)=>state.doClear(e)"/>
-	<v-icon icon="fa:fas fa-solid--file-import" size="small" @click="(e)=>state.doFileImport(e)"/>
+	<v-tooltip text="Clear Recording Buffer">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--trash-alt" size="small" @click="(e)=>state.doClear(e)"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Import Recording File">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--file-import" size="small" @click="(e)=>state.doFileImport(e)"/>
+		</template>
+	</v-tooltip>
 	<template v-if="info.hasrecord">
-	<v-icon icon="fa:fas fa-solid--file-export" size="small" @click="(e)=>state.doFileExport(e)"/>
-	<v-icon icon="fa:fas lets-icons--box-refresh-alt-right" size="small" @click="(e)=>state.doLoad(e)"/>
+	<v-tooltip text="Export Recording File">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--file-export" size="small" @click="(e)=>state.doFileExport(e)"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Load Recording into Playback">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas lets-icons--box-refresh-alt-right" size="small" @click="(e)=>state.doLoad(e)"/>
+		</template>
+	</v-tooltip>
 	</template>
 
 	<template v-if="info.hasplay">
-	<v-icon icon="fa:fas fa6-solid--backward-fast" @click="(e)=>state.doFastBackward(e)"/>
-	<v-icon icon="fa:fas fa--step-backward" size="small" @click="(e)=>state.doStepBackward(e)"/>
+	<v-tooltip text="Fast Backward">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa6-solid--backward-fast" @click="(e)=>state.doFastBackward(e)"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Step Backward">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--step-backward" size="small" @click="(e)=>state.doStepBackward(e)"/>
+		</template>
+	</v-tooltip>
 	<template v-if="info.playing">
-	<v-icon icon="fa:fas fa6-regular--circle-pause" size="small" @click="(e)=>{state.doPlay(e)}" />
+	<v-tooltip text="Pause">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa6-regular--circle-pause" size="small" @click="(e)=>{state.doPlay(e)}" />
+		</template>
+	</v-tooltip>
 	</template>
 	<template v-if="!info.playing">
-		<v-icon icon="fa:fas fa--play" size="small" @click="(e)=>{state.doPlay(e)}" />
+		<v-tooltip text="Play">
+			<template v-slot:activator="{ props: tooltipProps }">
+				<v-icon v-bind="tooltipProps" icon="fa:fas fa--play" size="small" @click="(e)=>{state.doPlay(e)}" />
+			</template>
+		</v-tooltip>
 	</template>
-	<v-icon icon="fa:fas fa--step-forward" size="small" @click="(e)=>state.doStepForward(e)"/>
-	<v-icon icon="fa:fas fa6-solid--forward-fast" size="small" @click="(e)=>state.doFastForward(e)"/>
-	<v-icon icon="fa:fas fa--cog" size="small" @click="(e)=>openStateMenu(state, e)"/>
+	<v-tooltip text="Step Forward">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--step-forward" size="small" @click="(e)=>state.doStepForward(e)"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Fast Forward">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa6-solid--forward-fast" size="small" @click="(e)=>state.doFastForward(e)"/>
+		</template>
+	</v-tooltip>
+	<v-tooltip text="Playback Settings">
+		<template v-slot:activator="{ props: tooltipProps }">
+			<v-icon v-bind="tooltipProps" icon="fa:fas fa--cog" size="small" @click="(e)=>openStateMenu(state, e)"/>
+		</template>
+	</v-tooltip>
   </template>
 
   <template v-if="settingsOpen">
-   <br/>    Default: <input type="number" min="0" max="60"  v-model="info.defaultDur">&nbsp&nbsp
-   Max: <input type="number"  min="0" max="300" v-model="info.maxDur"><br/>
-
+   <v-row class="ga-2 pa-1">
+     <v-col>
+       <v-text-field
+         v-model.number="info.defaultDur"
+         label="Default Duration"
+         type="number"
+         min="0"
+         max="60"
+         step="0.1"
+         suffix="sec"
+         density="compact"
+         hide-details
+       />
+     </v-col>
+     <v-col>
+       <v-text-field
+         v-model.number="info.maxDur"
+         label="Max Duration"
+         type="number"
+         min="0"
+         max="300"
+         step="0.1"
+         suffix="sec"
+         density="compact"
+         hide-details
+       />
+     </v-col>
+   </v-row>
   </template>
 &nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}} {{info.filename}}
 </template>
