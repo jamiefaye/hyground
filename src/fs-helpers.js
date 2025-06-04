@@ -24,10 +24,10 @@
  *
  * @return {!Promise<FileSystemFileHandle>} Handle to the existing file.
  */
-function getFileHandle() {
+function getFileHandle () {
   // For Chrome 86 and later...
   if ('showOpenFilePicker' in window) {
-    return window.showOpenFilePicker().then((handles) => handles[0]);
+    return window.showOpenFilePicker().then(handles => handles[0]);
   }
   // For Chrome 85 and earlier...
   return window.chooseFileSystemEntries();
@@ -38,13 +38,13 @@ function getFileHandle() {
  *
  * @return {!Promise<FileSystemFileHandle>} Handle to the new file.
  */
-function getNewFileHandle() {
+function getNewFileHandle () {
   // For Chrome 86 and later...
   if ('showSaveFilePicker' in window) {
     const opts = {
       types: [{
         description: 'Text file',
-        accept: {'text/plain': ['.txt']},
+        accept: { 'text/plain': ['.txt'] },
       }],
     };
     return window.showSaveFilePicker(opts);
@@ -67,7 +67,7 @@ function getNewFileHandle() {
  * @param {File} file
  * @return {!Promise<string>} A promise that resolves to the parsed string.
  */
-function readFile(file) {
+function readFile (file) {
   // If the new .text() reader is available, use it.
   if (file.text) {
     return file.text();
@@ -83,10 +83,10 @@ function readFile(file) {
  * @param {File} file
  * @return {Promise<string>} A promise that resolves to the parsed string.
  */
-function _readFileLegacy(file) {
-  return new Promise((resolve) => {
+function _readFileLegacy (file) {
+  return new Promise(resolve => {
     const reader = new FileReader();
-    reader.addEventListener('loadend', (e) => {
+    reader.addEventListener('loadend', e => {
       const text = e.srcElement.result;
       resolve(text);
     });
@@ -100,7 +100,7 @@ function _readFileLegacy(file) {
  * @param {FileSystemFileHandle} fileHandle File handle to write to.
  * @param {string} contents Contents to write.
  */
-async function writeFile(fileHandle, contents) {
+async function writeFile (fileHandle, contents) {
   // Support for Chrome 82 and earlier.
   if (fileHandle.createWriter) {
     // Create a writer (request permission if necessary).
@@ -128,7 +128,7 @@ async function writeFile(fileHandle, contents) {
  * @param {boolean} withWrite True if write permission should be checked.
  * @return {boolean} True if the user has granted read/write permission.
  */
-async function verifyPermission(fileHandle, withWrite) {
+async function verifyPermission (fileHandle, withWrite) {
   const opts = {};
   if (withWrite) {
     opts.writable = true;
@@ -147,4 +147,4 @@ async function verifyPermission(fileHandle, withWrite) {
   return false;
 }
 
-export {getFileHandle, getNewFileHandle, readFile, verifyPermission, writeFile}
+export { getFileHandle, getNewFileHandle, readFile, verifyPermission, writeFile }

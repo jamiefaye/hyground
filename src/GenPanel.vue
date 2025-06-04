@@ -1,105 +1,104 @@
-
 <script setup>
-  import {onMounted, onBeforeUnmount, ref, reactive} from 'vue';
+  import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
   const props = defineProps({
-  state: Object,
-  obj:   Object
-	});
+    state: Object,
+    obj:   Object,
+  });
 
 </script>
 
 <template>
-  <v-container fluid class="pa-1">
-    <v-row dense class="mb-1">
-      <v-col cols="6" class="py-1">
+  <v-container class="pa-1" fluid>
+    <v-row class="mb-1" dense>
+      <v-col class="py-1" cols="6">
         <v-text-field
           v-model.number="props.state.minFunctions"
-          label="Min f()"
-          type="number"
-          min="1"
-          max="25"
           density="compact"
-          variant="outlined"
           hide-details
+          label="Min f()"
+          max="25"
+          min="1"
+          type="number"
+          variant="outlined"
         />
       </v-col>
-      <v-col cols="6" class="py-1">
+      <v-col class="py-1" cols="6">
         <v-text-field
           v-model.number="props.state.maxFunctions"
-          label="Max f()"
-          type="number"
-          min="1"
-          max="25"
           density="compact"
-          variant="outlined"
           hide-details
+          label="Max f()"
+          max="25"
+          min="1"
+          type="number"
+          variant="outlined"
         />
       </v-col>
     </v-row>
 
-    <v-row dense class="mb-1">
-      <v-col cols="6" class="py-1">
+    <v-row class="mb-1" dense>
+      <v-col class="py-1" cols="6">
         <v-text-field
           v-model.number="props.state.minValue"
-          label="Min arg"
-          type="number"
-          min="0"
-          max="1000"
           density="compact"
-          variant="outlined"
           hide-details
+          label="Min arg"
+          max="1000"
+          min="0"
+          type="number"
+          variant="outlined"
         />
       </v-col>
-      <v-col cols="6" class="py-1">
+      <v-col class="py-1" cols="6">
         <v-text-field
           v-model.number="props.state.maxValue"
-          label="Max arg"
-          type="number"
-          min="1"
-          max="1000"
           density="compact"
-          variant="outlined"
           hide-details
+          label="Max arg"
+          max="1000"
+          min="1"
+          type="number"
+          variant="outlined"
         />
       </v-col>
     </v-row>
 
-    <v-row dense class="mb-1">
-      <v-col cols="4" class="py-1">
+    <v-row class="mb-1" dense>
+      <v-col class="py-1" cols="4">
         <v-text-field
           v-model.number="props.state.arrowFunctionProb"
-          label="P=>"
-          type="number"
-          min="0"
-          max="100"
           density="compact"
-          variant="outlined"
           hide-details
+          label="P=>"
+          max="100"
+          min="0"
+          type="number"
+          variant="outlined"
         />
       </v-col>
-      <v-col cols="4" class="py-1">
+      <v-col class="py-1" cols="4">
         <v-text-field
           v-model.number="props.state.mouseFunctionProb"
-          label="P=>xy"
-          type="number"
-          min="0"
-          max="100"
           density="compact"
-          variant="outlined"
           hide-details
+          label="P=>xy"
+          max="100"
+          min="0"
+          type="number"
+          variant="outlined"
         />
       </v-col>
-      <v-col cols="4" class="py-1">
+      <v-col class="py-1" cols="4">
         <v-text-field
           v-model.number="props.state.modulateItselfProb"
-          label="P(o0)"
-          type="number"
-          min="0"
-          max="100"
           density="compact"
-          variant="outlined"
           hide-details
+          label="P(o0)"
+          max="100"
+          min="0"
+          type="number"
+          variant="outlined"
         />
       </v-col>
     </v-row>
@@ -108,42 +107,41 @@
 
     <v-combobox
       v-model="props.state.exclusiveSourceList"
+      chips
+      class="mb-1"
+      :close-on-select="false"
+      density="compact"
+      hide-details
       :items="props.obj.sourcesList"
       label="Use sources"
-      density="compact"
-      variant="outlined"
-      :close-on-select="false"
       multiple
-      chips
-      hide-details
-      class="mb-1"
+      variant="outlined"
     />
 
     <v-combobox
       v-model="props.state.exclusiveFunctionList"
+      chips
+      class="mb-1"
+      :close-on-select="false"
+      density="compact"
+      hide-details
       :items="props.obj.getAllFunctions()"
       label="Use functions"
-      density="compact"
-      variant="outlined"
-      :close-on-select="false"
       multiple
-      chips
-      hide-details
-      class="mb-1"
+      variant="outlined"
     />
 
     <v-combobox
       v-model="props.state.ignoredList"
+      chips
+      class="mb-1"
+      :close-on-select="false"
+      density="compact"
+      hide-details
       :items="props.obj.getAllElements()"
       label="Don't use"
-      density="compact"
-      variant="outlined"
-      :close-on-select="false"
       multiple
-      chips
-      hide-details
-      class="mb-1"
+      variant="outlined"
     />
   </v-container>
 </template>
-

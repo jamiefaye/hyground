@@ -1,18 +1,18 @@
-  import {ref} from 'vue';
+import { ref } from 'vue';
 
-let editText = ref("");
-let editPath = ref("/");
-let editBlob = ref(null);
+const editText = ref('');
+const editPath = ref('/');
+const editBlob = ref(null);
 
 let openEditOn;
 let waverly;
 
-function setOpener(opener) {
-	openEditOn = opener;
+function setOpener (opener) {
+  openEditOn = opener;
 }
 
-function setWave(wv) {
-	waverly = wv;
+function setWave (wv) {
+  waverly = wv;
 }
 
-export {editText, editPath, setOpener, openEditOn, editBlob, waverly, setWave};
+export { editText, editPath, setOpener, openEditOn, editBlob, waverly, setWave };

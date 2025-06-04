@@ -77,10 +77,17 @@ async function render() {
 </script>
 
 
-<template><br>
+<template>
    <canvas ref="canvasElement" :width="width" :height="height"></canvas>
-   <p/>
 </template>
 
-
+<style scoped>
+canvas {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: block;
+  vertical-align: top;
+}
+</style>
 

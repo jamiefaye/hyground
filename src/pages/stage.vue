@@ -1,7 +1,7 @@
 <script setup>
-import HydraStage from '../HydraStage.vue'
+  import HydraStage from '../HydraStage.vue'
 </script>
 
 <template>
-  <HydraStage :show='false' />
+  <HydraStage :show="false" />
 </template>

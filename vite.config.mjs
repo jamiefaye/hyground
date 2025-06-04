@@ -76,16 +76,16 @@ export default defineConfig({
       '.vue',
     ],
   },
-  //base: '/hyg/',
-	server: {
-	  port: 8000,
+  //  base: '/hyg/',
+  server: {
+    port: 8000,
     https: {
       key: fs.readFileSync('./certs/key.pem'),
       cert: fs.readFileSync('./certs/certificate.pem'),
     },
     fs: {
       strict: false,
-    }
+    },
   },
   css: {
     preprocessorOptions: {

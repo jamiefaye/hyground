@@ -1,14 +1,13 @@
-
 export default function (options) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     //  async function startCapture(displayMediaOptions) {
-    navigator.mediaDevices.getDisplayMedia(options).then((stream) => {
+    navigator.mediaDevices.getDisplayMedia(options).then(stream => {
       const video = document.createElement('video')
       video.srcObject = stream
       video.addEventListener('loadedmetadata', () => {
         video.play()
-        resolve({video: video})
+        resolve({ video })
       })
-    }).catch((err) => reject(err))
+    }).catch(err => reject(err))
   })
 }

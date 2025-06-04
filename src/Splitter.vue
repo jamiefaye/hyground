@@ -1,14 +1,14 @@
 <template>
 
-  <div class="splitter" v-resize="onResize">
-    <v-sheet id="panel1" tile class="split-block" :style="style_left">
-      <slot name="panel1" v-bind:left="left"></slot>
+  <div v-resize="onResize" class="splitter">
+    <v-sheet id="panel1" class="split-block" :style="style_left" tile>
+      <slot :left="left" name="panel1" />
     </v-sheet>
 
-    <div id="splitter" class="gutter" :class="{'active': active}" :style="'width: '+ this.gutterSize +'px'"></div>
+    <div id="splitter" class="gutter" :class="{'active': active}" :style="'width: '+ gutterSize +'px'" />
 
-    <v-sheet id="panel2" tile class="d-flex split-block" :style="style_right">
-      <slot name="panel2" v-bind:right="right"></slot>
+    <v-sheet id="panel2" class="d-flex split-block" :style="style_right" tile>
+      <slot name="panel2" :right="right" />
     </v-sheet>
   </div>
 
@@ -16,26 +16,26 @@
 
 <script>
   export default {
-    name: 'splitter',
+    name: 'Splitter',
 
     props: {
       value: {
         type: [Number, String],
-        default: 300
+        default: 300,
       },
 
       gutterSize: {
         type: [Number, String],
-        default: 10
+        default: 10,
       },
 
       minWidth: {
         type: [Number, String],
-        default: 300
-      }
+        default: 300,
+      },
     },
 
-    data() {
+    data () {
       return {
         splitter: null,
         panel1: null,
@@ -48,72 +48,72 @@
       }
     },
 
+    computed: {
+      style_left () {
+        return {
+          flexBasis: 'calc(' + this.left + '% - '+ this.gutterSize +'px)',
+        }
+      },
+      style_right () {
+        return {
+          flexBasis: 'calc(' + this.right + '% - '+ this.gutterSize +'px)',
+        }
+      },
+    },
+
     mounted () {
       this.init();
     },
 
     methods: {
 
-      init() {
-        
-        this.splitter = document.getElementById("splitter");
-        this.panel1   = document.getElementById("panel1");
-        this.panel2   = document.getElementById("panel2");
+      init () {
 
-        this.splitter.addEventListener("mousedown", this.spMouseDown);
+        this.splitter = document.getElementById('splitter');
+        this.panel1 = document.getElementById('panel1');
+        this.panel2 = document.getElementById('panel2');
+
+        this.splitter.addEventListener('mousedown', this.spMouseDown);
 
         this.setPosition(this.value);
 
       },
 
-      spMouseDown(event) {
-        this.splitter.removeEventListener("mousedown", this.spMouseDown);
-        window.addEventListener("mousemove", this.spMouseMove);
-        window.addEventListener("mouseup", this.spMouseUp);
+      spMouseDown (event) {
+        this.splitter.removeEventListener('mousedown', this.spMouseDown);
+        window.addEventListener('mousemove', this.spMouseMove);
+        window.addEventListener('mouseup', this.spMouseUp);
 
         document.body.classList.add('noselect');
         this.active = true;
       },
 
-      spMouseUp(event) {
-        window.removeEventListener("mousemove", this.spMouseMove);
-        window.removeEventListener("mouseup", this.spMouseUp);
-        this.splitter.addEventListener("mousedown", this.spMouseDown);
-        
+      spMouseUp (event) {
+        window.removeEventListener('mousemove', this.spMouseMove);
+        window.removeEventListener('mouseup', this.spMouseUp);
+        this.splitter.addEventListener('mousedown', this.spMouseDown);
+
         document.body.classList.remove('noselect')
         this.active = false;
         this.$emit('input', this.percentage);
       },
 
-      spMouseMove(event) {
+      spMouseMove (event) {
         if (event.clientX > this.minWidth) {
           this.setPosition(event.clientX);
         }
       },
 
-      setPosition(position) {
+      setPosition (position) {
         this.percentage = parseFloat(((position/this.window_width) * 100).toFixed(4));
 
-        this.left  = this.percentage;
+        this.left = this.percentage;
         this.right = 100 - this.left;
       },
 
-      onResize() {
+      onResize () {
         this.window_width = window.innerWidth;
-      }
-    },
-
-    computed: {
-      style_left() {
-        return {
-          flexBasis: 'calc(' + this.left + '% - '+ this.gutterSize +'px)'
-        }
       },
-      style_right() {
-        return {
-          flexBasis: 'calc(' + this.right + '% - '+ this.gutterSize +'px)'
-        }
-      }
     },
 
   }

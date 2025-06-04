@@ -1,236 +1,246 @@
 <script setup lang="ts">
 
-  import {onMounted, onBeforeUnmount, ref, reactive} from 'vue';
-	import Hyground from "./Hyground.vue";
-	import Hydra from "./Hydra.vue";
-	import Editor from "./Editor.vue";
-	import examples from './examples.json';
-	import {openMsgBroker} from "hydra-synth";
+  import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+  import Hyground from './Hyground.vue';
+  import Hydra from './Hydra.vue';
+  import Editor from './Editor.vue';
+  import examples from './examples.json';
+  import { openMsgBroker } from 'hydra-synth';
 
-	import * as Comlink from "comlink";
-	import {Mutator} from "./Mutator.js";
-	import InActorPanel from "./InActorPanel.vue";
-	import {RandomHydra} from "./RandomHydra.js";
-	import GenPanel from "./GenPanel.vue";
+  import * as Comlink from 'comlink';
+  import { Mutator } from './Mutator.js';
+  import InActorPanel from './InActorPanel.vue';
+  import { RandomHydra } from './RandomHydra.js';
+  import GenPanel from './GenPanel.vue';
 
   const props = defineProps({
-  index: Number,
-  showVid: Boolean,
-  limit: Boolean
-	});
+    index: Number,
+    showVid: Boolean,
+    limit: Boolean,
+  });
 
 
-	let brokerObj;
+  let brokerObj;
   let broker;
-	let n;
-	const sketch = ref("");
-	const nextSketch = ref("");
-	const title = ref("");
-	let mutator = new Mutator;
-	let filmOpen = ref(false);
-	let sketchInfoRef = ref({});
-	let genPopupOpen = ref(false);
+  let n;
+  const sketch = ref('');
+  const nextSketch = ref('');
+  const title = ref('');
+  const mutator = new Mutator;
+  const filmOpen = ref(false);
+  const sketchInfoRef = ref({});
+  const genPopupOpen = ref(false);
 
-  let stateObject = reactive({
-minFunctions: 3,
-maxFunctions: 8,
-minValue: 0, // Set your minValue
-maxValue: 5, // Set your maxValue
+  const stateObject = reactive({
+    minFunctions: 3,
+    maxFunctions: 8,
+    minValue: 0, // Set your minValue
+    maxValue: 5, // Set your maxValue
 
-arrowFunctionProb: 10, // Set your arrowFunctionProb
-mouseFunctionProb: 0, // Set your mouseFunctionProb
-mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
-modulateItselfProb: 20, // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
-exclusiveSourceList: [],
-exclusiveFunctionList: [],
-ignoredList: ["solid", "brightness", "luma", "invert", "posterize", "thresh", "layer", "modulateScrollX", "modulateScrollY"] });
+    arrowFunctionProb: 10, // Set your arrowFunctionProb
+    mouseFunctionProb: 0, // Set your mouseFunctionProb
+    mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
+    modulateItselfProb: 20, // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
+    exclusiveSourceList: [],
+    exclusiveFunctionList: [],
+    ignoredList: ['solid', 'brightness', 'luma', 'invert', 'posterize', 'thresh', 'layer', 'modulateScrollX', 'modulateScrollY'] });
 
 
+  function editCB (msg, arg1, arg2) {
+    //console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
+    if (msg === 'drop') {
+      brokerObj.targetView = undefined;
+      brokerObj.lookForTarget();
+    } else {
+      console.log('Edit cb' + msg + ' ' + arg1 + ' ' + arg2);
+    }
+  }
 
-		function editCB(msg, arg1, arg2) {
-			//console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
-			if (msg === "drop") {
-				brokerObj.targetView = undefined;
-	 			brokerObj.lookForTarget();
-	 		} else {
-	 			console.log("Edit cb" + msg + " " + arg1 + " " + arg2);
-	 		}
-		}
+  async function openOurBroker (evt) {
+    brokerObj = await openMsgBroker('editor', 'stage', editCB);
+    broker = brokerObj.broker;
+    n = brokerObj.name;
+    console.log('Created: ' + n);
+    await brokerObj.lookForTarget();
+  }
 
-	async function openOurBroker(evt) {
-		brokerObj = await openMsgBroker("editor", "stage", editCB);
-		broker = brokerObj.broker;
-		n = brokerObj.name;
-		console.log("Created: " + n);
-		await brokerObj.lookForTarget();
-		}
-
-  async function fairwell() {
+  async function fairwell () {
     await brokerObj.dropAndNotify(false);
-  	//await broker.dropAndNotify(n, "editor", "editor");
+    //await broker.dropAndNotify(n, "editor", "editor");
   }
 
-let hydraRenderer;
-let hydraCanvas;
+  let hydraRenderer;
+  let hydraCanvas;
 
-async function reportHydra(newH, newCanvas) {
-	hydraRenderer = newH;
-	hydraCanvas = newCanvas;
-}
-
-
-	onMounted(() => {
-		openOurBroker();
-	});
-
-	onBeforeUnmount(() => {
-		fairwell(); // This never seems to be called.
-	});
-
-	function changed(e, t) {
-		nextSketch.value = e;
-	}
-
-  async function sendTargetHydra(evt) {
-  	setLocalSketch(nextSketch.value);
-  	await broker.callback(brokerObj.targetView, "update", nextSketch.value, {...sketchInfoRef.value});
+  async function reportHydra (newH, newCanvas) {
+    hydraRenderer = newH;
+    hydraCanvas = newCanvas;
   }
 
-function setLocalSketch(text) {
-//console.log("Set Local Sketch to: " + text);
-	sketch.value = text;
-}
 
-let hydraGen = new RandomHydra(stateObject);
+  onMounted(() => {
+    openOurBroker();
+  });
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
-// Connected to the crossing arrows icon.
-// shiftKey means call the generator.
-  function randomHydra(evt) {
+  onBeforeUnmount(() => {
+    fairwell(); // This never seems to be called.
+  });
+
+  function changed (e, t) {
+    nextSketch.value = e;
+  }
+
+  async function sendTargetHydra (evt) {
+    setLocalSketch(nextSketch.value);
+    await broker.callback(brokerObj.targetView, 'update', nextSketch.value, { ...sketchInfoRef.value });
+  }
+
+  function setLocalSketch (text) {
+    //console.log("Set Local Sketch to: " + text);
+    sketch.value = text;
+  }
+
+  const hydraGen = new RandomHydra(stateObject);
+
+  function getRandomInt (max) {
+    return Math.floor(Math.random() * max);
+  }
+  // Connected to the crossing arrows icon.
+  // shiftKey means call the generator.
+  function randomHydra (evt) {
     let ska;
     if (genPopupOpen.value || evt.altKey) {
       ska = hydraGen.generateCode();
     } else {
-		let sketchX = getRandomInt(examples.length);
-		let sketche = examples[sketchX];
-		console.log(sketche.sketch_id);
-		title.value = sketche.sketch_id;
-		let s64 = sketche.code;
-		ska = decodeURIComponent(atob(s64));
-	}
-		nextSketch.value = ska;
-		setLocalSketch(ska);
-		if (evt.shiftKey) sendTargetHydra();
+      const sketchX = getRandomInt(examples.length);
+      const sketche = examples[sketchX];
+      console.log(sketche.sketch_id);
+      title.value = sketche.sketch_id;
+      const s64 = sketche.code;
+      ska = decodeURIComponent(atob(s64));
+    }
+    nextSketch.value = ska;
+    setLocalSketch(ska);
+    if (evt.shiftKey) sendTargetHydra();
   }
 
 
- function openGen(evt) {
-   genPopupOpen.value = !genPopupOpen.value;
-}
+  function openGen (evt) {
+    genPopupOpen.value = !genPopupOpen.value;
+  }
 
 
   window.addEventListener('unload', function (event) {
-	fairwell();
+    fairwell();
 
-});
+  });
 
-	function mutate(evt) {
-	 	let newSk = mutator.mutate({changeTransform: evt.metaKey}, sketch.value);
-	 	nextSketch.value = newSk;
-	 	setLocalSketch(nextSketch.value);
-	 	if (evt.shiftKey) sendTargetHydra();
-	}
+  function mutate (evt) {
+    const newSk = mutator.mutate({ changeTransform: evt.metaKey }, sketch.value);
+    nextSketch.value = newSk;
+    setLocalSketch(nextSketch.value);
+    if (evt.shiftKey) sendTargetHydra();
+  }
 
-	function toggleFilm(evt) {
-	 filmOpen.value = !filmOpen.value;
-	}
-
-
-	function updater(newV, sketchInfo, e, what) {
-	nextSketch.value = newV;
-	sketchInfoRef.value = sketchInfo;
-	title.value="";
-	if (what === "step" || what === "fast") {
-			if (e.shiftKey){sendTargetHydra(e)} 
-					else {setLocalSketch(nextSketch.value)};
-	} else {
-			sendTargetHydra(e)
-	}
-
-}
+  function toggleFilm (evt) {
+    filmOpen.value = !filmOpen.value;
+  }
 
 
-if (crossOriginIsolated) {
-    console.log("***SharedArrayBuffer is available");
-} else {
-		console.log("***SharedArrayBuffer is not available");
-}
+  function updater (newV, sketchInfo, e, what) {
+    nextSketch.value = newV;
+    sketchInfoRef.value = sketchInfo;
+    title.value='';
+    if (what === 'step' || what === 'fast') {
+      if (e.shiftKey){sendTargetHydra(e)}
+      else {setLocalSketch(nextSketch.value)}
+    } else {
+      sendTargetHydra(e)
+    }
 
-function getHydraRenderer() {
-	return hydraRenderer;
-}
+  }
 
-let inActState;
 
-function reportInActorState(state) {
-	inActState = state;
-}
+  if (crossOriginIsolated) {
+    console.log('***SharedArrayBuffer is available');
+  } else {
+    console.log('***SharedArrayBuffer is not available');
+  }
 
-function evalDone(hydraRenderer, text, timeB4) {
-		console.log(`evalDone ${timeB4}`);
-	 inActState.evalDone(hydraRenderer, text, timeB4);
-}
+  function getHydraRenderer () {
+    return hydraRenderer;
+  }
+
+  let inActState;
+
+  function reportInActorState (state) {
+    inActState = state;
+  }
+
+  function evalDone (hydraRenderer, text, timeB4) {
+    console.log(`evalDone ${timeB4}`);
+    inActState.evalDone(hydraRenderer, text, timeB4);
+  }
 
 </script>
 
 
 <template>
-<table><tbody><tr>
-<template v-if="showVid">
-<td>
-<Hydra :sketch="sketch" :key="sketch" :sketchInfo="sketchInfoRef" :reportHydra="reportHydra" :evalDone="evalDone" :width="192" :height="108"/>
-</td>
+  <table><tbody><tr>
+    <template v-if="showVid">
+      <td>
+        <Hydra
+          :key="sketch"
+          :eval-done="evalDone"
+          :height="108"
+          :report-hydra="reportHydra"
+          :sketch="sketch"
+          :sketch-info="sketchInfoRef"
+          :width="192"
+        />
+      </td>
+    </template>
+    <td>
+      <v-container fluid><v-row class="ga-1">
+        <v-tooltip text="Load Random Example (Alt: Generate Code)">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon v-bind="tooltipProps" icon="fa:fas fa--random" @click="randomHydra" />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Mutate Current Code">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--dice" @click="mutate" />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Send to Stage">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon v-bind="tooltipProps" icon="fa:fas carbon--send-action-usage" @click="sendTargetHydra" />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Generator Settings">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon v-bind="tooltipProps" icon="fa:fas fa--cog" @click="(e)=>openGen(e)" />
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Record/Play Controls">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon v-bind="tooltipProps" icon="fa:fas fa--film" @click="toggleFilm" />
+          </template>
+        </v-tooltip>
+      </v-row>
+      </v-container>
+      <template v-if="genPopupOpen">
+        <GenPanel :obj="hydraGen" :state="stateObject" />
+      </template>
+
+      <InActorPanel
+        :hidden="!filmOpen"
+        :report-in-actor-state="reportInActorState"
+        :script="sketch"
+        :update-script="updater"
+      />
+
+      {{ title }}
+    </td></tr></tbody></table>
+  <Editor :limit="limit" :text="nextSketch" @text-changed="changed" />
 </template>
-<td>
-<v-container fluid ><v-row class='ga-1'>
-	<v-tooltip text="Load Random Example (Alt: Generate Code)">
-		<template v-slot:activator="{ props: tooltipProps }">
-			<v-icon v-bind="tooltipProps" icon="fa:fas fa--random"  @click="randomHydra"/>
-		</template>
-	</v-tooltip>
-	<v-tooltip text="Mutate Current Code">
-		<template v-slot:activator="{ props: tooltipProps }">
-			<v-icon v-bind="tooltipProps" icon="fa:fas fa-solid--dice" @click="mutate"/>
-		</template>
-	</v-tooltip>
-	<v-tooltip text="Send to Stage">
-		<template v-slot:activator="{ props: tooltipProps }">
-			<v-icon v-bind="tooltipProps" icon="fa:fas carbon--send-action-usage" @click="sendTargetHydra"/>
-		</template>
-	</v-tooltip>
-  <v-tooltip text="Generator Settings">
-		<template v-slot:activator="{ props: tooltipProps }">
-			<v-icon v-bind="tooltipProps" icon="fa:fas fa--cog" @click="(e)=>openGen(e)"/>
-		</template>
-	</v-tooltip>
-  <v-tooltip text="Record/Play Controls">
-		<template v-slot:activator="{ props: tooltipProps }">
-			<v-icon v-bind="tooltipProps" icon="fa:fas fa--film" @click="toggleFilm"/>
-		</template>
-	</v-tooltip>
-</v-row>
-</v-container>
-  <template v-if="genPopupOpen">
-  <GenPanel :state='stateObject' :obj="hydraGen" />
-  </template>
-
-  <InActorPanel :script="sketch" :updateScript="updater" :hidden="!filmOpen"
-  :reportInActorState="reportInActorState"/>
-
-{{title}}
-</td></tr></tbody></table>
-<Editor :text="nextSketch" @textChanged="changed" :limit="limit"/>
-</template>
-
