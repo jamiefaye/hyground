@@ -7,6 +7,11 @@
       <v-app-bar-nav-icon @click="drawerVisible = !drawerVisible" />
       <v-app-bar-title>Hydra</v-app-bar-title>
       <v-spacer />
+      <v-tooltip text="Hyground Documentation">
+        <template #activator="{ props: tooltipProps }">
+          <v-btn v-bind="tooltipProps" icon="mdi-help-circle-outline" size="small" @click="openDocumentation" />
+        </template>
+      </v-tooltip>
       <v-tooltip :text="isFullscreen ? 'Exit Fullscreen (Esc/F11)' : 'Enter Fullscreen (F11)'">
         <template #activator="{ props: tooltipProps }">
           <v-btn v-bind="tooltipProps" :icon="isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'" size="small" @click="toggleFullscreen" />
@@ -49,6 +54,10 @@
     } catch (error) {
       console.warn('Fullscreen operation failed:', error);
     }
+  }
+
+  function openDocumentation () {
+    window.open('/icon-documentation.html', '_blank');
   }
 
   // Computed property that hides drawer when in fullscreen

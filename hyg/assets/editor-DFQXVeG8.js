@@ -1,0 +1,1 @@
+import{ _ as o }from'./Editors.vue_vue_type_script_setup_true_lang-D2t0SDv1.js';import{ c as r,o as t }from'./index-BISJuDPG.js';import'./InActorPanel.vue_vue_type_style_index_0_lang-CA10Obwi.js';const p={ __name:'editor',setup (e){return(_,a)=>(t(),r(o))} };export{ p as default };
