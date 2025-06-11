@@ -9,12 +9,13 @@
       <v-spacer />
       <v-tooltip text="Hyground Documentation">
         <template #activator="{ props: tooltipProps }">
-          <v-btn v-bind="tooltipProps" icon="mdi-help-circle-outline" size="small" @click="openDocumentation" />
+          <IMdiHelpCircleOutline v-bind="tooltipProps" @click="openDocumentation" />
         </template>
       </v-tooltip>
       <v-tooltip :text="isFullscreen ? 'Exit Fullscreen (Esc/F11)' : 'Enter Fullscreen (F11)'">
         <template #activator="{ props: tooltipProps }">
-          <v-btn v-bind="tooltipProps" :icon="isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'" size="small" @click="toggleFullscreen" />
+          <IMdiFullscreenExit v-if="isFullscreen" v-bind="tooltipProps" @click="toggleFullscreen" />
+          <IMdiFullscreen v-else v-bind="tooltipProps" @click="toggleFullscreen" />
         </template>
       </v-tooltip>
     </v-app-bar>
@@ -38,7 +39,7 @@
     try {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         const appElement = document.querySelector('#inspire');
-        
+
         if (appElement.requestFullscreen) {
           await appElement.requestFullscreen({ navigationUI: 'hide' });
         } else if (appElement.webkitRequestFullscreen) {
@@ -57,7 +58,7 @@
   }
 
   function openDocumentation () {
-    window.open('/icon-documentation.html', '_blank');
+    window.open('./icon-documentation.html', '_blank');
   }
 
   // Computed property that hides drawer when in fullscreen

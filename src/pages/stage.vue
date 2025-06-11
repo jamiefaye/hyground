@@ -1,5 +1,5 @@
 <script setup>
-  import HydraStage from '../HydraStage.vue'
+  import HydraStage from '../components/HydraStage.vue'
 </script>
 
 <template>

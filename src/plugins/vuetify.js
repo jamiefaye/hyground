@@ -5,11 +5,8 @@
  */
 
 // Styles
-
-import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
-import { aliases, fa } from 'vuetify/iconsets/fa'
-import { mdi } from 'vuetify/iconsets/mdi'
+import '@mdi/font/css/materialdesignicons.css'
 
 // Composables
 import { createVuetify } from 'vuetify'
@@ -18,5 +15,8 @@ import { createVuetify } from 'vuetify'
 export default createVuetify({
   theme: {
     defaultTheme: 'light',
+  },
+  icons: {
+    defaultSet: 'mdi',
   },
 })

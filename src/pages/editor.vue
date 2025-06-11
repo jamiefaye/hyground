@@ -1,5 +1,5 @@
 <script setup>
-  import Editors from '../Editors.vue'
+  import Editors from '../components/Editors.vue'
 </script>
 
 <template>

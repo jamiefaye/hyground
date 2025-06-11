@@ -1,6 +1,6 @@
 <script setup>
-  import Editors from '../Editors.vue'
-  import TopLevel from '../TopLevel.vue'
+  import Editors from '../components/Editors.vue'
+  import TopLevel from '../components/TopLevel.vue'
 </script>
 
 

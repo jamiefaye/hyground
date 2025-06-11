@@ -15,7 +15,6 @@ import { createApp } from 'vue'
 
 // Styles
 import 'unfonts.css'
-import './assets/icons.css'
 
 const app = createApp(App)
 

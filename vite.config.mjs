@@ -2,6 +2,8 @@
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import Fonts from 'unplugin-fonts/vite'
+import Icons from 'unplugin-icons/vite'
+import IconsResolver from 'unplugin-icons/resolver'
 import Layouts from 'vite-plugin-vue-layouts-next'
 import Vue from '@vitejs/plugin-vue'
 import VueRouter from 'unplugin-vue-router/vite'
@@ -29,7 +31,14 @@ export default defineConfig({
         configFile: 'src/styles/settings.scss',
       },
     }),
-    Components(),
+    Components({
+      resolvers: [
+        IconsResolver(),
+      ],
+    }),
+    Icons({
+      autoInstall: true,
+    }),
     Fonts({
       google: {
         families: [{
@@ -76,7 +85,7 @@ export default defineConfig({
       '.vue',
     ],
   },
-  //  base: '/hyg/',
+  //base: '/hyg/',
   server: {
     port: 8000,
     https: {
