@@ -19,10 +19,16 @@
   <template v-for="(item, index) in edList" :key="item">
     <EditorView :index="index" :limit="limitHeight" :show-vid="showVideo" />
   </template>
-  <button id="EdAdd" type="button" @click="addEd">New</button>
-  <input id="videocheckbox" v-model="showVideo" type="checkbox">
-  <label for="videocheckbox">Monitors</label>
-  <input id="limitcheckbox" v-model="limitHeight" type="checkbox">
-  <label for="limitcheckbox">Limit Height</label>
+  <div class="d-flex align-center ga-3">
+    <v-btn id="EdAdd" variant="outlined" size="x-small" @click="addEd">New</v-btn>
+    <div>
+      <input id="videocheckbox" v-model="showVideo" type="checkbox">
+      <label for="videocheckbox">Monitors</label>
+    </div>
+    <div>
+      <input id="limitcheckbox" v-model="limitHeight" type="checkbox">
+      <label for="limitcheckbox">Limit Height</label>
+    </div>
+  </div>
 
 </template>
