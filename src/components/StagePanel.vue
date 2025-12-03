@@ -6,6 +6,7 @@
     reportInActorState: Function,
     updateScript: Function,
     sketch: String,
+    reverseMorph: Function,
   });
 
   function openEditor () {
@@ -53,6 +54,27 @@
           hide-details
           label="Quad"
         />
+      </template>
+    </v-tooltip>
+    <v-tooltip text="Auto-morph between sketches">
+      <template #activator="{ props: tooltipProps }">
+        <v-checkbox
+          v-bind="tooltipProps"
+          v-model="props.params.morph"
+          density="compact"
+          hide-details
+          label="Morph"
+        />
+      </template>
+    </v-tooltip>
+    <v-tooltip text="Morph back to previous sketch">
+      <template #activator="{ props: tooltipProps }">
+        <v-btn
+          v-bind="tooltipProps"
+          size="x-small"
+          :disabled="!props.params.morph"
+          @click="props.reverseMorph"
+        >Rev</v-btn>
       </template>
     </v-tooltip>
   </v-row></v-col><v-col>

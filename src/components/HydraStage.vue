@@ -6,6 +6,7 @@
   import { BGSynth, openMsgBroker } from 'hydra-synth';
   import StagePanel from './StagePanel.vue';
   import Editors from './Editors.vue'
+  import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
   const props = defineProps({
     show: Boolean,
   });
@@ -35,7 +36,22 @@
     fx: false,
     wgsl: false,
     quad: false,
+    morph: false,
   });
+
+  // Morph state
+  const morpher = new HydraSketchMorpher();
+  let lastSketch = '';
+  let currentSketch = '';
+  let morphInterval = null;
+
+  function reverseMorph() {
+    if (!lastSketch || !currentSketch || lastSketch === currentSketch) return;
+    // Swap and trigger morph back
+    const target = lastSketch;
+    lastSketch = currentSketch;
+    updater(target, fxsketchInfo);
+  }
 
 
   const mouseData = { x: 0, y:0 };
@@ -107,9 +123,48 @@
   }
 
   async function updater (newV, sketchInfo, e, what) {
+    // Cancel any in-progress morph
+    if (morphInterval) {
+      clearInterval(morphInterval);
+      morphInterval = null;
+    }
+
     if (!fxActive) {
-      fxSketch.value = newV;
-      fxsketchInfo = sketchInfo;
+      // Check if morph mode is enabled and we have a previous sketch
+      if (panelParams.morph && lastSketch && lastSketch !== newV) {
+        try {
+          const steps = morpher.morphSketches(lastSketch, newV, 30);
+          let stepIndex = 0;
+
+          morphInterval = setInterval(() => {
+            if (stepIndex < steps.length) {
+              fxSketch.value = steps[stepIndex].code;
+              fxsketchInfo = sketchInfo;
+              stepIndex++;
+            } else {
+              clearInterval(morphInterval);
+              morphInterval = null;
+              // Set exact destination sketch, not reconstructed version
+              fxSketch.value = newV;
+              lastSketch = currentSketch;
+              currentSketch = newV;
+            }
+          }, 50); // ~20fps morph animation
+        } catch (err) {
+          // Morph failed (incompatible sketches), just do direct switch
+          console.warn('Morph failed, doing direct switch:', err.message);
+          fxSketch.value = newV;
+          fxsketchInfo = sketchInfo;
+          lastSketch = currentSketch;
+          currentSketch = newV;
+        }
+      } else {
+        // No morph - direct switch
+        fxSketch.value = newV;
+        fxsketchInfo = sketchInfo;
+        lastSketch = currentSketch;
+        currentSketch = newV;
+      }
       lastSketchIsDirect = true;
     } else {
       flipIt();
@@ -236,6 +291,7 @@
       :report-in-actor-state="reportInActorState"
       :sketch="fxSketch"
       :update-script="updater"
+      :reverse-morph="reverseMorph"
     />
   </template>
   <Hydra

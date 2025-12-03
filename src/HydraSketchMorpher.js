@@ -1,7 +1,7 @@
 import { Parser } from 'acorn';
 import { generate } from 'astring';
 import { attachComments, makeTraveler } from 'astravel';
-import { hydraFunctions } from './src/hydra-functions.js';
+import { hydraFunctions } from './hydra-functions.js';
 
 /**
  * HydraSketchMorpher - Generates incremental transformations between two Hydra sketches

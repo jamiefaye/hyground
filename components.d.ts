@@ -12,7 +12,6 @@ declare module 'vue' {
     Editors: typeof import('./src/components/Editors.vue')['default']
     EditorView: typeof import('./src/components/EditorView.vue')['default']
     GenPanel: typeof import('./src/components/GenPanel.vue')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     Hydra: typeof import('./src/components/Hydra.vue')['default']
     HydraStage: typeof import('./src/components/HydraStage.vue')['default']
     Hyground: typeof import('./src/components/Hyground.vue')['default']
