@@ -5,9 +5,6 @@
   import Hydra from './Hydra.vue';
   import Editor from './Editor.vue';
   import examples from '../examples.json';
-  import { openMsgBroker } from 'hydra-synth';
-
-  import * as Comlink from 'comlink';
   import { Mutator } from '../Mutator.js';
   import InActorPanel from './InActorPanel.vue';
   import { RandomHydra } from '../RandomHydra.js';
@@ -20,9 +17,17 @@
   });
 
 
-  let brokerObj;
-  let broker;
-  let n;
+  // BroadcastChannel for stage communication (replaces MsgBroker)
+  const stageChannel = new BroadcastChannel('hydra-stage');
+  let stageReady = false;
+
+  stageChannel.onmessage = (event) => {
+    if (event.data.type === 'stage-ready') {
+      stageReady = true;
+      console.log('Stage is ready');
+    }
+  };
+
   const sketch = ref('');
   const nextSketch = ref('');
   const title = ref('');
@@ -47,29 +52,6 @@
     ignoredList: ['solid', 'brightness', 'luma', 'invert', 'posterize', 'thresh', 'layer', 'modulateScrollX', 'modulateScrollY'] });
 
 
-  function editCB (msg, arg1, arg2) {
-    //console.log("Edit Callback activated " + msg + " " + arg1 + " " + arg2);
-    if (msg === 'drop') {
-      brokerObj.targetView = undefined;
-      brokerObj.lookForTarget();
-    } else {
-      console.log('Edit cb' + msg + ' ' + arg1 + ' ' + arg2);
-    }
-  }
-
-  async function openOurBroker (evt) {
-    brokerObj = await openMsgBroker('editor', 'stage', editCB);
-    broker = brokerObj.broker;
-    n = brokerObj.name;
-    console.log('Created: ' + n);
-    await brokerObj.lookForTarget();
-  }
-
-  async function fairwell () {
-    await brokerObj.dropAndNotify(false);
-    //await broker.dropAndNotify(n, "editor", "editor");
-  }
-
   let hydraRenderer;
   let hydraCanvas;
 
@@ -78,13 +60,21 @@
     hydraCanvas = newCanvas;
   }
 
+  function sendToStage(sketchCode: string, info: object = {}) {
+    stageChannel.postMessage({
+      type: 'update',
+      sketch: sketchCode,
+      sketchInfo: info
+    });
+  }
 
   onMounted(() => {
-    openOurBroker();
+    // Request stage presence announcement
+    stageChannel.postMessage({ type: 'editor-ready' });
   });
 
   onBeforeUnmount(() => {
-    fairwell(); // This never seems to be called.
+    stageChannel.close();
   });
 
   function changed (e, t) {
@@ -98,7 +88,7 @@
     if (evt && evt.shiftKey && previousSketch.value && previousSketch.value !== nextSketch.value) {
       await morphToStage(previousSketch.value, nextSketch.value);
     } else {
-      await broker.callback(brokerObj.targetView, 'update', nextSketch.value, { ...sketchInfoRef.value });
+      sendToStage(nextSketch.value, { ...sketchInfoRef.value });
     }
 
     // Always update the previous sketch to current for next morph (A=B)
@@ -120,7 +110,7 @@
       nextSketch.value = steps[i];
       setLocalSketch(steps[i]);
 
-      await broker.callback(brokerObj.targetView, 'update', steps[i], { ...sketchInfoRef.value });
+      sendToStage(steps[i], { ...sketchInfoRef.value });
 
       // Wait between steps
       if (i < steps.length - 1) {
@@ -132,7 +122,7 @@
     // This ensures the stage matches exactly what's in the local preview
     nextSketch.value = toSketch;
     setLocalSketch(toSketch);
-    await broker.callback(brokerObj.targetView, 'update', toSketch, { ...sketchInfoRef.value });
+    sendToStage(toSketch, { ...sketchInfoRef.value });
   }
 
   async function createParameterInterpolationSteps (fromSketch, toSketch) {
@@ -253,10 +243,6 @@
   }
 
 
-  window.addEventListener('unload', function (event) {
-    fairwell();
-
-  });
 
   function mutate (evt) {
     const newSk = mutator.mutate({ changeTransform: evt.metaKey }, sketch.value);

@@ -1,9 +1,8 @@
 <script setup lang="ts">
   import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
   import Hydra from './Hydra.vue';
-  import * as Comlink from 'comlink';
   import InActorPanel from './InActorPanel.vue';
-  import { BGSynth, openMsgBroker } from 'hydra-synth';
+  import { Hydra as HydraEngine, getSharedDevice } from 'hydra-synth';
   import StagePanel from './StagePanel.vue';
   import Editors from './Editors.vue'
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
@@ -11,12 +10,14 @@
     show: Boolean,
   });
 
-  let stageName;
-  let brokerObj;
-
   let hydraRenderer;
   let fxHydra;
   let fxCanvas;
+
+  // Shared device Hydras for FX sources (replaces BGSynth workers)
+  let sharedDevice = null;
+  let sourceHydras: any[] = [null, null];
+  let sourceCanvases: OffscreenCanvas[] = [];
 
   //  const fxSketch = ref("src(s2).out()");
   const fxSketch = ref('');
@@ -72,50 +73,34 @@
     return flipper ? 0 : 1;
   }
 
-  let hBGSynth = new Array(2);
-
   let t0; let t1;
 
-  function cb (msg, arg1, arg2) {
-    //console.log("Callback activated " + msg + " " + arg1 + " " + arg2);
-    if (msg === 'update') { updater(arg1, arg2) }
-    else if (msg === 'drop') {
-
-    }
-  }
-
-  async function openBroker (evt) {
-
-    brokerObj = await openMsgBroker('stage', 'editor', cb);
-    stageName = brokerObj.name;
-    console.log('Created: ' + stageName);
-  }
-
-  async function fairwell () {
-    console.log('notify drop sent: ' + stageName);
-    await brokerObj.dropAndNotify(true);
-    console.log('notify drop done: ' + stageName);
-  }
-
-
   onMounted(() => {
-    openBroker();
     window.addEventListener('resize', resizeCanvas);
   });
 
   onBeforeUnmount(() => {
     window.removeEventListener('resize', resizeCanvas);
-    fairwell();
+    cleanupFX();
   });
 
   document.addEventListener('mousemove', function (event) {
     mouseData.x = event.clientX;
     mouseData.y = event.clientY;
   });
-  // Custom code to execute before closing
-  window.addEventListener('unload', function (event) {
-    fairwell();
-  });
+
+  // BroadcastChannel for editor communication (replaces MsgBroker)
+  const stageChannel = new BroadcastChannel('hydra-stage');
+
+  stageChannel.onmessage = (event) => {
+    const { type, sketch, sketchInfo } = event.data;
+    if (type === 'update') {
+      updater(sketch, sketchInfo || {});
+    }
+  };
+
+  // Announce stage presence
+  stageChannel.postMessage({ type: 'stage-ready' });
 
   function openEditor () {
     window.open('/index.html?edit=t', 'editor', 'width=500,height=1080,left=20');
@@ -168,14 +153,14 @@
       lastSketchIsDirect = true;
     } else {
       flipIt();
-      if (!hBGSynth[flipper]) {
-        console.log('BGWorker not set up');
+      if (!sourceHydras[flipper]) {
+        console.log('Source Hydra not set up');
         return;
       }
-      if (sketchInfo.key) await hBGSynth[flipper].hush();
-      await hBGSynth[flipper].setSketch(newV); // Maybe hush()?
+      if (sketchInfo.key) await sourceHydras[flipper].eval('hush()');
+      await sourceHydras[flipper].eval(newV);
 
-      // If coming out of a "direct to fxSketch" activation, we don't want to do a blend-in since it would reference the wrong BGRworker source.
+      // If coming out of a "direct to fxSketch" activation, we don't want to do a blend-in since it would reference the wrong source.
       // So just do a cut now and we can pick up using the FX stuff on the next transition.
 
       if (lastSketchIsDirect) {
@@ -201,32 +186,99 @@
     fxHydra = newH.synth;
     fxCanvas = newCanvas;
     console.log('New Hydra instance reported.');
-    if (fxLoaded) {
-      hBGSynth[0].setResolution(newCanvas.width, newCanvas.height);
-      hBGSynth[1].setResolution(newCanvas.width, newCanvas.height);
-    }
+    // Note: shared-device Hydras will be recreated if FX mode is active after resize
   }
 
 
   async function openFX () {
     if (fxLoaded) return;
 
-    hBGSynth[0] = await new BGSynth(fxCanvas, panelParams.wgsl, false, true);
-    hBGSynth[1] = await new BGSynth(fxCanvas, panelParams.wgsl, false, true);
+    // Get or create shared GPU device
+    sharedDevice = await getSharedDevice();
 
-    await hBGSynth[0].openWorker();
-    await hBGSynth[1].openWorker();
+    // Create offscreen canvases for source Hydras
+    const sourceWidth = fxCanvas.width;
+    const sourceHeight = fxCanvas.height;
+    sourceCanvases = [
+      new OffscreenCanvas(sourceWidth, sourceHeight),
+      new OffscreenCanvas(sourceWidth, sourceHeight)
+    ];
 
-    hBGSynth[0].requestFrameCallbacks(
-      frame=>{
-        fxHydra.s2.injectImage(frame);
-      });
-    hBGSynth[1].requestFrameCallbacks(frame=>{
-      fxHydra.s3.injectImage(frame);
+    // Create source Hydras sharing the same GPU device
+    sourceHydras[0] = new HydraEngine({
+      useWGSL: true,
+      gpuDevice: sharedDevice,
+      canvas: sourceCanvases[0],
+      width: sourceWidth,
+      height: sourceHeight,
+      makeGlobal: false,
+      autoLoop: false,
     });
+
+    sourceHydras[1] = new HydraEngine({
+      useWGSL: true,
+      gpuDevice: sharedDevice,
+      canvas: sourceCanvases[1],
+      width: sourceWidth,
+      height: sourceHeight,
+      makeGlobal: false,
+      autoLoop: false,
+    });
+
+    // Wait for WebGPU initialization
+    await Promise.all([
+      sourceHydras[0].wgslPromise,
+      sourceHydras[1].wgslPromise,
+    ]);
+
+    // Set up zero-copy texture sharing via initFromOutput
+    // s2 gets output from sourceHydras[0], s3 gets output from sourceHydras[1]
+    fxHydra.s2.initFromOutput(sourceHydras[0].o[0]);
+    fxHydra.s3.initFromOutput(sourceHydras[1].o[0]);
+
+    // Start render loop for source Hydras
+    startSourceLoop();
 
     fxLoaded = true;
     fxActive = true;
+  }
+
+  let sourceLoopId: number | null = null;
+
+  function startSourceLoop() {
+    let lastTime = performance.now();
+
+    function frame() {
+      const now = performance.now();
+      const dt = now - lastTime;
+      lastTime = now;
+
+      // Tick both source Hydras
+      if (sourceHydras[0]) sourceHydras[0].tick(dt);
+      if (sourceHydras[1]) sourceHydras[1].tick(dt);
+
+      sourceLoopId = requestAnimationFrame(frame);
+    }
+
+    sourceLoopId = requestAnimationFrame(frame);
+  }
+
+  function cleanupFX() {
+    if (sourceLoopId) {
+      cancelAnimationFrame(sourceLoopId);
+      sourceLoopId = null;
+    }
+    if (sourceHydras[0]) {
+      sourceHydras[0].synth._destroy?.();
+      sourceHydras[0] = null;
+    }
+    if (sourceHydras[1]) {
+      sourceHydras[1].synth._destroy?.();
+      sourceHydras[1] = null;
+    }
+    sourceCanvases = [];
+    fxActive = false;
+    fxLoaded = false;
   }
 
 
@@ -245,19 +297,14 @@
     fxActive = panelParams.fx;
     if (!fxActive) {
       // FX turned off, so tear everything down.
-      if (hBGSynth[0])
-        hBGSynth[0].destroy();
-      if (hBGSynth[1])
-        hBGSynth[1].destroy();
-      hBGSynth = new Array(2);
-      fxActive = false;
-      fxLoaded = false;
+      cleanupFX();
     } else {
       await openFX();
-      if (hBGSynth[0])
-        await hBGSynth[0].setSketch('hush()');
-      if (hBGSynth[1])
-        await hBGSynth[1].setSketch('hush()');
+      // Initialize both source Hydras with hush
+      if (sourceHydras[0])
+        await sourceHydras[0].eval('hush()');
+      if (sourceHydras[1])
+        await sourceHydras[1].eval('hush()');
     }
   }
 
