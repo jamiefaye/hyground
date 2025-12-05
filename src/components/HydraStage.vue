@@ -15,7 +15,7 @@
   let fxCanvas;
 
   // Shared device Hydras for FX sources (replaces BGSynth workers)
-  let sharedDevice = null;
+  const sharedDeviceRef = ref(null);
   let sourceHydras: any[] = [null, null];
   let sourceCanvases: OffscreenCanvas[] = [];
 
@@ -27,7 +27,7 @@
   const frameTime = 16;
 
   let fxLoaded = false;
-  let fxActive = false;
+  const fxActiveRef = ref(false);
   const widthRef = ref(window.innerWidth);
   const heightRef = ref(window.innerHeight);
 
@@ -114,7 +114,7 @@
       morphInterval = null;
     }
 
-    if (!fxActive) {
+    if (!fxActiveRef.value) {
       // Check if morph mode is enabled and we have a previous sketch
       if (panelParams.morph && lastSketch && lastSketch !== newV) {
         try {
@@ -193,8 +193,13 @@
   async function openFX () {
     if (fxLoaded) return;
 
-    // Get or create shared GPU device
-    sharedDevice = await getSharedDevice();
+    // Ensure we have the shared device (should already be set when WGSL was enabled)
+    if (!sharedDeviceRef.value) {
+      sharedDeviceRef.value = await getSharedDevice();
+      keyctr.value++;  // Force Hydra recreation with shared device
+      // Wait a tick for the Hydra to recreate
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     // Create offscreen canvases for source Hydras
     const sourceWidth = fxCanvas.width;
@@ -207,7 +212,7 @@
     // Create source Hydras sharing the same GPU device
     sourceHydras[0] = new HydraEngine({
       useWGSL: true,
-      gpuDevice: sharedDevice,
+      gpuDevice: sharedDeviceRef.value,
       canvas: sourceCanvases[0],
       width: sourceWidth,
       height: sourceHeight,
@@ -217,7 +222,7 @@
 
     sourceHydras[1] = new HydraEngine({
       useWGSL: true,
-      gpuDevice: sharedDevice,
+      gpuDevice: sharedDeviceRef.value,
       canvas: sourceCanvases[1],
       width: sourceWidth,
       height: sourceHeight,
@@ -240,7 +245,7 @@
     startSourceLoop();
 
     fxLoaded = true;
-    fxActive = true;
+    fxActiveRef.value = true;
   }
 
   let sourceLoopId: number | null = null;
@@ -253,9 +258,10 @@
       const dt = now - lastTime;
       lastTime = now;
 
-      // Tick both source Hydras
+      // Tick all Hydras in one unified loop for efficiency
       if (sourceHydras[0]) sourceHydras[0].tick(dt);
       if (sourceHydras[1]) sourceHydras[1].tick(dt);
+      if (hydraRenderer) hydraRenderer.tick(dt);  // fxHydra
 
       sourceLoopId = requestAnimationFrame(frame);
     }
@@ -277,7 +283,7 @@
       sourceHydras[1] = null;
     }
     sourceCanvases = [];
-    fxActive = false;
+    fxActiveRef.value = false;
     fxLoaded = false;
   }
 
@@ -294,8 +300,8 @@
   }
 
   async function toggleFX () {
-    fxActive = panelParams.fx;
-    if (!fxActive) {
+    fxActiveRef.value = panelParams.fx;
+    if (!fxActiveRef.value) {
       // FX turned off, so tear everything down.
       cleanupFX();
     } else {
@@ -322,7 +328,13 @@
 
 
   async function toggleWgsl () {
-    keyctr.value++;
+    if (panelParams.wgsl) {
+      // Get shared device when WGSL is enabled
+      sharedDeviceRef.value = await getSharedDevice();
+    } else {
+      sharedDeviceRef.value = null;
+    }
+    keyctr.value++;  // Force Hydra recreation
   }
 
   watch(()=>panelParams.fx, toggleFX);
@@ -344,6 +356,8 @@
   <Hydra
     :key="keyctr"
     :eval-done="evalDone"
+    :external-loop="fxActiveRef"
+    :gpu-device="sharedDeviceRef"
     :height="heightRef"
     :report-hydra="reportHydra"
     :sketch="fxSketch"
