@@ -13,6 +13,7 @@
   	wgsl:		Boolean,
   	gpuDevice: Object,  // Optional shared GPUDevice for zero-copy texture sharing
   	externalLoop: Boolean,  // If true, parent manages the animation loop
+  	preserveDrawingBuffer: Boolean,  // Enable for Syphon/pixel readback
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -60,7 +61,7 @@ async function render() {
 
 		if (h === undefined) {
 		console.log("New Hydra instance created.");
-    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, useWGSL: props.wgsl, gpuDevice: props.gpuDevice, regen: true});
+    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, useWGSL: props.wgsl, gpuDevice: props.gpuDevice, regen: true, preserveDrawingBuffer: props.preserveDrawingBuffer });
     	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);

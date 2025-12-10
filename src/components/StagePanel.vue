@@ -7,6 +7,7 @@
     updateScript: Function,
     sketch: String,
     reverseMorph: Function,
+    syphonAvailable: Boolean,
   });
 
   function openEditor () {
@@ -75,6 +76,17 @@
           :disabled="!props.params.morph"
           @click="props.reverseMorph"
         >Rev</v-btn>
+      </template>
+    </v-tooltip>
+    <v-tooltip v-if="props.syphonAvailable" text="Output to Syphon">
+      <template #activator="{ props: tooltipProps }">
+        <v-checkbox
+          v-bind="tooltipProps"
+          v-model="props.params.syphon"
+          density="compact"
+          hide-details
+          label="Syphon"
+        />
       </template>
     </v-tooltip>
   </v-row></v-col><v-col>

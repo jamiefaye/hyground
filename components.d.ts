@@ -40,6 +40,7 @@ declare module 'vue' {
     PlayAudio: typeof import('./src/components/PlayAudio.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SharedDeviceTest: typeof import('./src/components/SharedDeviceTest.vue')['default']
     Splitter: typeof import('./src/components/Splitter.vue')['default']
     StagePanel: typeof import('./src/components/StagePanel.vue')['default']
     TopLevel: typeof import('./src/components/TopLevel.vue')['default']

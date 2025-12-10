@@ -38,7 +38,106 @@
     wgsl: false,
     quad: false,
     morph: false,
+    syphon: false,
   });
+
+  // Syphon output state
+  const syphonAvailable = ref(false);
+  const syphonActive = ref(false);
+  let syphonFrameCount = 0;
+  let syphonLoopId: number | null = null;
+  let syphonReadbackCanvas: OffscreenCanvas | null = null;
+  let syphonReadbackCtx: OffscreenCanvasRenderingContext2D | null = null;
+
+  // Check for Syphon API (available when running in Electron with hydra-syphon)
+  async function initSyphon() {
+    if (window.syphonAPI) {
+      syphonAvailable.value = await window.syphonAPI.isAvailable();
+      if (syphonAvailable.value) {
+        console.log('Syphon API available - recreating Hydra with preserveDrawingBuffer');
+        keyctr.value++;  // Force Hydra recreation with preserveDrawingBuffer enabled
+      }
+    }
+  }
+
+  async function toggleSyphon() {
+    if (!syphonAvailable.value) return;
+
+    if (panelParams.syphon) {
+      const result = await window.syphonAPI.startServer('Hydra Stage');
+      syphonActive.value = result.success;
+      if (result.success) {
+        console.log('Syphon server started');
+        // Start dedicated Syphon loop if FX mode is not active
+        if (!fxActiveRef.value) {
+          startSyphonLoop();
+        }
+      } else {
+        console.error('Failed to start Syphon:', result.error);
+      }
+    } else {
+      await window.syphonAPI.stopServer();
+      syphonActive.value = false;
+      stopSyphonLoop();
+      console.log('Syphon server stopped');
+    }
+  }
+
+  function startSyphonLoop() {
+    if (syphonLoopId) return; // Already running
+
+    function frame() {
+      publishToSyphon();
+      syphonLoopId = requestAnimationFrame(frame);
+    }
+    syphonLoopId = requestAnimationFrame(frame);
+  }
+
+  function stopSyphonLoop() {
+    if (syphonLoopId) {
+      cancelAnimationFrame(syphonLoopId);
+      syphonLoopId = null;
+    }
+  }
+
+  async function publishToSyphon() {
+    if (!syphonActive.value || !hydraRenderer || !fxCanvas) return;
+
+    // Throttle to ~30fps for Syphon to reduce CPU overhead
+    syphonFrameCount++;
+    if (syphonFrameCount % 2 !== 0) return;
+
+    const width = hydraRenderer.width;
+    const height = hydraRenderer.height;
+
+    try {
+      // WebGL mode - use regl.read() for fast pixel readback
+      if (hydraRenderer.regl) {
+        const pixels = hydraRenderer.regl.read();
+        window.syphonAPI.publishFrame(pixels.buffer, width, height);
+      }
+      // WebGPU mode - use createImageBitmap + offscreen canvas
+      else if (panelParams.wgsl && fxCanvas) {
+        // Create/resize readback canvas if needed
+        if (!syphonReadbackCanvas || syphonReadbackCanvas.width !== width || syphonReadbackCanvas.height !== height) {
+          syphonReadbackCanvas = new OffscreenCanvas(width, height);
+          syphonReadbackCtx = syphonReadbackCanvas.getContext('2d', { willReadFrequently: true });
+        }
+        if (!syphonReadbackCtx) return;
+
+        // Copy from WebGPU canvas to 2D canvas
+        const bitmap = await createImageBitmap(fxCanvas);
+        syphonReadbackCtx.drawImage(bitmap, 0, 0);
+        bitmap.close();
+
+        // Read pixels from 2D canvas
+        const imageData = syphonReadbackCtx.getImageData(0, 0, width, height);
+        window.syphonAPI.publishFrame(imageData.data.buffer, width, height);
+      }
+    } catch (e) {
+      console.error('Syphon publish error:', e);
+    }
+  }
 
   // Morph state
   const morpher = new HydraSketchMorpher();
@@ -77,11 +176,18 @@
 
   onMounted(() => {
     window.addEventListener('resize', resizeCanvas);
+    initSyphon();
   });
 
   onBeforeUnmount(() => {
     window.removeEventListener('resize', resizeCanvas);
     cleanupFX();
+    stopSyphonLoop();
+    syphonReadbackCanvas = null;
+    syphonReadbackCtx = null;
+    if (syphonActive.value) {
+      window.syphonAPI?.stopServer();
+    }
   });
 
   document.addEventListener('mousemove', function (event) {
@@ -193,8 +299,10 @@
   async function openFX () {
     if (fxLoaded) return;
 
-    // Ensure we have the shared device (should already be set when WGSL was enabled)
-    if (!sharedDeviceRef.value) {
+    const useWGSL = panelParams.wgsl;
+
+    // For WGSL mode, ensure we have the shared device
+    if (useWGSL && !sharedDeviceRef.value) {
       sharedDeviceRef.value = await getSharedDevice();
       keyctr.value++;  // Force Hydra recreation with shared device
       // Wait a tick for the Hydra to recreate
@@ -209,37 +317,45 @@
       new OffscreenCanvas(sourceWidth, sourceHeight)
     ];
 
-    // Create source Hydras sharing the same GPU device
-    sourceHydras[0] = new HydraEngine({
-      useWGSL: true,
-      gpuDevice: sharedDeviceRef.value,
-      canvas: sourceCanvases[0],
+    // Create source Hydras - match WGSL setting of main Hydra
+    const hydraOpts = {
+      useWGSL: useWGSL,
       width: sourceWidth,
       height: sourceHeight,
       makeGlobal: false,
       autoLoop: false,
+    };
+
+    // For WGSL, share GPU device for zero-copy textures
+    if (useWGSL) {
+      hydraOpts.gpuDevice = sharedDeviceRef.value;
+    }
+
+    sourceHydras[0] = new HydraEngine({
+      ...hydraOpts,
+      canvas: sourceCanvases[0],
     });
 
     sourceHydras[1] = new HydraEngine({
-      useWGSL: true,
-      gpuDevice: sharedDeviceRef.value,
+      ...hydraOpts,
       canvas: sourceCanvases[1],
-      width: sourceWidth,
-      height: sourceHeight,
-      makeGlobal: false,
-      autoLoop: false,
     });
 
-    // Wait for WebGPU initialization
-    await Promise.all([
-      sourceHydras[0].wgslPromise,
-      sourceHydras[1].wgslPromise,
-    ]);
-
-    // Set up zero-copy texture sharing via initFromOutput
-    // s2 gets output from sourceHydras[0], s3 gets output from sourceHydras[1]
-    fxHydra.s2.initFromOutput(sourceHydras[0].o[0]);
-    fxHydra.s3.initFromOutput(sourceHydras[1].o[0]);
+    // Wait for initialization
+    if (useWGSL) {
+      // WebGPU needs async init
+      await Promise.all([
+        sourceHydras[0].wgslPromise,
+        sourceHydras[1].wgslPromise,
+      ]);
+      // Set up zero-copy texture sharing via initFromOutput
+      fxHydra.s2.initFromOutput(sourceHydras[0].o[0]);
+      fxHydra.s3.initFromOutput(sourceHydras[1].o[0]);
+    } else {
+      // WebGL: use canvas-based texture sharing
+      fxHydra.s2.init({ src: sourceCanvases[0], dynamic: true });
+      fxHydra.s3.init({ src: sourceCanvases[1], dynamic: true });
+    }
 
     // Start render loop for source Hydras
     startSourceLoop();
@@ -262,6 +378,9 @@
       if (sourceHydras[0]) sourceHydras[0].tick(dt);
       if (sourceHydras[1]) sourceHydras[1].tick(dt);
       if (hydraRenderer) hydraRenderer.tick(dt);  // fxHydra
+
+      // Publish to Syphon if active
+      publishToSyphon();
 
       sourceLoopId = requestAnimationFrame(frame);
     }
@@ -304,7 +423,13 @@
     if (!fxActiveRef.value) {
       // FX turned off, so tear everything down.
       cleanupFX();
+      // If Syphon is active, start dedicated loop since FX loop stopped
+      if (syphonActive.value) {
+        startSyphonLoop();
+      }
     } else {
+      // FX turned on - stop dedicated Syphon loop (startSourceLoop will handle it)
+      stopSyphonLoop();
       await openFX();
       // Initialize both source Hydras with hush
       if (sourceHydras[0])
@@ -339,6 +464,7 @@
 
   watch(()=>panelParams.fx, toggleFX);
   watch(()=>panelParams.wgsl, toggleWgsl);
+  watch(()=>panelParams.syphon, toggleSyphon);
 
 </script>
 
@@ -351,6 +477,7 @@
       :sketch="fxSketch"
       :update-script="updater"
       :reverse-morph="reverseMorph"
+      :syphon-available="syphonAvailable"
     />
   </template>
   <Hydra
@@ -359,6 +486,7 @@
     :external-loop="fxActiveRef"
     :gpu-device="sharedDeviceRef"
     :height="heightRef"
+    :preserve-drawing-buffer="syphonAvailable"
     :report-hydra="reportHydra"
     :sketch="fxSketch"
     :sketch-info="fxsketchInfo"
