@@ -85,7 +85,7 @@ class Mutator {
     // An AST traveler that accumulates a list of Literal nodes.
     const traveler = makeTraveler({
       go (node, state) {
-        if (node.type === 'Literal') {
+        if (node.type === 'Literal' && typeof node.value === 'number') {
           state.literalTab.push(node);
         } else if (node.type === 'MemberExpression') {
           if (node.property && node.property.type === 'Literal') {
