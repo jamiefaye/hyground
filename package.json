@@ -19,6 +19,7 @@
     "@fontsource/roboto": "5.2.5",
     "@iconify/json": "^2.2.347",
     "@iconify/vue": "^5.0.0",
+    "@jamiefaye/hydra-synth-vertex": "file:../hyv",
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
     "acorn": "^8.0.4",
