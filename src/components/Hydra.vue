@@ -2,6 +2,9 @@
 <script setup lang="ts">
   import {onMounted, onBeforeUnmount, Ref, ref, watch} from "vue";
   import {Hydra} from "hydra-synth";
+  import { useToastStore } from '@/stores/toast'
+
+  const toastStore = useToastStore()
 
   const props = defineProps({
   	sketch: String,
@@ -54,6 +57,32 @@ function animationTick() {
 	}
 }
 
+// Handle errors from Hydra (syntax, runtime, load errors)
+function handleHydraError(error) {
+	let message = error.message || String(error)
+	let details = null
+
+	// Format details based on error type
+	if (error.line != null) {
+		details = `Line ${error.line}${error.column != null ? `:${error.column}` : ''}`
+		if (error.source) {
+			details += ` - ${error.source}`
+		}
+	}
+	if (error.suggestion) {
+		message += ` (${error.suggestion})`
+	}
+
+	// Show toast based on error type
+	const errorType = error.type || 'runtime'
+	if (errorType === 'syntax') {
+		toastStore.error(`Syntax error: ${message}`, details)
+	} else if (errorType === 'load') {
+		toastStore.warning(`Load error: ${message}`, details)
+	} else {
+		toastStore.error(message, details)
+	}
+}
 
 async function render() {
     if (!context.value) return;
@@ -61,7 +90,16 @@ async function render() {
 
 		if (h === undefined) {
 		console.log("New Hydra instance created.");
-    	h = new Hydra({ makeGlobal: false, canvas: context.value, autoLoop: false, useWGSL: props.wgsl, gpuDevice: props.gpuDevice, regen: true, preserveDrawingBuffer: props.preserveDrawingBuffer });
+    	h = new Hydra({
+    		makeGlobal: false,
+    		canvas: context.value,
+    		autoLoop: false,
+    		useWGSL: props.wgsl,
+    		gpuDevice: props.gpuDevice,
+    		regen: true,
+    		preserveDrawingBuffer: props.preserveDrawingBuffer,
+    		onError: handleHydraError
+    	});
     	if (h.wgslPromise) await h.wgslPromise
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);
