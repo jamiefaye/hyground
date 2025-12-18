@@ -1,6 +1,5 @@
 <script setup>
 import { useToastStore } from '@/stores/toast'
-import { computed } from 'vue'
 
 const toastStore = useToastStore()
 
@@ -21,35 +20,23 @@ const typeIcons = {
 
 <template>
   <div class="toast-container">
-    <v-snackbar
-      v-for="toast in toastStore.toasts"
-      :key="toast.id"
-      v-model="toast.visible"
-      :color="typeColors[toast.type]"
-      :timeout="-1"
-      location="top center"
-      class="toast-snackbar"
-      multi-line
-    >
-      <div class="d-flex align-center">
-        <v-icon :icon="typeIcons[toast.type]" class="mr-2" />
-        <div class="toast-content">
-          <div class="toast-message">{{ toast.message }}</div>
-          <div v-if="toast.details" class="toast-details text-caption mt-1">
-            {{ toast.details }}
-          </div>
+    <transition-group name="toast">
+      <v-alert
+        v-for="toast in toastStore.toasts"
+        :key="toast.id"
+        :type="typeColors[toast.type]"
+        :icon="typeIcons[toast.type]"
+        closable
+        class="toast-alert"
+        elevation="8"
+        @click:close="toastStore.dismiss(toast.id)"
+      >
+        <div class="toast-message">{{ toast.message }}</div>
+        <div v-if="toast.details" class="toast-details">
+          {{ toast.details }}
         </div>
-      </div>
-      <template #actions>
-        <v-btn
-          variant="text"
-          size="small"
-          @click="toastStore.dismiss(toast.id)"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+      </v-alert>
+    </transition-group>
   </div>
 </template>
 
@@ -63,17 +50,12 @@ const typeIcons = {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  pointer-events: none;
+  max-width: 500px;
+  width: 90vw;
 }
 
-.toast-snackbar {
+.toast-alert {
   pointer-events: auto;
-  position: relative !important;
-}
-
-.toast-content {
-  flex: 1;
-  min-width: 0;
 }
 
 .toast-message {
@@ -81,8 +63,29 @@ const typeIcons = {
 }
 
 .toast-details {
-  opacity: 0.8;
+  opacity: 0.85;
   font-family: monospace;
+  font-size: 0.85em;
+  margin-top: 4px;
   word-break: break-all;
+}
+
+/* Transition animations */
+.toast-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.toast-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 </style>
