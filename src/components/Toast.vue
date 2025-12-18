@@ -27,7 +27,7 @@ const typeIcons = {
       v-model="toast.visible"
       :color="typeColors[toast.type]"
       :timeout="-1"
-      location="bottom right"
+      location="top center"
       class="toast-snackbar"
       multi-line
     >
@@ -56,11 +56,12 @@ const typeIcons = {
 <style scoped>
 .toast-container {
   position: fixed;
-  bottom: 16px;
-  right: 16px;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 8px;
   pointer-events: none;
 }
