@@ -1,0 +1,322 @@
+//+ dur=4 // 0 - basic sphere
+// TEST: Single sphere with osc texture, rotating on Y axis
+hush()
+osc(10, 0.1, 1.5)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 1 - basic cube
+// TEST: Single cube with colored osc, rotating on X and Y axes
+hush()
+osc(8, 0.2, 2)
+  .color(1, 0.5, 0.3)
+  .out(o0, cube(0.4).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 2 - torus
+// TEST: Torus with hue-shifting gradient, dual axis rotation
+hush()
+gradient(0.5)
+  .hue(() => time * 0.1)
+  .out(o0, torus(0.4, 0.15).rotateX(() => time * 0.7).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 3 - cylinder
+// TEST: Cylinder with noise texture, tilted rotation
+hush()
+noise(3, 0.2)
+  .colorama(0.5)
+  .out(o0, cylinder(0.3, 0.8).rotateX(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 4 - cone
+// TEST: Cone with voronoi texture, Y axis spin
+hush()
+voronoi(5, 0.3)
+  .color(0.8, 0.2, 0.5)
+  .out(o0, cone(0.4, 0.8).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 5 - sphere grid
+// TEST: 3x3 grid of small spheres with kaleid osc
+hush()
+osc(20, 0.05, 1)
+  .kaleid(4)
+  .out(o0, sphere(0.1).grid(3, 3, 1, 0.6).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 6 - cube grid 3D
+// TEST: 2x2x2 cube array (8 cubes total) with shape texture
+hush()
+shape(4, 0.5, 0.01)
+  .repeat(4, 4)
+  .out(o0, cube(0.15).grid(2, 2, 2, 0.5).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 7 - torus grid
+// TEST: 3x3 torus array with modulated osc
+hush()
+osc(5, 0.1, 2)
+  .modulate(noise(2), 0.1)
+  .out(o0, torus(0.12, 0.04).grid(3, 3, 1, 0.5).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=4 // 8 - non-uniform scale
+// TEST: Sphere stretched 1.5x wide, 0.5x tall (ellipsoid shape)
+hush()
+gradient(1)
+  .saturate(2)
+  .out(o0, sphere(0.3).scale(1.5, 0.5, 1).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 9 - translated cubes multi-layer
+// TEST: Three cubes (red/green/blue) at different X positions using sprite layers
+hush()
+solid(1, 0, 0).out(o0, cube(0.2).translate(-0.5, 0, 0).rotateY(() => time).perspective(45))
+solid(0, 1, 0).out(o0, cube(0.2).translate(0, 0, 0).rotateY(() => time).perspective(45), 1)
+solid(0, 0, 1).out(o0, cube(0.2).translate(0.5, 0, 0).rotateY(() => time).perspective(45), 2)
+
+
+
+//+ dur=4 // 10 - noise texture sphere
+// TEST: High contrast noise pattern on rotating sphere
+hush()
+noise(4, 0.3)
+  .contrast(1.5)
+  .out(o0, sphere(0.5).rotateX(() => time * 0.3).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 11 - voronoi torus
+// TEST: Voronoi cells with colorama on large torus
+hush()
+voronoi(8, 0.5, 0.3)
+  .colorama(0.2)
+  .out(o0, torus(0.45, 0.12).rotateX(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 12 - modulated osc sphere
+// TEST: Osc modulated by rotated osc (wavy pattern)
+hush()
+osc(30, 0.01)
+  .modulate(osc(10).rotate(0.5), 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time * 0.7).perspective(45))
+
+
+
+//+ dur=4 // 13 - kaleid cube
+// TEST: 6-fold kaleidoscope pattern on rotating cube
+hush()
+osc(10, 0.1, 1.5)
+  .kaleid(6)
+  .out(o0, cube(0.4).rotateX(() => time * 0.4).rotateY(() => time * 0.6).perspective(45))
+
+
+
+//+ dur=4 // 14 - feedback sphere
+// TEST: Feedback loop (trails) blended with osc on sphere
+hush()
+src(o0)
+  .scale(0.99)
+  .rotate(0.01)
+  .blend(osc(10, 0.1, 2), 0.3)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 15 - cylinder row
+// TEST: Row of 4 cylinders with hue animation
+hush()
+osc(15, 0.1, 1)
+  .hue(() => time * 0.1)
+  .out(o0, cylinder(0.1, 0.5).grid(4, 1, 1, 0.4).rotateX(0.3).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 16 - animated shape on torus
+// TEST: Hexagon shape with pulsing scale applied to torus
+hush()
+shape(6, 0.8, 0.01)
+  .scale(1, 1, () => 0.5 + 0.3 * Math.sin(time))
+  .out(o0, torus(0.4, 0.1).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 17 - large sphere grid 5x5
+// TEST: 25 tiny spheres in 5x5 grid with fast osc
+hush()
+osc(40, 0.02, 0.5)
+  .out(o0, sphere(0.05).grid(5, 5, 1, 0.35).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 18 - cone array
+// TEST: 3x3 grid of cones with gradient colorama
+hush()
+gradient(0.3)
+  .colorama(0.4)
+  .out(o0, cone(0.15, 0.4).grid(3, 3, 1, 0.5).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 19 - textured plane
+// TEST: Flat plane with modulated osc, tilted toward camera
+hush()
+osc(10, 0.1, 1.5)
+  .modulate(noise(3), 0.1)
+  .out(o0, plane(1, 1).rotateX(-0.3).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ dur=5 // 20 - Cat GLB model
+// TEST: Cat.glb loaded with osc texture, should show cat mesh
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb').then(model => {
+  osc(8, 0.1, 2).out(o0, model.scale(1.0).rotateX(Math.PI).rotateY(() => time).perspective(45))
+})
+
+
+
+//+ dur=5 // 21 - Cat with noise
+// TEST: Cat.glb with noise/colorama texture
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb').then(model => {
+  noise(5, 0.3).contrast(1.3).colorama(0.2).out(o0, model.scale(1.0).rotateX(Math.PI).rotateY(() => time * 0.5).perspective(45))
+})
+
+
+
+//+ dur=4 // 22 - two spheres side by side
+// TEST: Two spheres at X=-0.4 and X=0.4, counter-rotating, different textures
+hush()
+osc(10).out(o0, sphere(0.3).translate(-0.4, 0, 0).rotateY(() => time).perspective(45))
+noise(5).out(o0, sphere(0.3).translate(0.4, 0, 0).rotateY(() => -time).perspective(45), 1)
+
+
+
+//+ dur=4 // 23 - deep 3D grid
+// TEST: 3x3x3 cube array (27 cubes) with blue-tinted osc
+hush()
+osc(20, 0.05)
+  .color(0.5, 0.8, 1)
+  .out(o0, cube(0.08).grid(3, 3, 3, 0.35).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 24 - animated sphere scale
+// TEST: Sphere pulsing size via scale transform
+hush()
+osc(15, 0.1, 1.5)
+  .out(o0, sphere(0.3).scale(() => 1 + 0.5 * Math.sin(time * 2)).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 25 - horizontal torus row
+// TEST: Row of 6 tiny tori spread horizontally
+hush()
+voronoi(10, 0.5)
+  .out(o0, torus(0.1, 0.03).grid(6, 1, 1, 0.28).translate(0, 0, 0).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=6 // 26 - Animated Woman GLB
+// TEST: Animated woman model with osc texture, should show rigged character
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb').then(model => {
+  osc(12, 0.1, 1.5).out(o0, model.animate(null, () => time).scale(0.8).rotateX(Math.PI/2).rotateY(() => time * 0.3).perspective(45))
+})
+
+
+
+//+ dur=6 // 27 - Animated Woman with gradient
+// TEST: Animated woman with gradient/colorama texture
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb').then(model => {
+  gradient(0.5).hue(() => time * 0.1).out(o0, model.animate(null, () => time).scale(0.8).rotateX(Math.PI/2).rotateY(() => time * 0.5).perspective(45))
+})
+
+
+
+//+ dur=5 // 28 - Sprite sheet cube (die)
+// TEST: Cube with 4x4 sprite grid, each face shows different cell from grid
+hush()
+s0.initImage('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/test-grid-4x4.png')
+src(s0).out(o0, cube(0.4).rotateY(() => time).rotateX(() => time * 0.7).perspective(45), { level: 1, sprite: { cols: 4, rows: 4 } })
+
+
+
+//+ dur=5 // 29 - OBJ model heads
+// TEST: Load OBJ file with multiple heads, rotating
+hush()
+loadObj('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/headsSortedRandom.obj', { swapYZ: true }).then(head => {
+  osc(10, 0.1, 1.5).color(0.9, 0.5, 0.3).out(o0, head.scale(0.8).rotateX(Math.PI/2).rotateY(() => time).perspective(45))
+})
+
+
+
+//+ dur=4 // 30 - Diffuse lighting sphere
+// TEST: Sphere with diffuse lighting from upper-left, should show shading
+hush()
+solid(0.8, 0.3, 0.2)
+  .diffuse(1, 1, 1, 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 31 - Specular highlight torus
+// TEST: Torus with specular highlight, should show shiny spot
+hush()
+solid(0.2, 0.4, 0.8)
+  .diffuse(1, 1, 1, 0.3)
+  .specular(1, 1, 1, 32, 0.8)
+  .out(o0, torus(0.4, 0.15).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 32 - Fresnel effect sphere
+// TEST: Sphere with fresnel rim lighting, edges should glow
+hush()
+solid(0.1, 0.1, 0.3)
+  .fresnel(3, 0.5)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 33 - Combined lighting on cube
+// TEST: Cube with diffuse + specular + fresnel, full shading
+hush()
+solid(0.6, 0.2, 0.4)
+  .diffuse(1, 1, 0.8, 0.15)
+  .specular(1, 1, 1, 64, 0.6)
+  .fresnel(2, 0.3)
+  .out(o0, cube(0.4).rotateX(() => time * 0.4).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=5 // 34 - Sprite levels (layered geometry)
+// TEST: Three shapes at different levels - sphere behind, torus middle, cube front
+hush()
+osc(10, 0.1, 2).out(o0, sphere(0.5).translate(0, 0, -0.3).rotateY(() => time).perspective(45), { level: 0 })
+noise(5).color(0.2, 0.8, 0.4).out(o0, torus(0.35, 0.1).rotateX(() => time * 0.7).perspective(45), { level: 1 })
+voronoi(8).color(0.8, 0.3, 0.5).out(o0, cube(0.25).translate(0.3, 0.2, 0.3).rotateY(() => -time).perspective(45), { level: 2 })
+
+
+
+//+ dur=5 // 35 - Sprite levels with blend modes
+// TEST: Overlapping shapes with add blend - should brighten where overlapping
+hush()
+solid(0.5, 0, 0).out(o0, sphere(0.4).translate(-0.2, 0, 0).perspective(45), { level: 0 })
+solid(0, 0.5, 0).out(o0, sphere(0.4).translate(0.2, 0, 0).perspective(45), { level: 1, blend: 'add' })
+solid(0, 0, 0.5).out(o0, sphere(0.4).translate(0, 0.3, 0).perspective(45), { level: 2, blend: 'add' })
+
+
