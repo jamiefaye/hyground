@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
   import Hydra from './Hydra.vue';
   import InActorPanel from './InActorPanel.vue';
-  import { Hydra as HydraEngine, getSharedDevice } from 'hydra-synth';
   import StagePanel from './StagePanel.vue';
   import Editors from './Editors.vue'
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
@@ -28,8 +27,10 @@
 
   let fxLoaded = false;
   const fxActiveRef = ref(false);
-  const widthRef = ref(window.innerWidth);
-  const heightRef = ref(window.innerHeight);
+  const widthRef = ref(100);
+  const heightRef = ref(100);
+  const containerRef = ref(null);
+  let resizeObserver = null;
 
   const hidePanel = ref(false);
 
@@ -174,13 +175,43 @@
 
   let t0; let t1;
 
+  function setupResizeObserver() {
+    if (resizeObserver || !containerRef.value) return;
+
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = Math.round(entry.contentRect.width);
+        const height = Math.round(entry.contentRect.height);
+        if (width > 0 && height > 0) {
+          widthRef.value = width;
+          heightRef.value = height;
+          console.log('Stage container resized:', width, 'x', height);
+        }
+      }
+    });
+    resizeObserver.observe(containerRef.value);
+  }
+
   onMounted(() => {
-    window.addEventListener('resize', resizeCanvas);
     initSyphon();
+    // Try to set up ResizeObserver immediately
+    nextTick(() => {
+      setupResizeObserver();
+    });
+  });
+
+  // Watch for containerRef to become available
+  watch(containerRef, (newVal) => {
+    if (newVal) {
+      setupResizeObserver();
+    }
   });
 
   onBeforeUnmount(() => {
-    window.removeEventListener('resize', resizeCanvas);
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
     cleanupFX();
     stopSyphonLoop();
     syphonReadbackCanvas = null;
@@ -301,6 +332,9 @@
 
     const useWGSL = panelParams.wgsl;
 
+    // Import the createHydra factory from the webgpu extension
+    const { createHydra, getSharedDevice } = await import("hydra-synth/extensions/vertex/webgpu");
+
     // For WGSL mode, ensure we have the shared device
     if (useWGSL && !sharedDeviceRef.value) {
       sharedDeviceRef.value = await getSharedDevice();
@@ -317,37 +351,28 @@
       new OffscreenCanvas(sourceWidth, sourceHeight)
     ];
 
-    // Create source Hydras - match WGSL setting of main Hydra
+    // Create source Hydras using the factory (which auto-installs vertex extension)
     const hydraOpts = {
       useWGSL: useWGSL,
       width: sourceWidth,
       height: sourceHeight,
-      makeGlobal: false,
+      makeGlobal: true,  // Required for sandbox eval to work
       autoLoop: false,
+      gpuDevice: useWGSL ? sharedDeviceRef.value : undefined,
     };
 
-    // For WGSL, share GPU device for zero-copy textures
-    if (useWGSL) {
-      hydraOpts.gpuDevice = sharedDeviceRef.value;
-    }
-
-    sourceHydras[0] = new HydraEngine({
+    sourceHydras[0] = await createHydra({
       ...hydraOpts,
       canvas: sourceCanvases[0],
     });
 
-    sourceHydras[1] = new HydraEngine({
+    sourceHydras[1] = await createHydra({
       ...hydraOpts,
       canvas: sourceCanvases[1],
     });
 
-    // Wait for initialization
+    // Set up texture sharing for FX compositing
     if (useWGSL) {
-      // WebGPU needs async init
-      await Promise.all([
-        sourceHydras[0].wgslPromise,
-        sourceHydras[1].wgslPromise,
-      ]);
       // Set up zero-copy texture sharing via initFromOutput
       fxHydra.s2.initFromOutput(sourceHydras[0].o[0]);
       fxHydra.s3.initFromOutput(sourceHydras[1].o[0]);
@@ -408,15 +433,6 @@
 
 
   const keyctr = ref(0);
-  function resizeCanvas () {
-
-    const inW = window.innerWidth;
-    const inH = window.innerHeight; // - 80;
-    widthRef.value = inW;
-    heightRef.value = inH;
-    console.log('Resized: ' + inW + ' + ' +inH + ' keyctr: ' + keyctr.value);
-    keyctr.value++;
-  }
 
   async function toggleFX () {
     fxActiveRef.value = panelParams.fx;
@@ -455,6 +471,7 @@
   async function toggleWgsl () {
     if (panelParams.wgsl) {
       // Get shared device when WGSL is enabled
+      const { getSharedDevice } = await import("hydra-synth/extensions/vertex/webgpu");
       sharedDeviceRef.value = await getSharedDevice();
     } else {
       sharedDeviceRef.value = null;
@@ -470,27 +487,44 @@
 
 
 <template>
-  <template v-if="props.show">
-    <StagePanel
-      :params="panelParams"
-      :report-in-actor-state="reportInActorState"
-      :sketch="fxSketch"
-      :update-script="updater"
-      :reverse-morph="reverseMorph"
-      :syphon-available="syphonAvailable"
-    />
-  </template>
-  <Hydra
-    :key="keyctr"
-    :eval-done="evalDone"
-    :external-loop="fxActiveRef"
-    :gpu-device="sharedDeviceRef"
-    :height="heightRef"
-    :preserve-drawing-buffer="syphonAvailable"
-    :report-hydra="reportHydra"
-    :sketch="fxSketch"
-    :sketch-info="fxsketchInfo"
-    :wgsl="panelParams.wgsl"
-    :width="widthRef"
-  />
+  <div class="stage-wrapper">
+    <div v-if="props.show" class="stage-panel-wrapper">
+      <StagePanel
+        :params="panelParams"
+        :report-in-actor-state="reportInActorState"
+        :sketch="fxSketch"
+        :update-script="updater"
+        :reverse-morph="reverseMorph"
+        :syphon-available="syphonAvailable"
+      />
+    </div>
+    <div ref="containerRef" class="hydra-container">
+      <Hydra
+        :key="keyctr"
+        :eval-done="evalDone"
+        :external-loop="fxActiveRef"
+        :gpu-device="sharedDeviceRef"
+        :height="heightRef"
+        :preserve-drawing-buffer="syphonAvailable"
+        :report-hydra="reportHydra"
+        :sketch="fxSketch"
+        :sketch-info="fxsketchInfo"
+        :wgsl="panelParams.wgsl"
+        :width="widthRef"
+      />
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.stage-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.hydra-container {
+  flex: 1;
+  overflow: hidden;
+}
+</style>

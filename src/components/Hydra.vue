@@ -1,7 +1,6 @@
 
 <script setup lang="ts">
-  import {onMounted, onBeforeUnmount, Ref, ref, watch} from "vue";
-  import {Hydra} from "hydra-synth";
+  import {onMounted, onBeforeUnmount, Ref, ref, watch, computed} from "vue";
   import { useToastStore } from '@/stores/toast'
 
   const toastStore = useToastStore()
@@ -17,10 +16,24 @@
   	gpuDevice: Object,  // Optional shared GPUDevice for zero-copy texture sharing
   	externalLoop: Boolean,  // If true, parent manages the animation loop
   	preserveDrawingBuffer: Boolean,  // Enable for Syphon/pixel readback
+  	fillContainer: Boolean,  // If true, canvas fills container via CSS (for stage)
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
 const context: Ref<CanvasRenderingContext2D | undefined> = ref();
+
+// Computed style to ensure canvas displays at intended size
+// fillContainer: no explicit size, let layout determine it
+// otherwise: explicit pixel dimensions
+const canvasStyle = computed(() => {
+  if (props.fillContainer) {
+    return {}  // No style - let CSS handle sizing
+  }
+  return {
+    width: `${props.width}px`,
+    height: `${props.height}px`
+  }
+});
 
 onMounted(() => {
     context.value = canvasElement.value;
@@ -32,7 +45,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
 	stopAnimationTimer();
-	h._destroy();
+	if (h && h._destroy) h._destroy();
 	h = undefined;
 });
 
@@ -86,21 +99,37 @@ function handleHydraError(error) {
 
 async function render() {
     if (!context.value) return;
+    // Wait for valid canvas dimensions
+    if (!props.width || !props.height || props.width <= 0 || props.height <= 0) {
+      console.warn('Hydra: Invalid canvas dimensions, skipping render');
+      return;
+    }
     let text = props.sketch;
 
 		if (h === undefined) {
-		console.log("New Hydra instance created.");
-    	h = new Hydra({
-    		makeGlobal: false,
-    		canvas: context.value,
-    		autoLoop: false,
-    		useWGSL: props.wgsl,
-    		gpuDevice: props.gpuDevice,
-    		regen: true,
-    		preserveDrawingBuffer: props.preserveDrawingBuffer,
-    		onError: handleHydraError
-    	});
-    	if (h.wgslPromise) await h.wgslPromise
+		console.log("New Hydra instance created via createHydra factory.");
+    	// Ensure canvas has dimensions set before Hydra reads them
+    	const canvas = context.value as HTMLCanvasElement;
+    	canvas.width = props.width;
+    	canvas.height = props.height;
+
+    	try {
+    	  // Use the createHydra factory from the webgpu extension
+    	  const { createHydra } = await import("hydra-synth/extensions/vertex/webgpu");
+    	  h = await createHydra({
+    		  makeGlobal: true,  // Required for sandbox eval to work
+    		  canvas: canvas,
+    		  width: props.width,
+    		  height: props.height,
+    		  autoLoop: false,
+    		  useWGSL: props.wgsl,
+    		  gpuDevice: props.gpuDevice,
+    		  preserveDrawingBuffer: props.preserveDrawingBuffer,
+    	  });
+    	} catch (err) {
+    	  console.error('Failed to create Hydra instance:', err);
+    	  return;
+    	}
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);
     	}
@@ -110,10 +139,17 @@ async function render() {
     		frameTimerKey = setInterval(animationTick, frameTime);
     	}
     }
-    if (props.sketchInfo.key) h.synth.hush(); // hush if a key frame is requested.
+    if (props.sketchInfo?.key) h.synth.hush(); // hush if a key frame is requested.
     //console.log("Eval: " + text);
+    // Skip eval if sketch is empty
+    if (!text || text.trim() === '') return;
     let timeB4 = performance.now();
- 		await h.eval(text);
+    try {
+ 		  await h.eval(text);
+ 		} catch (err) {
+ 		  console.error('Hydra eval error:', err);
+ 		  return;
+ 		}
  		if (props.evalDone) {
  			props.evalDone(h, text, timeB4);
  		}
@@ -122,7 +158,7 @@ async function render() {
 
 
 <template>
-   <canvas ref="canvasElement" :width="width" :height="height"></canvas>
+   <canvas ref="canvasElement" :width="width" :height="height" :style="canvasStyle"></canvas>
 </template>
 
 <style scoped>
@@ -131,7 +167,6 @@ canvas {
   padding: 0;
   border: 0;
   display: block;
-  vertical-align: top;
 }
 </style>
 

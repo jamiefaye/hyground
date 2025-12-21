@@ -1,5 +1,5 @@
 <template>
-  <v-app id="inspire">
+  <v-layout id="inspire" class="fill-height">
     <v-navigation-drawer v-model="drawerVisible" :width="450">
       <Editors />
     </v-navigation-drawer>
@@ -22,7 +22,7 @@
     <v-main>
       <HydraStage :show="drawerVisible" />
     </v-main>
-  </v-app>
+  </v-layout>
 </template>
 
 <script setup>
@@ -32,7 +32,7 @@
   import HydraStage from './HydraStage.vue'
 
   const appStore = useAppStore()
-  const drawer = ref(null)
+  const drawer = ref(true)
   const isFullscreen = ref(false)
 
   async function toggleFullscreen () {
@@ -108,13 +108,15 @@
   });
 </script>
 
-<script>
-  export default {
-    data: () => ({ drawer: null }),
-  }
-</script>
 
 <style>
+/* Ensure #inspire fills its container - let Vuetify handle layout */
+#inspire {
+  width: 100%;
+  height: 100%;
+}
+
+
 /* Clean fullscreen CSS - now that layout issues are fixed */
 #inspire:fullscreen,
 #inspire:-webkit-full-screen,

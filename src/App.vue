@@ -10,7 +10,3 @@
   const theme = useTheme()
   theme.global.name.value = 'light';
 </script>
-
-<style>
-
-</style>
