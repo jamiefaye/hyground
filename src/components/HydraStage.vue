@@ -419,11 +419,11 @@
       sourceLoopId = null;
     }
     if (sourceHydras[0]) {
-      sourceHydras[0].synth._destroy?.();
+      sourceHydras[0]._destroy?.();
       sourceHydras[0] = null;
     }
     if (sourceHydras[1]) {
-      sourceHydras[1].synth._destroy?.();
+      sourceHydras[1]._destroy?.();
       sourceHydras[1] = null;
     }
     sourceCanvases = [];
