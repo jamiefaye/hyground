@@ -299,7 +299,6 @@
     <template v-if="showVid">
       <td>
         <Hydra
-          :key="sketch"
           :eval-done="evalDone"
           :height="108"
           :report-hydra="reportHydra"
