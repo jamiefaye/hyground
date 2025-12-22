@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
-import { Hydra, getSharedDevice } from 'hydra-synth';
 
 const canvasA = ref<HTMLCanvasElement | null>(null);
 const canvasB = ref<HTMLCanvasElement | null>(null);
@@ -24,51 +23,46 @@ async function init() {
   }
 
   try {
+    // Import the createHydra factory from the webgpu extension
+    const { createHydra, getSharedDevice } = await import("hydra-synth/extensions/vertex/webgpu");
+
     status.value = 'Getting shared GPU device...';
     const device = await getSharedDevice();
     status.value = `Got device: ${device.label || 'WebGPU Device'}`;
 
-    // Create 3 Hydras sharing the same device
+    // Create 3 Hydras sharing the same device (factory auto-installs vertex extension)
     status.value = 'Creating Hydra A...';
-    hydraA = new Hydra({
+    hydraA = await createHydra({
       useWGSL: true,
       gpuDevice: device,
       canvas: canvasA.value,
       width: 640,
       height: 360,
-      makeGlobal: false,
+      makeGlobal: true,  // Required for sandbox eval
       autoLoop: false,
     });
 
     status.value = 'Creating Hydra B...';
-    hydraB = new Hydra({
+    hydraB = await createHydra({
       useWGSL: true,
       gpuDevice: device,
       canvas: canvasB.value,
       width: 640,
       height: 360,
-      makeGlobal: false,
+      makeGlobal: true,  // Required for sandbox eval
       autoLoop: false,
     });
 
     status.value = 'Creating Hydra FX (main output)...';
-    hydraFX = new Hydra({
+    hydraFX = await createHydra({
       useWGSL: true,
       gpuDevice: device,
       canvas: canvasMain.value,
       width: 1280,
       height: 720,
-      makeGlobal: false,
+      makeGlobal: true,  // Required for sandbox eval
       autoLoop: false,
     });
-
-    // Wait for all WGSL setups to complete
-    status.value = 'Waiting for WebGPU initialization...';
-    await Promise.all([
-      hydraA.wgslPromise,
-      hydraB.wgslPromise,
-      hydraFX.wgslPromise,
-    ]);
 
     // Set up cross-Hydra sources (ZERO-COPY via shared device!)
     status.value = 'Setting up cross-Hydra sources...';
@@ -122,15 +116,15 @@ function cleanup() {
     animationId = null;
   }
   if (hydraA) {
-    hydraA.synth._destroy();
+    hydraA.looper?.stop();
     hydraA = null;
   }
   if (hydraB) {
-    hydraB.synth._destroy();
+    hydraB.looper?.stop();
     hydraB = null;
   }
   if (hydraFX) {
-    hydraFX.synth._destroy();
+    hydraFX.looper?.stop();
     hydraFX = null;
   }
 }

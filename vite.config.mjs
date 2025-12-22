@@ -86,6 +86,10 @@ export default defineConfig({
     ],
   },
   base: '/hyg/',
+  build: {
+    minify: false,
+    sourcemap: true,
+  },
   server: {
     port: 8000,
     https: {

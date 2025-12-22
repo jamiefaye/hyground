@@ -45,11 +45,14 @@ class InActorState {
 
   evalDone (hydraRenderer, text, timeB4) {
     const outA = []
-    const preamble = hydraRenderer.activeFromBefore(timeB4 + performance.timeOrigin);
-    if (preamble !== '') {
-      outA.push('/*\n');
-      outA.push(preamble);
-      outA.push('*/\n');
+    // activeFromBefore is a custom hyv feature for recording - optional
+    if (hydraRenderer.activeFromBefore) {
+      const preamble = hydraRenderer.activeFromBefore(timeB4 + performance.timeOrigin);
+      if (preamble !== '') {
+        outA.push('/*\n');
+        outA.push(preamble);
+        outA.push('*/\n');
+      }
     }
     outA.push(text);
     const code = outA.join('');

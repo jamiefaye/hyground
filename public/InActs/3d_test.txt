@@ -181,8 +181,8 @@ osc(10, 0.1, 1.5)
 //+ dur=5 // 20 - Cat GLB model
 // TEST: Cat.glb loaded with osc texture, should show cat mesh
 hush()
-loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb').then(model => {
-  osc(8, 0.1, 2).out(o0, model.scale(1.0).rotateX(Math.PI).rotateY(() => time).perspective(45))
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb', { up: '-y' }).then(model => {
+  osc(8, 0.1, 2).out(o0, model.scale(1.0).rotateY(() => time).perspective(45))
 })
 
 
@@ -190,8 +190,8 @@ loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit
 //+ dur=5 // 21 - Cat with noise
 // TEST: Cat.glb with noise/colorama texture
 hush()
-loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb').then(model => {
-  noise(5, 0.3).contrast(1.3).colorama(0.2).out(o0, model.scale(1.0).rotateX(Math.PI).rotateY(() => time * 0.5).perspective(45))
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb', { up: '-y' }).then(model => {
+  noise(5, 0.3).contrast(1.3).colorama(0.2).out(o0, model.scale(1.0).rotateY(() => time * 0.5).perspective(45))
 })
 
 
@@ -232,8 +232,8 @@ voronoi(10, 0.5)
 //+ dur=6 // 26 - Animated Woman GLB
 // TEST: Animated woman model with osc texture, should show rigged character
 hush()
-loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb').then(model => {
-  osc(12, 0.1, 1.5).out(o0, model.animate(null, () => time).scale(0.8).rotateX(Math.PI/2).rotateY(() => time * 0.3).perspective(45))
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb', { up: '-z' }).then(model => {
+  osc(12, 0.1, 1.5).out(o0, model.animate(null, () => time).scale(0.8).rotateY(() => time * 0.3).perspective(45))
 })
 
 
@@ -241,8 +241,8 @@ loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedW
 //+ dur=6 // 27 - Animated Woman with gradient
 // TEST: Animated woman with gradient/colorama texture
 hush()
-loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb').then(model => {
-  gradient(0.5).hue(() => time * 0.1).out(o0, model.animate(null, () => time).scale(0.8).rotateX(Math.PI/2).rotateY(() => time * 0.5).perspective(45))
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb', { up: '-z' }).then(model => {
+  gradient(0.5).hue(() => time * 0.1).out(o0, model.animate(null, () => time).scale(0.8).rotateY(() => time * 0.5).perspective(45))
 })
 
 
@@ -258,8 +258,8 @@ src(s0).out(o0, cube(0.4).rotateY(() => time).rotateX(() => time * 0.7).perspect
 //+ dur=5 // 29 - OBJ model heads
 // TEST: Load OBJ file with multiple heads, rotating
 hush()
-loadObj('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/headsSortedRandom.obj', { swapYZ: true }).then(head => {
-  osc(10, 0.1, 1.5).color(0.9, 0.5, 0.3).out(o0, head.scale(0.8).rotateX(Math.PI/2).rotateY(() => time).perspective(45))
+loadObj('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/headsSortedRandom.obj', { swapYZ: true, up: '-z' }).then(head => {
+  osc(10, 0.1, 1.5).color(0.9, 0.5, 0.3).out(o0, head.scale(0.8).rotateY(() => time).perspective(45))
 })
 
 

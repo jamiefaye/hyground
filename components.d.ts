@@ -43,6 +43,7 @@ declare module 'vue' {
     SharedDeviceTest: typeof import('./src/components/SharedDeviceTest.vue')['default']
     Splitter: typeof import('./src/components/Splitter.vue')['default']
     StagePanel: typeof import('./src/components/StagePanel.vue')['default']
+    Toast: typeof import('./src/components/Toast.vue')['default']
     TopLevel: typeof import('./src/components/TopLevel.vue')['default']
   }
 }
