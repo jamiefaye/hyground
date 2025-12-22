@@ -68,4 +68,16 @@ This is a Vue 3 + Vuetify 3 application for Hydra visual synthesis with the foll
 - `src/plugins/` - Vue plugin registration
 - `src/lib/` - Utility libraries (webcam, screenmedia)
 
-The application appears to be a live coding environment for Hydra visual synthesis with collaborative/performance features.
+The application is a live coding environment for Hydra visual synthesis with collaborative/performance features.
+
+## Deployment
+
+**Live deployment:** https://www.fentonia.com/hyg/
+
+**Deploy to S3:**
+```bash
+npm run build
+aws s3 sync dist/ s3://www.fentonia.com/hyg/
+```
+
+The app uses the local hyv library which includes the vertex extension for 3D geometry, model loading, and WebGPU support.
