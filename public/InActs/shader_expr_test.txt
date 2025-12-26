@@ -1,0 +1,195 @@
+//+ dur=4 // 0 - basic time expression
+// TEST: Frequency varies with sin(time), should oscillate between 50 and 70
+hush()
+osc("60 + sin(time) * 10").out(o0)
+
+
+
+//+ dur=4 // 1 - fragment coord _st.x
+// TEST: Offset varies across screen horizontally (left=0, right=0.5)
+hush()
+osc(20, 0.1, "_st.x * 0.5").out(o0)
+
+
+
+//+ dur=4 // 2 - fragment coord _st.y
+// TEST: Frequency varies vertically (bottom=10, top=40)
+hush()
+osc("10 + _st.y * 30").out(o0)
+
+
+
+//+ dur=4 // 3 - ternary expression
+// TEST: Left half freq=10, right half freq=40 (sharp split at center)
+hush()
+osc("_st.x > 0.5 ? 40 : 10").out(o0)
+
+
+
+//+ dur=4 // 4 - Math.PI constant
+// TEST: Rotation uses PI (should do half rotation per second)
+hush()
+osc(20, 0.1, 1.5).rotate("time * Math.PI * 0.5").out(o0)
+
+
+
+//+ dur=4 // 5 - pow function
+// TEST: Non-linear gradient (darker at edges due to pow)
+hush()
+osc("10 + pow(_st.x, 2) * 50").out(o0)
+
+
+
+//+ dur=4 // 6 - mix function
+// TEST: Frequency interpolates between 10 and 60 based on x position
+hush()
+osc("mix(10, 60, _st.x)").out(o0)
+
+
+
+//+ dur=4 // 7 - sin with _st
+// TEST: Wavy frequency pattern across screen
+hush()
+osc("30 + sin(_st.x * 10) * 20").out(o0)
+
+
+
+//+ dur=4 // 8 - combined time and _st
+// TEST: Animated wave pattern moving across screen
+hush()
+osc("30 + sin(_st.x * 6.28 + time * 2) * 20").out(o0)
+
+
+
+//+ dur=4 // 9 - multiple expressions in chain
+// TEST: Both frequency and rotation use expressions
+hush()
+osc("20 + sin(time) * 10", 0.1, 1)
+  .rotate("_st.x * 0.5")
+  .out(o0)
+
+
+
+//+ dur=4 // 10 - expression in color transform
+// TEST: Brightness varies horizontally
+hush()
+osc(30, 0.1, 1.5)
+  .brightness("_st.x - 0.5")
+  .out(o0)
+
+
+
+//+ dur=4 // 11 - expression in modulate
+// TEST: Modulation amount varies by position
+hush()
+osc(10, 0.1, 1.5)
+  .modulate(noise(3), "_st.y * 0.3")
+  .out(o0)
+
+
+
+//+ dur=4 // 12 - clamp function
+// TEST: Frequency clamped between 15 and 45
+hush()
+osc("clamp(_st.x * 100, 15, 45)").out(o0)
+
+
+
+//+ dur=4 // 13 - smoothstep function
+// TEST: Smooth transition from freq 10 to 50 between x=0.3 and x=0.7
+hush()
+osc("mix(10, 50, smoothstep(0.3, 0.7, _st.x))").out(o0)
+
+
+
+//+ dur=4 // 14 - abs function
+// TEST: V-shaped frequency pattern (highest at edges, lowest at center)
+hush()
+osc("10 + abs(_st.x - 0.5) * 60").out(o0)
+
+
+
+//+ dur=4 // 15 - fract function
+// TEST: Repeating frequency pattern (sawtooth)
+hush()
+osc("10 + fract(_st.x * 4) * 30").out(o0)
+
+
+
+//+ dur=4 // 16 - floor for stepped values
+// TEST: Discrete frequency bands (staircase pattern)
+hush()
+osc("10 + floor(_st.x * 5) * 10").out(o0)
+
+
+
+//+ dur=4 // 17 - length for radial pattern
+// TEST: Frequency based on distance from center
+hush()
+osc("10 + length(vec2(_st.x - 0.5, _st.y - 0.5)) * 80").out(o0)
+
+
+
+//+ dur=4 // 18 - cos and sin together
+// TEST: Circular pattern in frequency
+hush()
+osc("30 + cos(_st.x * 6.28) * sin(_st.y * 6.28) * 20").out(o0)
+
+
+
+//+ dur=4 // 19 - expression with resolution
+// TEST: Pattern scales with canvas width (consistent visual across resolutions)
+hush()
+osc("60 * resolution.x / 1920").out(o0)
+
+
+
+//+ dur=5 // 20 - 3D with vertex varying _v.normal
+// TEST: Color based on surface normal Z component (front faces bright)
+hush()
+solid(1, "_v.normal.z * 0.5 + 0.5", 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=5 // 21 - 3D _v.depth for fog effect
+// TEST: Objects fade to dark with distance (depth-based fade)
+hush()
+osc(10, 0.1, 1.5)
+  .brightness("1 - _v.depth * 2")
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=5 // 22 - 3D _v.position for gradient
+// TEST: Color varies based on world Y position (top=red, bottom=blue)
+hush()
+solid("_v.position.y + 0.5", 0.3, "0.5 - _v.position.y")
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=5 // 23 - 3D fresnel-like effect with _v.viewDir
+// TEST: Edge glow effect using view direction dot normal
+hush()
+solid(0.1, 0.1, 0.3)
+  .add(solid("pow(1 - abs(_v.normal.z), 3)", "pow(1 - abs(_v.normal.z), 3)", 1), 0.8)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ dur=4 // 24 - mixed JS callback and shader expr
+// TEST: JS callback for global time offset, shader expr for spatial variation
+hush()
+osc("20 + _st.x * 30", () => time * 0.1, 1.5).out(o0)
+
+
+
+//+ dur=4 // 25 - complex expression
+// TEST: Multiple operations combined - should produce interesting pattern
+hush()
+osc("20 + sin(time + _st.x * 6.28) * cos(_st.y * 6.28) * 15")
+  .rotate("sin(time) * 0.2")
+  .out(o0)
+
+
