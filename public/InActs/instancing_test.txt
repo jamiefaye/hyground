@@ -1,0 +1,123 @@
+//+ dur=4 // 0 - basic sphere grid
+// TEST: 3x3 grid of spheres (9 instances) - should match previous CPU-based behavior
+hush()
+osc(20, 0.05, 1)
+  .out(o0, sphere(0.15).grid(3, 3, 1, 0.5).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 1 - cube grid 2x2x2
+// TEST: 8 cubes in 3D grid arrangement
+hush()
+shape(4, 0.5)
+  .out(o0, cube(0.12).grid(2, 2, 2, 0.4).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=4 // 2 - large sphere grid 10x10
+// TEST: 100 spheres in 10x10 grid (testing GPU instancing performance)
+hush()
+osc(30, 0.1, 1.5)
+  .out(o0, sphere(0.03).grid(10, 10, 1, 0.18).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 3 - scatter random positions
+// TEST: 50 randomly scattered spheres
+hush()
+gradient(1)
+  .colorama(0.5)
+  .out(o0, sphere(0.05).scatter(50, {x: 2, y: 2, z: 1}).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 4 - scatter with seed
+// TEST: Reproducible scatter positions (same seed = same positions)
+hush()
+osc(10, 0.1, 1)
+  .out(o0, sphere(0.08).scatter(30, {x: 2, y: 2, z: 0.5}, 42).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=5 // 5 - _ix instance index for color
+// TEST: Each instance has different color based on index (gradient across grid)
+hush()
+solid("_ix / 25", 0.5, "1 - _ix / 25")
+  .out(o0, sphere(0.1).grid(5, 5, 1, 0.35).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 6 - _ix for rotation
+// TEST: Each instance rotated differently based on index
+hush()
+osc(20, 0.1, 1.5)
+  .out(o0, cube(0.1).grid(4, 4, 1, 0.4).rotateZ("_ix * 0.1").rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 7 - _ix combined with time
+// TEST: Animated per-instance rotation (wave effect across grid)
+hush()
+gradient(0.3)
+  .colorama(() => time * 0.1)
+  .out(o0, torus(0.08, 0.03).grid(6, 6, 1, 0.28).rotateX("sin(time + _ix * 0.3) * 0.5").rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ dur=5 // 8 - _ix for brightness variation
+// TEST: Brightness varies by instance index
+hush()
+osc(20, 0.1, 1.5)
+  .brightness("sin(_ix * 0.5) * 0.3")
+  .out(o0, sphere(0.08).grid(5, 5, 1, 0.35).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=4 // 9 - large scatter count
+// TEST: 200 scattered spheres (testing GPU instancing performance)
+hush()
+noise(3, 0.3)
+  .colorama(0.5)
+  .out(o0, sphere(0.02).scatter(200, {x: 2.5, y: 2, z: 1.5}).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ dur=4 // 10 - grid without rotation transforms
+// TEST: Grid with no rotateY/perspective (tests hasTransforms=false path)
+hush()
+osc(40, 0.1, 0.8)
+  .out(o0, sphere(0.1).grid(3, 3, 1, 0.5).perspective(45))
+
+
+
+//+ dur=5 // 11 - _ix with modulo for repeating pattern
+// TEST: Color pattern repeats every 4 instances
+hush()
+solid("mod(_ix, 4.0) / 4.0", 0.6, 0.4)
+  .out(o0, cube(0.1).grid(4, 4, 1, 0.4).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 12 - _ix combined with _v.normal for shading
+// TEST: Per-instance color combined with normal-based shading
+hush()
+solid("_ix / 36 + _v.normal.z * 0.3", "_v.normal.x * 0.5 + 0.5", "_v.normal.y * 0.5 + 0.5")
+  .out(o0, sphere(0.08).grid(6, 6, 1, 0.28).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=4 // 13 - asymmetric grid spacing
+// TEST: Different spacing in x and y directions
+hush()
+osc(15, 0.1, 1.5)
+  .out(o0, cube(0.1).grid(5, 3, 1, {x: 0.3, y: 0.5}).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=5 // 14 - very large grid (stress test)
+// TEST: 400 instances (20x20) - should not crash with GPU instancing
+hush()
+osc(60, 0.05, 0.5)
+  .out(o0, sphere(0.015).grid(20, 20, 1, 0.09).rotateY(() => time * 0.2).perspective(45))
+
+
