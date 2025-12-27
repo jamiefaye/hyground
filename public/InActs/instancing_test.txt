@@ -121,3 +121,100 @@ osc(60, 0.05, 0.5)
   .out(o0, sphere(0.015).grid(20, 20, 1, 0.09).rotateY(() => time * 0.2).perspective(45))
 
 
+
+//+ dur=5 // 15 - instances() with nested position array
+// TEST: Custom positions using instances() API
+hush()
+osc(20, 0.1, 1.5)
+  .out(o0, sphere(0.15).instances([
+    [-0.5, -0.5, 0],
+    [0.5, -0.5, 0],
+    [0, 0.5, 0]
+  ]).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=5 // 16 - instances() with positions and rotations
+// TEST: Each instance with different rotation
+hush()
+gradient(0.5)
+  .out(o0, cube(0.2).instances({
+    positions: [[0, 0, 0], [-0.6, 0, 0], [0.6, 0, 0]],
+    rotations: [[0, 0, 0], [0, 0.5, 0], [0, -0.5, 0]]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 17 - instances() with positions and scales
+// TEST: Each instance with different scale
+hush()
+osc(30, 0.1, 1)
+  .out(o0, sphere(0.2).instances({
+    positions: [[-0.5, 0, 0], [0, 0, 0], [0.5, 0, 0]],
+    scales: [0.5, 1.0, 1.5]
+  }).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=5 // 18 - instances() with full transform (pos, rot, scale)
+// TEST: Complete per-instance transforms
+hush()
+solid(0.8, 0.3, 0.2)
+  .out(o0, cube(0.15).instances({
+    positions: [[-0.6, -0.3, 0], [0, 0.3, 0], [0.6, -0.3, 0]],
+    rotations: [[0, 0, 0.3], [0.3, 0, 0], [0, 0.3, 0]],
+    scales: [0.8, 1.0, 1.2]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 19 - instances() with {x,y,z} object format
+// TEST: Using object format for positions
+hush()
+noise(5, 0.2)
+  .colorama(0.3)
+  .out(o0, torus(0.12, 0.04).instances({
+    positions: [
+      {x: -0.5, y: 0, z: 0},
+      {x: 0, y: 0, z: 0},
+      {x: 0.5, y: 0, z: 0}
+    ]
+  }).rotateX(() => time * 0.5).perspective(45))
+
+
+
+//+ dur=5 // 20 - instances() flat array format
+// TEST: Flat array (3 components per instance)
+hush()
+osc(15, 0.1, 1.2)
+  .out(o0, sphere(0.12).instances([
+    -0.6, 0.3, 0,
+    0, -0.3, 0,
+    0.6, 0.3, 0,
+    -0.3, 0, 0.3,
+    0.3, 0, -0.3
+  ]).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ dur=5 // 21 - instances() with vec3 scales
+// TEST: Non-uniform per-instance scaling
+hush()
+gradient(0.3)
+  .out(o0, cube(0.15).instances({
+    positions: [[-0.5, 0, 0], [0.5, 0, 0]],
+    scales: [[0.5, 1.5, 1.0], [1.5, 0.5, 1.0]]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ dur=5 // 22 - instances() combined with _ix
+// TEST: Custom positions with _ix for per-instance color
+hush()
+solid("_ix / 5", 0.5, "1 - _ix / 5")
+  .out(o0, sphere(0.1).instances({
+    positions: [[-0.6, 0, 0], [-0.3, 0, 0], [0, 0, 0], [0.3, 0, 0], [0.6, 0, 0]],
+    rotations: [[0, 0, 0], [0, 0.3, 0], [0, 0.6, 0], [0, 0.9, 0], [0, 1.2, 0]]
+  }).rotateY(() => time * 0.2).perspective(45))
+
+
