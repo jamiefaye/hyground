@@ -46,6 +46,17 @@
         />
       </template>
     </v-tooltip>
+    <v-tooltip text="Use core renderer interface (new plugin architecture)">
+      <template #activator="{ props: tooltipProps }">
+        <v-checkbox
+          v-bind="tooltipProps"
+          v-model="props.params.useCoreRenderer"
+          density="compact"
+          hide-details
+          label="Core"
+        />
+      </template>
+    </v-tooltip>
     <v-tooltip text="Enable Quad Rendering">
       <template #activator="{ props: tooltipProps }">
         <v-checkbox

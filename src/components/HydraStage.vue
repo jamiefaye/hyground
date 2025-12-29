@@ -37,6 +37,7 @@
   const panelParams = reactive({
     fx: false,
     wgsl: false,
+    useCoreRenderer: false,  // Toggle between standalone createHydra and core + install()
     quad: false,
     morph: false,
     syphon: false,
@@ -509,6 +510,7 @@
         :report-hydra="reportHydra"
         :sketch="fxSketch"
         :sketch-info="fxsketchInfo"
+        :use-core-renderer="panelParams.useCoreRenderer"
         :wgsl="panelParams.wgsl"
         :width="widthRef"
       />

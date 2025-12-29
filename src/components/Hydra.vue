@@ -17,6 +17,7 @@
   	externalLoop: Boolean,  // If true, parent manages the animation loop
   	preserveDrawingBuffer: Boolean,  // Enable for Syphon/pixel readback
   	fillContainer: Boolean,  // If true, canvas fills container via CSS (for stage)
+  	useCoreRenderer: Boolean,  // If true, use core hydra-synth + install() instead of standalone createHydra
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -107,25 +108,46 @@ async function render() {
     let text = props.sketch;
 
 		if (h === undefined) {
-		console.log("New Hydra instance created via createHydra factory.");
     	// Ensure canvas has dimensions set before Hydra reads them
     	const canvas = context.value as HTMLCanvasElement;
     	canvas.width = props.width;
     	canvas.height = props.height;
 
     	try {
-    	  // Use the createHydra factory from the webgpu extension
-    	  const { createHydra } = await import("hydra-synth/extensions/vertex/webgpu");
-    	  h = await createHydra({
-    		  makeGlobal: true,  // Required for sandbox eval to work
-    		  canvas: canvas,
-    		  width: props.width,
-    		  height: props.height,
-    		  autoLoop: false,
-    		  useWGSL: props.wgsl,
-    		  gpuDevice: props.gpuDevice,
-    		  preserveDrawingBuffer: props.preserveDrawingBuffer,
-    	  });
+    	  if (props.useCoreRenderer) {
+    	    // Mode: Core hydra-synth with renderer interface + vertex install()
+    	    console.log("Creating Hydra via core + vertex install()");
+    	    const HydraRenderer = (await import("hydra-synth")).default;
+    	    const { install } = await import("hydra-synth/extensions/vertex/webgpu");
+
+    	    h = new HydraRenderer({
+    	      makeGlobal: true,
+    	      canvas: canvas,
+    	      width: props.width,
+    	      height: props.height,
+    	      autoLoop: false,
+    	      useWGSL: props.wgsl,
+    	      gpuDevice: props.gpuDevice,
+    	    });
+    	    await h.ready();
+    	    install(h);
+    	    console.log("Core + vertex install() complete, renderer:", h.renderer?.capabilities?.name);
+    	  } else {
+    	    // Mode: Standalone createHydra from vertex extension (original behavior)
+    	    console.log("Creating Hydra via standalone createHydra factory");
+    	    const { createHydra } = await import("hydra-synth/extensions/vertex/webgpu");
+    	    h = await createHydra({
+    	      makeGlobal: true,
+    	      canvas: canvas,
+    	      width: props.width,
+    	      height: props.height,
+    	      autoLoop: false,
+    	      useWGSL: props.wgsl,
+    	      gpuDevice: props.gpuDevice,
+    	      preserveDrawingBuffer: props.preserveDrawingBuffer,
+    	    });
+    	    console.log("Standalone createHydra complete");
+    	  }
     	} catch (err) {
     	  console.error('Failed to create Hydra instance:', err);
     	  return;
