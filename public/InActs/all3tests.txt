@@ -1,0 +1,795 @@
+//+ 4.004 0 2025-12-27T22:25:00.347Z
+// TEST: Single cube with colored osc, rotating on X and Y axes
+hush()
+osc(8, 0.2, 2)
+  .color(1, 0.5, 0.3)
+  .out(o0, cube(0.4).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.002 1 2025-12-27T22:25:04.351Z
+// TEST: Torus with hue-shifting gradient, dual axis rotation
+hush()
+gradient(0.5)
+  .hue(() => time * 0.1)
+  .out(o0, torus(0.4, 0.15).rotateX(() => time * 0.7).rotateY(() => time).perspective(45))
+
+
+
+//+ 3.995 2 2025-12-27T22:25:08.353Z
+// TEST: Cylinder with noise texture, tilted rotation
+hush()
+noise(3, 0.2)
+  .colorama(0.5)
+  .out(o0, cylinder(0.3, 0.8).rotateX(() => time * 0.3).perspective(45))
+
+
+
+//+ 4.011 3 2025-12-27T22:25:12.348Z
+// TEST: Cone with voronoi texture, Y axis spin
+hush()
+voronoi(5, 0.3)
+  .color(0.8, 0.2, 0.5)
+  .out(o0, cone(0.4, 0.8).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.001 4 2025-12-27T22:25:16.359Z
+// TEST: 3x3 grid of small spheres with kaleid osc
+hush()
+osc(20, 0.05, 1)
+  .kaleid(4)
+  .out(o0, sphere(0.1).grid(3, 3, 1, 0.6).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.003 5 2025-12-27T22:25:20.360Z
+// TEST: 2x2x2 cube array (8 cubes total) with shape texture
+hush()
+shape(4, 0.5, 0.01)
+  .repeat(4, 4)
+  .out(o0, cube(0.15).grid(2, 2, 2, 0.5).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.014 6 2025-12-27T22:25:24.363Z
+// TEST: 3x3 torus array with modulated osc
+hush()
+osc(5, 0.1, 2)
+  .modulate(noise(2), 0.1)
+  .out(o0, torus(0.12, 0.04).grid(3, 3, 1, 0.5).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 4.012 7 2025-12-27T22:25:28.377Z
+// TEST: Sphere stretched 1.5x wide, 0.5x tall (ellipsoid shape)
+hush()
+gradient(1)
+  .saturate(2)
+  .out(o0, sphere(0.3).scale(1.5, 0.5, 1).rotateY(() => time).perspective(45))
+
+
+
+//+ 3.991 8 2025-12-27T22:25:32.389Z
+// TEST: Three cubes (red/green/blue) at different X positions using sprite layers
+hush()
+solid(1, 0, 0).out(o0, cube(0.2).translate(-0.5, 0, 0).rotateY(() => time).perspective(45))
+solid(0, 1, 0).out(o0, cube(0.2).translate(0, 0, 0).rotateY(() => time).perspective(45), 1)
+solid(0, 0, 1).out(o0, cube(0.2).translate(0.5, 0, 0).rotateY(() => time).perspective(45), 2)
+
+
+
+//+ 4.006 9 2025-12-27T22:25:36.380Z
+// TEST: High contrast noise pattern on rotating sphere
+hush()
+noise(4, 0.3)
+  .contrast(1.5)
+  .out(o0, sphere(0.5).rotateX(() => time * 0.3).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.007 10 2025-12-27T22:25:40.386Z
+// TEST: Voronoi cells with colorama on large torus
+hush()
+voronoi(8, 0.5, 0.3)
+  .colorama(0.2)
+  .out(o0, torus(0.45, 0.12).rotateX(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.012 11 2025-12-27T22:25:44.393Z
+// TEST: Osc modulated by rotated osc (wavy pattern)
+hush()
+osc(30, 0.01)
+  .modulate(osc(10).rotate(0.5), 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time * 0.7).perspective(45))
+
+
+
+//+ 4.001 12 2025-12-27T22:25:48.405Z
+// TEST: 6-fold kaleidoscope pattern on rotating cube
+hush()
+osc(10, 0.1, 1.5)
+  .kaleid(6)
+  .out(o0, cube(0.4).rotateX(() => time * 0.4).rotateY(() => time * 0.6).perspective(45))
+
+
+
+//+ 4.008 13 2025-12-27T22:25:52.406Z
+// TEST: Feedback loop (trails) blended with osc on sphere
+hush()
+src(o0)
+  .scale(0.99)
+  .rotate(0.01)
+  .blend(osc(10, 0.1, 2), 0.3)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.011 14 2025-12-27T22:25:56.414Z
+// TEST: Row of 4 cylinders with hue animation
+hush()
+osc(15, 0.1, 1)
+  .hue(() => time * 0.1)
+  .out(o0, cylinder(0.1, 0.5).grid(4, 1, 1, 0.4).rotateX(0.3).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 4.002 15 2025-12-27T22:26:00.425Z
+// TEST: Hexagon shape with pulsing scale applied to torus
+hush()
+shape(6, 0.8, 0.01)
+  .scale(1, 1, () => 0.5 + 0.3 * Math.sin(time))
+  .out(o0, torus(0.4, 0.1).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.001 16 2025-12-27T22:26:04.427Z
+// TEST: 25 tiny spheres in 5x5 grid with fast osc
+hush()
+osc(40, 0.02, 0.5)
+  .out(o0, sphere(0.05).grid(5, 5, 1, 0.35).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 4.009 17 2025-12-27T22:26:08.428Z
+// TEST: 3x3 grid of cones with gradient colorama
+hush()
+gradient(0.3)
+  .colorama(0.4)
+  .out(o0, cone(0.15, 0.4).grid(3, 3, 1, 0.5).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 5.001 18 2025-12-27T22:26:12.437Z
+// TEST: Flat plane with modulated osc, tilted toward camera
+hush()
+osc(10, 0.1, 1.5)
+  .modulate(noise(3), 0.1)
+  .out(o0, plane(1, 1).rotateX(-0.3).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ 5.008 19 2025-12-27T22:26:17.438Z
+// TEST: Cat.glb loaded with osc texture, should show cat mesh
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb', { up: '-y' }).then(model => {
+  osc(8, 0.1, 2).out(o0, model.scale(1.0).rotateY(() => time).perspective(45))
+})
+
+
+
+//+ 4.066 20 2025-12-27T22:26:22.446Z
+// TEST: Cat.glb with noise/colorama texture
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimalKit/Cat.glb', { up: '-y' }).then(model => {
+  noise(5, 0.3).contrast(1.3).colorama(0.2).out(o0, model.scale(1.0).rotateY(() => time * 0.5).perspective(45))
+})
+
+
+
+//+ 3.945 21 2025-12-27T22:26:26.512Z
+// TEST: Two spheres at X=-0.4 and X=0.4, counter-rotating, different textures
+hush()
+osc(10).out(o0, sphere(0.3).translate(-0.4, 0, 0).rotateY(() => time).perspective(45))
+noise(5).out(o0, sphere(0.3).translate(0.4, 0, 0).rotateY(() => -time).perspective(45), 1)
+
+
+
+//+ 3.998 22 2025-12-27T22:26:30.457Z
+// TEST: 3x3x3 cube array (27 cubes) with blue-tinted osc
+hush()
+osc(20, 0.05)
+  .color(0.5, 0.8, 1)
+  .out(o0, cube(0.08).grid(3, 3, 3, 0.35).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.022 23 2025-12-27T22:26:34.455Z
+// TEST: Sphere pulsing size via scale transform
+hush()
+osc(15, 0.1, 1.5)
+  .out(o0, sphere(0.3).scale(() => 1 + 0.5 * Math.sin(time * 2)).rotateY(() => time).perspective(45))
+
+
+
+//+ 5.981 24 2025-12-27T22:26:38.477Z
+// TEST: Row of 6 tiny tori spread horizontally
+hush()
+voronoi(10, 0.5)
+  .out(o0, torus(0.1, 0.03).grid(6, 1, 1, 0.28).translate(0, 0, 0).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 6.008 25 2025-12-27T22:26:44.458Z
+// TEST: Animated woman model with osc texture, should show rigged character
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb', { up: '-z' }).then(model => {
+  osc(12, 0.1, 1.5).out(o0, model.animate(null, () => time).scale(0.8).rotateY(() => time * 0.3).perspective(45))
+})
+
+
+
+//+ 5.035 26 2025-12-27T22:26:50.466Z
+// TEST: Animated woman with gradient/colorama texture
+hush()
+loadGlb('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/AnimatedWomenPack/Woman.glb', { up: '-z' }).then(model => {
+  gradient(0.5).hue(() => time * 0.1).out(o0, model.animate(null, () => time).scale(0.8).rotateY(() => time * 0.5).perspective(45))
+})
+
+
+
+//+ 4.986 27 2025-12-27T22:26:55.501Z
+// TEST: Cube with 4x4 sprite grid, each face shows different cell from grid
+hush()
+s0.initImage('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/test-grid-4x4.png')
+src(s0).out(o0, cube(0.4).rotateY(() => time).rotateX(() => time * 0.7).perspective(45), { level: 1, sprite: { cols: 4, rows: 4 } })
+
+
+
+//+ 4.027 28 2025-12-27T22:27:00.487Z
+// TEST: Load OBJ file with multiple heads, rotating
+hush()
+loadObj('https://raw.githubusercontent.com/jamiefaye/hydra-models/main/headsSortedRandom.obj', { swapYZ: true, up: '-z' }).then(head => {
+  osc(10, 0.1, 1.5).color(0.9, 0.5, 0.3).out(o0, head.scale(0.8).rotateY(() => time).perspective(45))
+})
+
+
+
+//+ 4.008 29 2025-12-27T22:27:04.514Z
+// TEST: Sphere with diffuse lighting from upper-left, should show shading
+hush()
+solid(0.8, 0.3, 0.2)
+  .diffuse(1, 1, 1, 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.002 30 2025-12-27T22:27:08.522Z
+// TEST: Torus with specular highlight, should show shiny spot
+hush()
+solid(0.2, 0.4, 0.8)
+  .diffuse(1, 1, 1, 0.3)
+  .specular(1, 1, 1, 32, 0.8)
+  .out(o0, torus(0.4, 0.15).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.01 31 2025-12-27T22:27:12.524Z
+// TEST: Sphere with fresnel rim lighting, edges should glow
+hush()
+solid(0.1, 0.1, 0.3)
+  .fresnel(3, 0.5)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 5.04 32 2025-12-27T22:27:16.534Z
+// TEST: Cube with diffuse + specular + fresnel, full shading
+hush()
+solid(0.6, 0.2, 0.4)
+  .diffuse(1, 1, 0.8, 0.15)
+  .specular(1, 1, 1, 64, 0.6)
+  .fresnel(2, 0.3)
+  .out(o0, cube(0.4).rotateX(() => time * 0.4).rotateY(() => time).perspective(45))
+
+
+
+//+ 5.003 33 2025-12-27T22:27:21.574Z
+// TEST: Three shapes at different levels - sphere behind, torus middle, cube front
+hush()
+osc(10, 0.1, 2).out(o0, sphere(0.5).translate(0, 0, -0.3).rotateY(() => time).perspective(45), { level: 0 })
+noise(5).color(0.2, 0.8, 0.4).out(o0, torus(0.35, 0.1).rotateX(() => time * 0.7).perspective(45), { level: 1 })
+voronoi(8).color(0.8, 0.3, 0.5).out(o0, cube(0.25).translate(0.3, 0.2, 0.3).rotateY(() => -time).perspective(45), { level: 2 })
+
+
+
+//+ 1.979 34 2025-12-27T22:27:26.577Z
+// TEST: Overlapping shapes with add blend - should brighten where overlapping
+hush()
+solid(0.5, 0, 0).out(o0, sphere(0.4).translate(-0.2, 0, 0).perspective(45), { level: 0 })
+solid(0, 0.5, 0).out(o0, sphere(0.4).translate(0.2, 0, 0).perspective(45), { level: 1, blend: 'add' })
+solid(0, 0, 0.5).out(o0, sphere(0.4).translate(0, 0.3, 0).perspective(45), { level: 2, blend: 'add' })
+
+
+
+//+ 3.986 35 2025-12-27T22:27:28.556Z
+// TEST: Single sphere with osc texture, rotating on Y axis
+hush()
+osc(10, 0.1, 1.5)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 11.775 36 2025-12-27T22:27:32.542Z
+// TEST: Single cube with colored osc, rotating on X and Y axes
+hush()
+osc(8, 0.2, 2)
+  .color(1, 0.5, 0.3)
+  .out(o0, cube(0.4).rotateX(() => time * 0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.002 37 2025-12-27T22:27:44.317Z
+// TEST: Offset varies across screen horizontally (left=0, right=0.5)
+hush()
+osc(20, 0.1, "_st.x * 0.5").out(o0)
+
+
+
+//+ 4.007 38 2025-12-27T22:27:48.319Z
+// TEST: Frequency varies vertically (bottom=10, top=40)
+hush()
+osc("10 + _st.y * 30").out(o0)
+
+
+
+//+ 4.011 39 2025-12-27T22:27:52.326Z
+// TEST: Left half freq=10, right half freq=40 (sharp split at center)
+hush()
+osc("_st.x > 0.5 ? 40 : 10").out(o0)
+
+
+
+//+ 4.008 40 2025-12-27T22:27:56.337Z
+// TEST: Rotation uses PI (should do half rotation per second)
+hush()
+osc(20, 0.1, 1.5).rotate("time * Math.PI * 0.5").out(o0)
+
+
+
+//+ 3.997 41 2025-12-27T22:28:00.345Z
+// TEST: Non-linear gradient (darker at edges due to pow)
+hush()
+osc("10 + pow(_st.x, 2) * 50").out(o0)
+
+
+
+//+ 4.009 42 2025-12-27T22:28:04.342Z
+// TEST: Frequency interpolates between 10 and 60 based on x position
+hush()
+osc("mix(10, 60, _st.x)").out(o0)
+
+
+
+//+ 4.003 43 2025-12-27T22:28:08.351Z
+// TEST: Wavy frequency pattern across screen
+hush()
+osc("30 + sin(_st.x * 10) * 20").out(o0)
+
+
+
+//+ 4.001 44 2025-12-27T22:28:12.354Z
+// TEST: Animated wave pattern moving across screen
+hush()
+osc("30 + sin(_st.x * 6.28 + time * 2) * 20").out(o0)
+
+
+
+//+ 4.014 45 2025-12-27T22:28:16.355Z
+// TEST: Both frequency and rotation use expressions
+hush()
+osc("20 + sin(time) * 10", 0.1, 1)
+  .rotate("_st.x * 0.5")
+  .out(o0)
+
+
+
+//+ 4.008 46 2025-12-27T22:28:20.369Z
+// TEST: Brightness varies horizontally
+hush()
+osc(30, 0.1, 1.5)
+  .brightness("_st.x - 0.5")
+  .out(o0)
+
+
+
+//+ 4.011 47 2025-12-27T22:28:24.377Z
+// TEST: Modulation amount varies by position
+hush()
+osc(10, 0.1, 1.5)
+  .modulate(noise(3), "_st.y * 0.3")
+  .out(o0)
+
+
+
+//+ 4.003 48 2025-12-27T22:28:28.388Z
+// TEST: Frequency clamped between 15 and 45
+hush()
+osc("clamp(_st.x * 100, 15, 45)").out(o0)
+
+
+
+//+ 4.011 49 2025-12-27T22:28:32.391Z
+// TEST: Smooth transition from freq 10 to 50 between x=0.3 and x=0.7
+hush()
+osc("mix(10, 50, smoothstep(0.3, 0.7, _st.x))").out(o0)
+
+
+
+//+ 4.003 50 2025-12-27T22:28:36.402Z
+// TEST: V-shaped frequency pattern (highest at edges, lowest at center)
+hush()
+osc("10 + abs(_st.x - 0.5) * 60").out(o0)
+
+
+
+//+ 4.005 51 2025-12-27T22:28:40.405Z
+// TEST: Repeating frequency pattern (sawtooth)
+hush()
+osc("10 + fract(_st.x * 4) * 30").out(o0)
+
+
+
+//+ 4.006 52 2025-12-27T22:28:44.410Z
+// TEST: Discrete frequency bands (staircase pattern)
+hush()
+osc("10 + floor(_st.x * 5) * 10").out(o0)
+
+
+
+//+ 4.009 53 2025-12-27T22:28:48.416Z
+// TEST: Frequency based on distance from center
+hush()
+osc("10 + length(vec2(_st.x - 0.5, _st.y - 0.5)) * 80").out(o0)
+
+
+
+//+ 3.999 54 2025-12-27T22:28:52.425Z
+// TEST: Circular pattern in frequency
+hush()
+osc("30 + cos(_st.x * 6.28) * sin(_st.y * 6.28) * 20").out(o0)
+
+
+
+//+ 5.015 55 2025-12-27T22:28:56.424Z
+// TEST: Pattern scales with canvas width (consistent visual across resolutions)
+hush()
+osc("60 * resolution.x / 1920").out(o0)
+
+
+
+//+ 5.004 56 2025-12-27T22:29:01.439Z
+// TEST: Color based on surface normal Z component (front faces bright)
+hush()
+solid(1, "_v.normal.z * 0.5 + 0.5", 0.2)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 5.006 57 2025-12-27T22:29:06.443Z
+// TEST: Objects fade to dark with distance (depth-based fade)
+hush()
+osc(10, 0.1, 1.5)
+  .brightness("1 - _v.depth * 2")
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 5.006 58 2025-12-27T22:29:11.449Z
+// TEST: Color varies based on world Y position (top=red, bottom=blue)
+hush()
+solid("_v.position.y + 0.5", 0.3, "0.5 - _v.position.y")
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 3.999 59 2025-12-27T22:29:16.455Z
+// TEST: Edge glow effect using view direction dot normal
+hush()
+solid(0.1, 0.1, 0.3)
+  .add(solid("pow(1 - abs(_v.normal.z), 3)", "pow(1 - abs(_v.normal.z), 3)", 1), 0.8)
+  .out(o0, sphere(0.5).rotateY(() => time).perspective(45))
+
+
+
+//+ 4.001 60 2025-12-27T22:29:20.454Z
+// TEST: JS callback for global time offset, shader expr for spatial variation
+hush()
+osc("20 + _st.x * 30", () => time * 0.1, 1.5).out(o0)
+
+
+
+//+ 2.006 61 2025-12-27T22:29:24.455Z
+// TEST: Multiple operations combined - should produce interesting pattern
+hush()
+osc("20 + sin(time + _st.x * 6.28) * cos(_st.y * 6.28) * 15")
+  .rotate("sin(time) * 0.2")
+  .out(o0)
+
+
+
+//+ 4.006 62 2025-12-27T22:29:26.461Z
+// TEST: Frequency varies with sin(time), should oscillate between 50 and 70
+hush()
+osc("60 + sin(time) * 10").out(o0)
+
+
+
+//+ 4.009 63 2025-12-27T22:29:30.467Z
+// TEST: Offset varies across screen horizontally (left=0, right=0.5)
+hush()
+osc(20, 0.1, "_st.x * 0.5").out(o0)
+
+
+
+//+ 4.003 64 2025-12-27T22:29:34.476Z
+// TEST: Frequency varies vertically (bottom=10, top=40)
+hush()
+osc("10 + _st.y * 30").out(o0)
+
+
+
+//+ 4.016 65 2025-12-27T22:29:38.479Z
+// TEST: Left half freq=10, right half freq=40 (sharp split at center)
+hush()
+osc("_st.x > 0.5 ? 40 : 10").out(o0)
+
+
+
+//+ 4.011 66 2025-12-27T22:29:42.495Z
+// TEST: 8 cubes in 3D grid arrangement
+hush()
+shape(4, 0.5)
+  .out(o0, cube(0.12).grid(2, 2, 2, 0.4).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.011 67 2025-12-27T22:29:46.506Z
+// TEST: 100 spheres in 10x10 grid (testing GPU instancing performance)
+hush()
+osc(30, 0.1, 1.5)
+  .out(o0, sphere(0.03).grid(10, 10, 1, 0.18).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 4.007 68 2025-12-27T22:29:50.517Z
+// TEST: 50 randomly scattered spheres
+hush()
+gradient(1)
+  .colorama(0.5)
+  .out(o0, sphere(0.05).scatter(50, {x: 2, y: 2, z: 1}).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.002 69 2025-12-27T22:29:54.524Z
+// TEST: Reproducible scatter positions (same seed = same positions)
+hush()
+osc(10, 0.1, 1)
+  .out(o0, sphere(0.08).scatter(30, {x: 2, y: 2, z: 0.5}, 42).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 5.012 70 2025-12-27T22:29:59.526Z
+// TEST: Each instance has different color based on index (gradient across grid)
+hush()
+solid("_ix / 25", 0.5, "1 - _ix / 25")
+  .out(o0, sphere(0.1).grid(5, 5, 1, 0.35).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.003 71 2025-12-27T22:30:04.538Z
+// TEST: Each instance rotated differently based on index
+hush()
+osc(20, 0.1, 1.5)
+  .out(o0, cube(0.1).grid(4, 4, 1, 0.4).rotateZ("_ix * 0.1").rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.01 72 2025-12-27T22:30:09.541Z
+// TEST: Animated per-instance rotation (wave effect across grid)
+hush()
+gradient(0.3)
+  .colorama(() => time * 0.1)
+  .out(o0, torus(0.08, 0.03).grid(6, 6, 1, 0.28).rotateX("sin(time + _ix * 0.3) * 0.5").rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ 4.001 73 2025-12-27T22:30:14.551Z
+// TEST: Brightness varies by instance index
+hush()
+osc(20, 0.1, 1.5)
+  .brightness("sin(_ix * 0.5) * 0.3")
+  .out(o0, sphere(0.08).grid(5, 5, 1, 0.35).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 3.997 74 2025-12-27T22:30:18.552Z
+// TEST: 200 scattered spheres (testing GPU instancing performance)
+hush()
+noise(3, 0.3)
+  .colorama(0.5)
+  .out(o0, sphere(0.02).scatter(200, {x: 2.5, y: 2, z: 1.5}).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ 5.014 75 2025-12-27T22:30:22.549Z
+// TEST: Grid with no rotateY/perspective (tests hasTransforms=false path)
+hush()
+osc(40, 0.1, 0.8)
+  .out(o0, sphere(0.1).grid(3, 3, 1, 0.5).perspective(45))
+
+
+
+//+ 5.003 76 2025-12-27T22:30:27.563Z
+// TEST: Color pattern repeats every 4 instances
+hush()
+solid("mod(_ix, 4.0) / 4.0", 0.6, 0.4)
+  .out(o0, cube(0.1).grid(4, 4, 1, 0.4).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 4.009 77 2025-12-27T22:30:32.566Z
+// TEST: Per-instance color combined with normal-based shading
+hush()
+solid("_ix / 36 + _v.normal.z * 0.3", "_v.normal.x * 0.5 + 0.5", "_v.normal.y * 0.5 + 0.5")
+  .out(o0, sphere(0.08).grid(6, 6, 1, 0.28).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.01 78 2025-12-27T22:30:36.575Z
+// TEST: Different spacing in x and y directions
+hush()
+osc(15, 0.1, 1.5)
+  .out(o0, cube(0.1).grid(5, 3, 1, {x: 0.3, y: 0.5}).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 5.007 79 2025-12-27T22:30:41.585Z
+// TEST: 400 instances (20x20) - should not crash with GPU instancing
+hush()
+osc(60, 0.05, 0.5)
+  .out(o0, sphere(0.015).grid(20, 20, 1, 0.09).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ 5.011 80 2025-12-27T22:30:46.592Z
+// TEST: Custom positions using instances() API
+hush()
+osc(20, 0.1, 1.5)
+  .out(o0, sphere(0.15).instances([
+    [-0.5, -0.5, 0],
+    [0.5, -0.5, 0],
+    [0, 0.5, 0]
+  ]).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 5.009 81 2025-12-27T22:30:51.603Z
+// TEST: Each instance with different rotation
+hush()
+gradient(0.5)
+  .out(o0, cube(0.2).instances({
+    positions: [[0, 0, 0], [-0.6, 0, 0], [0.6, 0, 0]],
+    rotations: [[0, 0, 0], [0, 0.5, 0], [0, -0.5, 0]]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.011 82 2025-12-27T22:30:56.612Z
+// TEST: Each instance with different scale
+hush()
+osc(30, 0.1, 1)
+  .out(o0, sphere(0.2).instances({
+    positions: [[-0.5, 0, 0], [0, 0, 0], [0.5, 0, 0]],
+    scales: [0.5, 1.0, 1.5]
+  }).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 5.014 83 2025-12-27T22:31:01.623Z
+// TEST: Complete per-instance transforms
+hush()
+solid(0.8, 0.3, 0.2)
+  .out(o0, cube(0.15).instances({
+    positions: [[-0.6, -0.3, 0], [0, 0.3, 0], [0.6, -0.3, 0]],
+    rotations: [[0, 0, 0.3], [0.3, 0, 0], [0, 0.3, 0]],
+    scales: [0.8, 1.0, 1.2]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 5.002 84 2025-12-27T22:31:06.637Z
+// TEST: Using object format for positions
+hush()
+noise(5, 0.2)
+  .colorama(0.3)
+  .out(o0, torus(0.12, 0.04).instances({
+    positions: [
+      {x: -0.5, y: 0, z: 0},
+      {x: 0, y: 0, z: 0},
+      {x: 0.5, y: 0, z: 0}
+    ]
+  }).rotateX(() => time * 0.5).perspective(45))
+
+
+
+//+ 5.002 85 2025-12-27T22:31:11.639Z
+// TEST: Flat array (3 components per instance)
+hush()
+osc(15, 0.1, 1.2)
+  .out(o0, sphere(0.12).instances([
+    -0.6, 0.3, 0,
+    0, -0.3, 0,
+    0.6, 0.3, 0,
+    -0.3, 0, 0.3,
+    0.3, 0, -0.3
+  ]).rotateY(() => time * 0.4).perspective(45))
+
+
+
+//+ 5.011 86 2025-12-27T22:31:16.641Z
+// TEST: Non-uniform per-instance scaling
+hush()
+gradient(0.3)
+  .out(o0, cube(0.15).instances({
+    positions: [[-0.5, 0, 0], [0.5, 0, 0]],
+    scales: [[0.5, 1.5, 1.0], [1.5, 0.5, 1.0]]
+  }).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 2 87 2025-12-27T22:31:21.652Z
+// TEST: Custom positions with _ix for per-instance color
+hush()
+solid("_ix / 5", 0.5, "1 - _ix / 5")
+  .out(o0, sphere(0.1).instances({
+    positions: [[-0.6, 0, 0], [-0.3, 0, 0], [0, 0, 0], [0.3, 0, 0], [0.6, 0, 0]],
+    rotations: [[0, 0, 0], [0, 0.3, 0], [0, 0.6, 0], [0, 0.9, 0], [0, 1.2, 0]]
+  }).rotateY(() => time * 0.2).perspective(45))
+
+
+
+//+ 4.004 88 2025-12-27T22:31:23.652Z
+// TEST: 3x3 grid of spheres (9 instances) - should match previous CPU-based behavior
+hush()
+osc(20, 0.05, 1)
+  .out(o0, sphere(0.15).grid(3, 3, 1, 0.5).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4.007 89 2025-12-27T22:31:27.656Z
+// TEST: 8 cubes in 3D grid arrangement
+hush()
+shape(4, 0.5)
+  .out(o0, cube(0.12).grid(2, 2, 2, 0.4).rotateX(() => time * 0.3).rotateY(() => time * 0.5).perspective(45))
+
+
+
+//+ 4 90 2025-12-27T22:31:31.663Z
+// TEST: 100 spheres in 10x10 grid (testing GPU instancing performance)
+hush()
+osc(30, 0.1, 1.5)
+  .out(o0, sphere(0.03).grid(10, 10, 1, 0.18).rotateY(() => time * 0.3).perspective(45))
+
+
+
+//+ 0 91 2025-12-27T22:31:35.663Z
+// TEST: 50 randomly scattered spheres
+hush()
+gradient(1)
+  .colorama(0.5)
+  .out(o0, sphere(0.05).scatter(50, {x: 2, y: 2, z: 1}).rotateY(() => time * 0.3).perspective(45))
+
+
+

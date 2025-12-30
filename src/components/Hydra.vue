@@ -18,6 +18,7 @@
   	preserveDrawingBuffer: Boolean,  // Enable for Syphon/pixel readback
   	fillContainer: Boolean,  // If true, canvas fills container via CSS (for stage)
   	useCoreRenderer: Boolean,  // If true, use core hydra-synth + install() instead of standalone createHydra
+  	makeGlobal: { type: Boolean, default: true },  // Whether to expose Hydra functions globally (required for sandbox eval)
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -51,6 +52,7 @@ onBeforeUnmount(() => {
 });
 
 let h; // hydra instance for this Hydra Vue object.
+let creatingHydra = false; // Guard against concurrent creation
 
 // For the hydra-synth tick timer. Used instead of RAF.
 let frameTime = 16.6;
@@ -108,6 +110,13 @@ async function render() {
     let text = props.sketch;
 
 		if (h === undefined) {
+		  // Prevent concurrent Hydra creation
+		  if (creatingHydra) {
+		    console.log('Hydra: Already creating, will render when ready');
+		    return;
+		  }
+		  creatingHydra = true;
+
     	// Ensure canvas has dimensions set before Hydra reads them
     	const canvas = context.value as HTMLCanvasElement;
     	canvas.width = props.width;
@@ -121,7 +130,7 @@ async function render() {
     	    const { install } = await import("hydra-synth/extensions/vertex/webgpu");
 
     	    h = new HydraRenderer({
-    	      makeGlobal: true,
+    	      makeGlobal: props.makeGlobal,
     	      canvas: canvas,
     	      width: props.width,
     	      height: props.height,
@@ -137,7 +146,7 @@ async function render() {
     	    console.log("Creating Hydra via standalone createHydra factory");
     	    const { createHydra } = await import("hydra-synth/extensions/vertex/webgpu");
     	    h = await createHydra({
-    	      makeGlobal: true,
+    	      makeGlobal: props.makeGlobal,
     	      canvas: canvas,
     	      width: props.width,
     	      height: props.height,
@@ -150,8 +159,10 @@ async function render() {
     	  }
     	} catch (err) {
     	  console.error('Failed to create Hydra instance:', err);
+    	  creatingHydra = false;
     	  return;
     	}
+    	creatingHydra = false;
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);
     	}
@@ -160,6 +171,8 @@ async function render() {
     		stopAnimationTimer();
     		frameTimerKey = setInterval(animationTick, frameTime);
     	}
+    	// Re-read sketch in case it changed while we were creating Hydra
+    	text = props.sketch;
     }
     if (props.sketchInfo?.key) h.synth.hush(); // hush if a key frame is requested.
     //console.log("Eval: " + text);

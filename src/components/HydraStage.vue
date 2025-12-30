@@ -501,6 +501,7 @@
     </div>
     <div ref="containerRef" class="hydra-container">
       <Hydra
+        v-if="widthRef > 100 && heightRef > 100"
         :key="keyctr"
         :eval-done="evalDone"
         :external-loop="fxActiveRef"
