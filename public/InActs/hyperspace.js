@@ -7,7 +7,7 @@
 // Then paste this code
 
 // === Configuration ===
-const STAR_COUNT = 600
+const STAR_COUNT = 1200
 const FIELD_WIDTH = 5
 const FIELD_DEPTH = 10
 
