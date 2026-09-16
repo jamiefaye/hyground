@@ -19,6 +19,7 @@
   	fillContainer: Boolean,  // If true, canvas fills container via CSS (for stage)
   	useCoreRenderer: Boolean,  // If true, use core hydra-synth + install() instead of standalone createHydra
   	makeGlobal: { type: Boolean, default: true },  // Whether to expose Hydra functions globally (required for sandbox eval)
+  	numOutputs: { type: Number, default: 4 },  // Number of output buffers (o0..oN-1); render() tiles them all
 	});
 
 const canvasElement: Ref<HTMLCanvasElement | undefined> = ref();
@@ -137,6 +138,7 @@ async function render() {
     	      autoLoop: false,
     	      useWGSL: props.wgsl,
     	      gpuDevice: props.gpuDevice,
+    	      numOutputs: props.numOutputs,
     	    });
     	    await h.ready();
     	    install(h);
@@ -154,6 +156,7 @@ async function render() {
     	      useWGSL: props.wgsl,
     	      gpuDevice: props.gpuDevice,
     	      preserveDrawingBuffer: props.preserveDrawingBuffer,
+    	      numOutputs: props.numOutputs,
     	    });
     	    console.log("Standalone createHydra complete");
     	  }
