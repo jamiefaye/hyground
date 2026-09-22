@@ -6,6 +6,7 @@
   import Editor from './Editor.vue';
   import examples from '../examples.json';
   import { Mutator } from '../Mutator.js';
+  import { describeControls, parmSketch, renderValues } from '../Parm.js';
   import InActorPanel from './InActorPanel.vue';
   import { RandomHydra } from '../RandomHydra.js';
   import GenPanel from './GenPanel.vue';
@@ -251,6 +252,102 @@
     if (evt.shiftKey) sendTargetHydra();
   }
 
+  // Connected to the knob icon: hand the sketch's constants to the EC4 (setup 14 PARM).
+  // Not parmed: plain click parms (the editor keeps the sketch as written, the preview runs
+  // the parmed one, an overlay shows the live values). Shift: send the parmed sketch to the
+  // stage too. Alt: labels by the literal's first digit (osc5) instead of argument position
+  // (osc1). Meta: show the parmed sketch in the editor.
+  // Parmed: plain click closes (knobs let go, preview back to the sketch as written);
+  // Alt (Option) bakes the live values into the editor.
+  function parm (evt) {
+    if (parmed.value) {
+      if (evt.altKey) bakeParm(); else closeParm();
+      return;
+    }
+    const source = nextSketch.value || sketch.value;
+    const r = parmSketch(source, { label: evt.altKey ? 'digit' : 'index' });
+    console.log(`parm: ${r.controls.length} controls\n${describeControls(r.controls)}\n${r.code}`);
+    parmed.value = { source, controls: r.controls };
+    if (evt.metaKey) nextSketch.value = r.code;
+    setLocalSketch(r.code);
+    if (evt.shiftKey) {
+      sendToStage(r.code, { ...sketchInfoRef.value });
+      previousSketch.value = r.code;
+    }
+    watchAssigns(r, evt.shiftKey);
+  }
+
+  // A variable's knob (let x = 0.5 -> parm(...)()) is read once at eval, so a turn on one of
+  // those re-evaluates the parmed sketch, at most every 150 ms. Argument knobs are live anyway.
+  let parmUnlisten = null;
+  function watchAssigns (r, toStage) {
+    if (parmUnlisten) { parmUnlisten(); parmUnlisten = null; }
+    const assignSlots = new Set(r.controls.filter(c => c.kind === 'assign').map(c => c.slot));
+    if (!assignSlots.size || !window.midi) return;
+    let timer = null;
+    parmUnlisten = window.midi.onEvent((ev) => {
+      if (ev.type !== 'cc' || !ev.registered || ev.number === undefined) return;
+      const slot = ev.number + 1;   // PARM profile: CC (slot - 1)
+      if (!assignSlots.has(slot) || timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        if (hydraRenderer) Promise.resolve(hydraRenderer.eval(r.code)).catch(err => console.error('Hydra eval error:', err));
+        if (toStage) sendToStage(r.code, { ...sketchInfoRef.value });
+      }, 150);
+    });
+  }
+
+  // Live view of the parmed sketch with the knobs' values written in place of its constants
+  const parmed = ref(null);
+  const parmView = ref('');
+  const editorWrap = ref(null);
+  const overlayStyle = ref({});
+  // Copy CodeMirror's font and offsets so the overlay's characters land on the editor's
+  function measureOverlay () {
+    const wrap = editorWrap.value;
+    const content = wrap && wrap.querySelector('.cm-content');
+    const line = wrap && wrap.querySelector('.cm-line');
+    if (!content) return;
+    const cs = getComputedStyle(content);
+    const wrapBox = wrap.getBoundingClientRect();
+    const contentBox = content.getBoundingClientRect();
+    overlayStyle.value = {
+      font: cs.font,
+      lineHeight: cs.lineHeight,
+      paddingTop: (contentBox.top - wrapBox.top) + 'px',
+      paddingLeft: (contentBox.left - wrapBox.left + (line ? parseFloat(getComputedStyle(line).paddingLeft) || 0 : 0)) + 'px',
+    };
+  }
+  const parmTimer = setInterval(() => {
+    if (!parmed.value) return;
+    measureOverlay();
+    const p = window.parm;
+    const valueOf = (c) => { const s = p && p.slots.get(c.slot); return s ? s.fn() : undefined; };
+    const v = renderValues(parmed.value.source, parmed.value.controls, valueOf);
+    if (v !== parmView.value) parmView.value = v;
+  }, 100);
+  onBeforeUnmount(() => clearInterval(parmTimer));
+
+  // The knobs let go: their slots lose their labels once nothing re-registers them
+  function releaseParm (text) {
+    parmed.value = null;
+    if (parmUnlisten) { parmUnlisten(); parmUnlisten = null; }
+    if (window.parm) window.parm.begin();
+    setLocalSketch(text);
+  }
+  // Bake: the live values become the sketch text
+  function bakeParm () {
+    if (!parmed.value) return;
+    const baked = parmView.value;
+    nextSketch.value = baked;
+    releaseParm(baked);
+  }
+  // Close: back to the sketch as written
+  function closeParm () {
+    if (!parmed.value) return;
+    releaseParm(parmed.value.source);
+  }
+
   function toggleFilm (evt) {
     filmOpen.value = !filmOpen.value;
   }
@@ -320,6 +417,11 @@
             <IFa6SolidDiceD6 v-bind="tooltipProps" @click="mutate" />
           </template>
         </v-tooltip>
+        <v-tooltip text="Parm: constants to knobs (Shift: stage too, Alt: digit labels, Meta: show code); again: close, Alt: bake">
+          <template #activator="{ props: tooltipProps }">
+            <IMdiKnob v-bind="tooltipProps" @click="parm" />
+          </template>
+        </v-tooltip>
         <v-tooltip text="Send to Stage">
           <template #activator="{ props: tooltipProps }">
             <ICarbonSendActionUsage v-bind="tooltipProps" @click="sendTargetHydra" />
@@ -350,5 +452,22 @@
 
       {{ title }}
     </td></tr></tbody></table>
-  <Editor :limit="limit" :text="nextSketch" @text-changed="changed" />
+  <div ref="editorWrap" class="editor-wrap" :class="{ parmed: !!parmed }">
+    <Editor :limit="limit" :text="nextSketch" @text-changed="changed" />
+    <div v-if="parmed" class="parm-overlay" :style="overlayStyle">
+      <pre>{{ parmView }}</pre>
+      <span class="parm-actions"><button @click="bakeParm">bake</button> <button @click="closeParm">close</button></span>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.editor-wrap { position: relative; }
+.editor-wrap.parmed :deep(.cm-editor) { opacity: 0.3; }
+/* Over the text area of the editor, same font and offsets (set at runtime from CodeMirror's own), so the
+   values sit where the constants are and the layout does not move */
+.parm-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; color: #063; }
+.parm-overlay pre { margin: 0; white-space: pre; font: inherit; }
+.parm-actions { position: absolute; top: 2px; right: 6px; pointer-events: auto; font: 12px monospace; }
+.parm-actions button { font: inherit; background: #333; color: #ddd; border: 1px solid #666; padding: 0 6px; margin-left: 4px; }
+</style>

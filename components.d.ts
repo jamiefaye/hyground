@@ -8,6 +8,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    _orig_EditorView: typeof import('./src/components/_orig_EditorView.vue')['default']
+    _orig_Hydra: typeof import('./src/components/_orig_Hydra.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
     Editors: typeof import('./src/components/Editors.vue')['default']
     EditorView: typeof import('./src/components/EditorView.vue')['default']
@@ -35,6 +37,7 @@ declare module 'vue' {
     IMdiFullscreen: typeof import('~icons/mdi/fullscreen')['default']
     IMdiFullscreenExit: typeof import('~icons/mdi/fullscreen-exit')['default']
     IMdiHelpCircleOutline: typeof import('~icons/mdi/help-circle-outline')['default']
+    IMdiKnob: typeof import('~icons/mdi/knob')['default']
     InActorPanel: typeof import('./src/components/InActorPanel.vue')['default']
     MainView: typeof import('./src/components/MainView.vue')['default']
     PlayAudio: typeof import('./src/components/PlayAudio.vue')['default']

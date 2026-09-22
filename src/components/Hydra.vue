@@ -1,5 +1,6 @@
 
 <script setup lang="ts">
+import { installParm } from '../Parm.js';
   import {onMounted, onBeforeUnmount, Ref, ref, watch, computed} from "vue";
   import { useToastStore } from '@/stores/toast'
 
@@ -166,6 +167,8 @@ async function render() {
     	  return;
     	}
     	creatingHydra = false;
+    	// Knobs for parmed sketches (window.parm, window.midi); once per page, harmless without a controller
+    	installParm().catch(err => console.warn('parm install failed:', err));
     	if (props.reportHydra) {
     		props.reportHydra(h, context.value);
     	}
