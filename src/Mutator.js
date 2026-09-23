@@ -59,6 +59,8 @@ class Mutator {
       const ast = Parser.parse(text, {
         locations: true,
         ecmaVersion: 'latest',
+        allowAwaitOutsideFunction: true,   // sketches may await (loadGlb, ...) and return at top level
+        allowReturnOutsideFunction: true,
         onComment: comments }
       );
 
@@ -82,40 +84,45 @@ class Mutator {
   // pick one at random. If reroll is true, we use the same field
   // we did last time.
   transform (ast, options) {
-    // An AST traveler that accumulates a list of Literal nodes.
-    const traveler = makeTraveler({
-      go (node, state) {
-        if (node.type === 'Literal' && typeof node.value === 'number') {
-          state.literalTab.push(node);
-        } else if (node.type === 'MemberExpression') {
-          if (node.property && node.property.type === 'Literal') {
-            // numeric array subscripts are ineligable
-            return;
-          }
-        } else if (node.type === 'CallExpression') {
-          if (node.callee && node.callee.property && node.callee.property.name && node.callee.property.name !== 'out') {
-            state.functionTab.push(node);
-          }
-        }
-        // Call the parent's `go` method
-        this.super.go.call(this, node, state);
-      },
-    });
-
-    const state = {};
-    state.literalTab = [];
-    state.functionTab = [];
-
-    traveler.go(ast, state);
+    // Walk the tree for the dice's two tables. A numeric literal counts only where it is an argument
+    // (however deep: inside an arrow, an array or an arithmetic expression) of a Hydra function, so
+    // out()'s level, setResolution(), initCam(1) and .fast(0.1) are never rerolled. A subscript
+    // (o[1]) is not a literal to roll. The function table holds the method calls that are Hydra
+    // functions (sources at the head of a chain stay what they are), so a transform always has a
+    // type to change within.
+    const SKIP = new Set(['type', 'start', 'end', 'loc', 'range']);
+    const nameOf = callee => callee.type === 'Identifier' ? callee.name
+      : (callee.type === 'MemberExpression' && !callee.computed && callee.property.type === 'Identifier' ? callee.property.name : null);
+    const state = { literalTab: [], functionTab: [] };
+    const visit = (node, inHydra) => {
+      if (!node || typeof node.type !== 'string') return;
+      if (node.type === 'Literal') { if (inHydra && typeof node.value === 'number') state.literalTab.push(node); return; }
+      if (node.type === 'MemberExpression') { visit(node.object, inHydra); if (node.computed && node.property.type !== 'Literal') visit(node.property, inHydra); return; }
+      if (node.type === 'CallExpression') {
+        const name = nameOf(node.callee);
+        const hydra = !!(name && this.transMap[name]);
+        if (hydra && node.callee.type === 'MemberExpression') state.functionTab.push(node);
+        visit(node.callee, inHydra);
+        node.arguments.forEach(arg => visit(arg, hydra));
+        return;
+      }
+      for (const key of Object.keys(node)) {
+        if (SKIP.has(key)) continue;
+        const child = node[key];
+        if (Array.isArray(child)) child.forEach(ch => visit(ch, inHydra));
+        else if (child && typeof child.type === 'string') visit(child, inHydra);
+      }
+    };
+    visit(ast, false);
 
     this.litCount = state.literalTab.length;
     this.funCount = state.functionTab.length;
-    if (this.litCount !== this.initialVector.length) {
-      const nextVect = [];
-      for(let i = 0; i < this.litCount; ++i) {
-        nextVect.push(state.literalTab[i].value);
-      }
-      this.initialVector = nextVect;
+    // The initial values (what a reroll is relative to) belong to a sketch shape, not a literal count:
+    // a new sketch with the same number of constants gets its own
+    const shape = generate(ast).replace(/\d+(\.\d+)?/g, '#');
+    if (shape !== this.shape) {
+      this.shape = shape;
+      this.initialVector = state.literalTab.map(n => n.value);
     }
     if (options.changeTransform) {
       this.glitchTrans(state, options);
@@ -179,7 +186,7 @@ class Mutator {
       console.log('No name for callee');
       return;
     }
-    const ftype = this.transMap[oldName].type;
+    const ftype = this.transMap[oldName] && this.transMap[oldName].type;
     if (ftype == undefined) {
       console.log('ftype undefined for: ' + oldName);
       return;

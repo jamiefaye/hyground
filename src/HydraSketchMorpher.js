@@ -33,6 +33,8 @@ class HydraSketchMorpher {
       const ast = Parser.parse(sketchCode, {
         locations: true,
         ecmaVersion: 'latest',
+        allowAwaitOutsideFunction: true,
+        allowReturnOutsideFunction: true,
         onComment: comments,
       });
 
@@ -394,7 +396,7 @@ class HydraSketchMorpher {
    */
   _validateSketch (sketchCode) {
     try {
-      Parser.parse(sketchCode, { ecmaVersion: 'latest' });
+      Parser.parse(sketchCode, { ecmaVersion: 'latest', allowAwaitOutsideFunction: true, allowReturnOutsideFunction: true });
       return true;
     } catch (error) {
       console.warn('Generated invalid sketch:', sketchCode, error.message);
