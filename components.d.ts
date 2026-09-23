@@ -8,8 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    _orig_EditorView: typeof import('./src/components/_orig_EditorView.vue')['default']
-    _orig_Hydra: typeof import('./src/components/_orig_Hydra.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
     Editors: typeof import('./src/components/Editors.vue')['default']
     EditorView: typeof import('./src/components/EditorView.vue')['default']
@@ -34,15 +32,18 @@ declare module 'vue' {
     IFa6SolidTrashCan: typeof import('~icons/fa6-solid/trash-can')['default']
     ILetsIconsBoxRefreshAltRight: typeof import('~icons/lets-icons/box-refresh-alt-right')['default']
     Image: typeof import('./src/components/Image.vue')['default']
+    IMdiCogOutline: typeof import('~icons/mdi/cog-outline')['default']
     IMdiFullscreen: typeof import('~icons/mdi/fullscreen')['default']
     IMdiFullscreenExit: typeof import('~icons/mdi/fullscreen-exit')['default']
     IMdiHelpCircleOutline: typeof import('~icons/mdi/help-circle-outline')['default']
     IMdiKnob: typeof import('~icons/mdi/knob')['default']
     InActorPanel: typeof import('./src/components/InActorPanel.vue')['default']
+    LiveEditor: typeof import('./src/components/LiveEditor.vue')['default']
     MainView: typeof import('./src/components/MainView.vue')['default']
     PlayAudio: typeof import('./src/components/PlayAudio.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SettingsPanel: typeof import('./src/components/SettingsPanel.vue')['default']
     SharedDeviceTest: typeof import('./src/components/SharedDeviceTest.vue')['default']
     Splitter: typeof import('./src/components/Splitter.vue')['default']
     StagePanel: typeof import('./src/components/StagePanel.vue')['default']

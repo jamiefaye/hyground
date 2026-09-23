@@ -43,6 +43,11 @@ onMounted(() => {
     context.value = canvasElement.value;
     render();
     watch(()=> props.sketch, ()=>render());
+    // The stage container changes size (fullscreen, a window resize): tell Hydra, or it keeps drawing at
+    // the old resolution into a canvas whose buffer the size attributes have already reset (top part black)
+    watch(() => [props.width, props.height], ([w, ht]) => {
+      if (h && typeof h.setResolution === 'function' && w > 0 && ht > 0) h.setResolution(w, ht);
+    });
     //watch(()=> props.wgsl, ()=>render());
 
 });

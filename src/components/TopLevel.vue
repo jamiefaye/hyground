@@ -1,38 +1,24 @@
 <template>
   <v-layout id="inspire" class="fill-height">
-    <v-navigation-drawer v-model="drawerVisible" :width="450">
-      <Editors />
-    </v-navigation-drawer>
-    <v-app-bar v-if="!appStore.isFullscreen" :height="40">
-      <v-app-bar-nav-icon @click="drawerVisible = !drawerVisible" />
-      <v-app-bar-title>Hydra</v-app-bar-title>
-      <v-spacer />
-      <v-tooltip text="Hyground Documentation">
-        <template #activator="{ props: tooltipProps }">
-          <IMdiHelpCircleOutline v-bind="tooltipProps" @click="openDocumentation" />
-        </template>
-      </v-tooltip>
-      <v-tooltip :text="isFullscreen ? 'Exit Fullscreen (Esc/F11)' : 'Enter Fullscreen (F11)'">
-        <template #activator="{ props: tooltipProps }">
-          <IMdiFullscreenExit v-if="isFullscreen" v-bind="tooltipProps" @click="toggleFullscreen" />
-          <IMdiFullscreen v-else v-bind="tooltipProps" @click="toggleFullscreen" />
-        </template>
-      </v-tooltip>
-    </v-app-bar>
     <v-main>
-      <HydraStage :show="drawerVisible" />
+      <HydraStage
+        :is-fullscreen="isFullscreen"
+        :open-documentation="openDocumentation"
+        :show="!appStore.isFullscreen"
+        :toggle-fullscreen="toggleFullscreen"
+      />
     </v-main>
   </v-layout>
 </template>
 
 <script setup>
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  // The page is the stage. The Editors panel opens from the stage's own row (Edit: a popup or a box)
+  // or over the picture (Live); the drawer and app bar that used to hold them are gone.
+  import { onBeforeUnmount, onMounted, ref } from 'vue'
   import { useAppStore } from '@/stores/app'
-  import Editors from './Editors.vue'
   import HydraStage from './HydraStage.vue'
 
   const appStore = useAppStore()
-  const drawer = ref(true)
   const isFullscreen = ref(false)
 
   async function toggleFullscreen () {
@@ -60,27 +46,6 @@
   function openDocumentation () {
     window.open('./icon-documentation.html', '_blank');
   }
-
-  // Computed property that hides drawer when in fullscreen
-  const drawerVisible = computed({
-    get () {
-      return drawer.value && !appStore.isFullscreen
-    },
-    set (value) {
-      drawer.value = value
-    },
-  })
-
-  // Watch for fullscreen changes to save/restore drawer state
-  watch(() => appStore.isFullscreen, isFullscreen => {
-    if (isFullscreen) {
-      // Save current drawer state before hiding
-      appStore.setDrawerWasOpen(drawer.value)
-    } else {
-      // Restore drawer state when exiting fullscreen
-      drawer.value = appStore.drawerWasOpen
-    }
-  })
 
   onMounted(() => {
     const handleFullscreenChange = () => {

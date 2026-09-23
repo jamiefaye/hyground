@@ -4,11 +4,20 @@
   import InActorPanel from './InActorPanel.vue';
   import StagePanel from './StagePanel.vue';
   import Editors from './Editors.vue'
+  import EditorView from './EditorView.vue';
+  import SettingsPanel from './SettingsPanel.vue';
+  import { useAppStore } from '@/stores/app';
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
+  import { portal } from 'hydra-synth/src/lib/windows.js';
   const props = defineProps({
     show: Boolean,
+    // from the page: fullscreen and help, shown at the end of the stage's row now the app bar is gone
+    isFullscreen: Boolean,
+    toggleFullscreen: Function,
+    openDocumentation: Function,
   });
 
+  const appStore = useAppStore();
   let hydraRenderer;
   let fxHydra;
   let fxCanvas;
@@ -35,6 +44,7 @@
   const hidePanel = ref(false);
 
   const panelParams = reactive({
+    live: false,   // the live editor over the picture
     fx: false,
     wgsl: false,
     useCoreRenderer: false,  // Toggle between standalone createHydra and core + install()
@@ -42,6 +52,54 @@
     morph: false,
     syphon: false,
   });
+
+  // ---- the live editor: code over the picture, run straight into this stage (Mod-Enter). Its text
+  // follows the sketch playing here while it is not being typed in, so opening it shows what runs.
+  const liveText = ref('');
+  const liveFocused = ref(false);
+  const liveEditor = ref(null);
+  const stageRenderer = ref(null);   // this stage's Hydra, for the live view's parm re-evals
+  function runLive (text: string, info: object = {}) {
+    updater(text, info || {}, null, 'live');
+  }
+  function showLive (on = !panelParams.live) {
+    panelParams.live = on;
+  }
+  // whether by key or by the Live box: opening loads what is playing and takes the caret
+  watch(() => panelParams.live, on => { if (on) { liveText.value = fxSketch.value; nextTick(() => liveEditor.value?.focus()); } });
+  watch(fxSketch, v => { if (!liveFocused.value) liveText.value = v; });
+
+  // ---- the editor popup: the Editors panel (monitors and all) in a window of its own on the
+  // laptop screen, or in a box over the picture when popups are blocked. Same page, same Hydra
+  // objects: it talks to this stage as the drawer does. Shift-click keeps the old separate /editor window.
+  const editorsRoot = ref<HTMLElement | null>(null);
+  let editorsPortal: any = null;
+  async function toggleEditors (evt?: MouseEvent) {
+    if (evt && evt.shiftKey) { window.open('/editor', 'editor', 'width=500,height=1080,left=20'); return; }
+    if (editorsPortal && !editorsPortal.closed) { editorsPortal.close(); return; }
+    const p = await portal('hyg-editors', { role: 'panel', title: 'Hydra editors', width: 520, height: 960, boxStyle: 'position: fixed; left: 8px; top: 48px; width: 480px; max-width: calc(100vw - 16px); max-height: calc(100vh - 56px); overflow: auto; z-index: 1500; padding: 4px; background: rgba(255,255,255,0.96); border: 1px solid #888; box-sizing: border-box;' });
+    if (!p) return;
+    editorsPortal = p;
+    p.onClose(() => { editorsRoot.value = null; editorsPortal = null; });
+    editorsRoot.value = p.root;
+  }
+  // ---- settings: a box over the picture (top right), same portal mechanism, never a window
+  const settingsRoot = ref<HTMLElement | null>(null);
+  let settingsPortal: any = null;
+  async function toggleSettings () {
+    if (settingsPortal && !settingsPortal.closed) { settingsPortal.close(); return; }
+    const p = await portal('hyg-settings', { box: 'always', keys: false, boxStyle: 'position: fixed; right: 8px; top: 40px; width: 240px; z-index: 1500; padding: 4px; background: rgba(255,255,255,0.96); border: 1px solid #888; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); box-sizing: border-box;' });
+    if (!p) return;
+    settingsPortal = p;
+    p.onClose(() => { settingsRoot.value = null; settingsPortal = null; });
+    settingsRoot.value = p.root;
+  }
+  const stageKeys = (e: KeyboardEvent) => {
+    // Mod-Shift-H shows and hides the live editor from anywhere on the page (as on hydra.ojack.xyz)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); showLive(); }
+  };
+  onMounted(() => document.addEventListener('keydown', stageKeys));
+  onBeforeUnmount(() => { document.removeEventListener('keydown', stageKeys); if (editorsPortal && !editorsPortal.closed) editorsPortal.close(); });
 
   // Syphon output state
   const syphonAvailable = ref(false);
@@ -231,9 +289,13 @@
   const stageChannel = new BroadcastChannel('hydra-stage');
 
   stageChannel.onmessage = (event) => {
-    const { type, sketch, sketchInfo } = event.data;
+    const { type, sketch, sketchInfo, slot, value } = event.data;
     if (type === 'update') {
       updater(sketch, sketchInfo || {});
+    } else if (type === 'parm-set') {
+      // The editor set a parmed knob (the dice): mirror it on this window's parm, which the EC4 alone reaches
+      const s = window.parm && window.parm.slots.get(slot);
+      if (s) s.fn.set(value);
     }
   };
 
@@ -321,6 +383,7 @@
   // Hydras can be changed by the resize process, so we may need to fix stuff.
   async function reportHydra (newH, newCanvas) {
     hydraRenderer = newH;
+    stageRenderer.value = newH;
     fxHydra = newH.synth;
     fxCanvas = newCanvas;
     console.log('New Hydra instance reported.');
@@ -491,6 +554,11 @@
   <div class="stage-wrapper">
     <div v-if="props.show" class="stage-panel-wrapper">
       <StagePanel
+        :is-fullscreen="isFullscreen"
+        :open-documentation="openDocumentation"
+        :open-editors="toggleEditors"
+        :open-settings="toggleSettings"
+        :toggle-fullscreen="toggleFullscreen"
         :params="panelParams"
         :report-in-actor-state="reportInActorState"
         :sketch="fxSketch"
@@ -515,7 +583,25 @@
         :wgsl="panelParams.wgsl"
         :width="widthRef"
       />
+      <EditorView
+        v-if="panelParams.live"
+        ref="liveEditor"
+        :index="0"
+        :auto-parm="appStore.prefs.autoParm"
+        live
+        :renderer="stageRenderer"
+        :stage="runLive"
+        :text="liveText"
+        @focus-changed="v => liveFocused = v"
+        @hide="showLive(false)"
+      />
     </div>
+    <Teleport v-if="editorsRoot" :to="editorsRoot">
+      <div class="v-application v-theme--light editors-popup"><Editors /></div>
+    </Teleport>
+    <Teleport v-if="settingsRoot" :to="settingsRoot">
+      <SettingsPanel :params="panelParams" :syphon-available="syphonAvailable" />
+    </Teleport>
   </div>
 </template>
 
@@ -529,5 +615,10 @@
 .hydra-container {
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
+</style>
+<style>
+/* the Editors panel in its popup or box: Vuetify's theme variables come from these classes */
+.editors-popup { display: block; min-height: 0; background: #fff; color: #000; padding: 4px; }
 </style>
