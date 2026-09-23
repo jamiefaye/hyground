@@ -1,13 +1,16 @@
 <script setup lang="ts">
 
-  import { onMounted, ref } from 'vue';
+  import { ref } from 'vue';
   import EditorView from './EditorView.vue';
+  import { useAppStore } from '@/stores/app';
 
+  // The editors' options (monitors, limit height, auto stage, parms to stage, auto parm) are in
+  // the settings panel (gear on the stage's row), so the live view on the stage shares them.
+  const appStore = useAppStore();
+  const prefs = appStore.prefs;
 
   let elkey = 0;
   const edList = ref([elkey++]);
-  const showVideo = ref(true);
-  const limitHeight = ref(false);
 
   function addEd () {
     edList.value.push(elkey++);
@@ -17,18 +20,17 @@
 
 <template>
   <template v-for="(item, index) in edList" :key="item">
-    <EditorView :index="index" :limit="limitHeight" :show-vid="showVideo" />
+    <EditorView
+      :index="index"
+      :limit="prefs.limitHeight"
+      :show-vid="prefs.monitors"
+      :auto-stage="prefs.autoStage"
+      :parms-to-stage="prefs.parmsToStage"
+      :auto-parm="prefs.autoParm"
+    />
   </template>
   <div class="d-flex align-center ga-3">
     <v-btn id="EdAdd" variant="outlined" size="x-small" @click="addEd">New</v-btn>
-    <div>
-      <input id="videocheckbox" v-model="showVideo" type="checkbox">
-      <label for="videocheckbox">Monitors</label>
-    </div>
-    <div>
-      <input id="limitcheckbox" v-model="limitHeight" type="checkbox">
-      <label for="limitcheckbox">Limit Height</label>
-    </div>
   </div>
 
 </template>

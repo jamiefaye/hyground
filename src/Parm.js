@@ -25,7 +25,11 @@
  * Ranges come from the argument's name in the function table: multiplicative parameters
  * (frequency, scale, speed, ...) get a log range an octave-triplet each side of the literal,
  * counts (nSides, repeatX, ...) get integer detents, everything else the dice's rule, zero
- * to twice the literal, or a unit range when the literal is zero.
+ * to twice the literal, or a unit range when the literal is zero. The range is not a rail:
+ * the knobs are endless and the controls are registered open, so min..max only sets the size
+ * of a detent (a 64th of the range) and a value can go on past either end. A log control
+ * turned down approaches zero without reaching it; a count keeps its floor of 1. Push and
+ * turn moves a tenth of a detent (the EC4's push sends a note on the encoder's number).
  */
 import { Parser } from 'acorn';
 import { generate } from 'astring';
@@ -64,6 +68,43 @@ export function firstDigit (raw) {
 
 const sig = x => Number(Number(x).toPrecision(3));
 
+/** Is this text parmSketch's output (or a sketch built from it)? */
+export function isParmed (text) { return /\bparm\s*\.\s*begin\s*\(/.test(text); }
+
+/**
+ * The reverse of parmSketch: parm(slot, label, init, min, max[, curve]) and parm(...)() become
+ * the init literal again, parm.begin() statements go. Text that parmSketch did not make comes
+ * back unchanged (a sketch calling its own parm is left alone).
+ */
+export function unparmSketch (text) {
+  const comments = [];
+  const ast = Parser.parse(text, { ecmaVersion: 'latest', allowAwaitOutsideFunction: true, allowReturnOutsideFunction: true, locations: true, onComment: comments });
+  const isParmCall = n => n && n.type === 'CallExpression' && n.callee.type === 'Identifier' && n.callee.name === 'parm' && n.arguments.length >= 3 && n.arguments[2].type === 'Literal';
+  const isBegin = n => n && n.type === 'ExpressionStatement' && n.expression.type === 'CallExpression' && n.expression.callee.type === 'MemberExpression'
+    && n.expression.callee.object.type === 'Identifier' && n.expression.callee.object.name === 'parm' && n.expression.callee.property.name === 'begin';
+  const literalOf = n => { const init = n.arguments[2]; return lit(init.value, init.raw); };
+  // Returns a replacement node or undefined
+  const visit = (node) => {
+    if (!node || typeof node.type !== 'string') return undefined;
+    if (node.type === 'CallExpression' && node.arguments.length === 0 && isParmCall(node.callee)) return literalOf(node.callee); // parm(...)()
+    if (isParmCall(node)) return literalOf(node);
+    for (const key of Object.keys(node)) {
+      if (SKIP_KEYS.has(key)) continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        for (let i = child.length - 1; i >= 0; i--) {
+          if (isBegin(child[i])) { child.splice(i, 1); continue; }
+          const r = visit(child[i]); if (r) child[i] = r;
+        }
+      } else if (child && typeof child.type === 'string') { const r = visit(child); if (r) node[key] = r; }
+    }
+    return undefined;
+  };
+  visit(ast);
+  attachComments(ast, comments);
+  return generate(ast, { comments: true }).trimEnd();
+}
+
 /** Range for a literal from its function and argument: { min, max, curve } with curve linear | log | int. */
 export function rangeFor (fn, argName, value) {
   const v = Number(value);
@@ -86,6 +127,10 @@ const SKIP_KEYS = new Set(['type', 'start', 'end', 'loc', 'range', 'comments', '
  */
 export function parmSketch (text, options = {}) {
   const opts = Object.assign({ label: 'index', slots: 128 }, options);
+  // Parming a parmed sketch (the stage's text is the parmed code; Meta showed it; Auto Parm on a
+  // re-run) would add a second parm.begin() and find no constants: undo the first parm and parm
+  // the sketch as written, so a re-parm gives the same knobs back.
+  if (isParmed(text)) text = unparmSketch(text);
   const comments = [];
   const ast = Parser.parse(text, { ecmaVersion: 'latest', allowAwaitOutsideFunction: true, allowReturnOutsideFunction: true, locations: true, onComment: comments });
   const controls = [];
@@ -242,8 +287,9 @@ export async function installParm (options = {}) {
     const prev = slots.get(slot);
     // Inside an arrow function this runs every frame: the same control again is a lookup, not a registration
     if (prev && prev.label === label && prev.init === init && prev.min === min && prev.max === max && prev.curve === curve) return prev.fn;
-    const opts = { min, max, init, label };
-    if (curve === 'int') { opts.curve = 'linear'; opts.steps = Math.max(1, Math.round(max - min)); } else opts.curve = curve;
+    // No rails: the range sets the detent size. Push and turn: a tenth of a detent (counts stay whole)
+    const opts = { min, max, init, label, open: true, fine: 10 };
+    if (curve === 'int') { opts.curve = 'linear'; opts.steps = Math.max(1, Math.round(max - min)); opts.open = 'up'; opts.fine = 0; } else opts.curve = curve;
     const fn = midi.cc(at(slot), opts);
     if (!prev || prev.label !== label || prev.init !== init) fn.set(init); // a new sketch on this slot starts at its own value
     slots.set(slot, { label, init, min, max, curve, fn });

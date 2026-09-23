@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { abbrev, describeControls, firstDigit, formatValue, parmSketch, rangeFor, renderValues } from './Parm.js';
+import { isParmed, unparmSketch, abbrev, describeControls, firstDigit, formatValue, parmSketch, rangeFor, renderValues } from './Parm.js';
 
 test('labels: abbreviation plus first digit, unique keys, index mode', () => {
   assert.equal(abbrev('colorama'), 'cor'); assert.equal(abbrev('modulateScrollX'), 'msx'); assert.equal(abbrev('zzz'), 'zzz');
@@ -56,3 +56,17 @@ test('assignments: let / const / plain =, labelled =name, read where they sit', 
   assert.match(describeControls(r.controls), /1 =spe   speed = 0.5/);
   assert.equal(renderValues(text, r.controls, c => c.slot === 2 ? 6 : undefined), 'let speed = 0.5\nconst n = 6, name = "x"\nspeed = -1\nosc(10, speed).kaleid(n).out()');
 });
+
+test('re-parm: a parmed sketch is unparmed first, so parm.begin() never repeats and the knobs come back', () => {
+  const src = 'let k = 0.5\nosc(10, () => time * 0.1).rotate(0.3).out(o0)'
+  const once = parmSketch(src)
+  assert.equal(isParmed(once.code), true); assert.equal(isParmed(src), false)
+  assert.equal(unparmSketch(once.code), 'let k = 0.5;\nosc(10, () => time * 0.1).rotate(0.3).out(o0);')
+  const twice = parmSketch(once.code)
+  assert.equal(twice.controls.length, once.controls.length)
+  assert.equal((twice.code.match(/parm\.begin\(\)/g) || []).length, 1)
+  assert.deepEqual(twice.controls.map(c => [c.slot, c.label, c.value]), once.controls.map(c => [c.slot, c.label, c.value]))
+  // a sketch with its own parm() and no begin is not touched
+  const own = 'osc(parm(1, 2, 3)).out(o0)'
+  assert.equal(parmSketch(own).code.includes('parm(1, 2, 3)'), true)
+})
