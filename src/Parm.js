@@ -335,7 +335,7 @@ export async function installParm (options = {}) {
         for (let g = 1; g <= groups; g++) for (let n = 1; n <= per; n++) endless.push({ device: d, id: [g, n], row: { kind: 'endless', closed: false } });
       }
     }
-    for (let page = 2; page <= MAX_PAGES && endless.length < need; page++) for (const { d, rows } of paged) if (rows.some(r => r.kind === 'endless')) pageOf(d, rows, page);
+    for (let page = 2; page <= MAX_PAGES && endless.length < need; page++) for (const { d, rows } of paged) pageOf(d, rows, page);
     return { endless, bounded, paged: paged.map(x => x.d) };
   };
   const placeOne = (slot, label) => {
@@ -403,19 +403,21 @@ export async function installParm (options = {}) {
   // The pages of a paged device on its last button row: press = that page; lit for the live page, dim
   // where a page holds knobs, off where it is empty
   const pagesOf = d => Math.max(1, ...[...slots.values()].filter(s => s.device === d && s.fn.page).map(s => s.fn.page));
-  const pageRow = d => (d.profile.layout || []).find(r => r.group && r.kind === 'button' && r.role === 'pages') || null;
+  // 'pages': one button per page (the XL3's lower row); 'pageStep': two buttons step back and forth (the nano's track arrows)
+  const pageRow = d => (d.profile.layout || []).find(r => r.group && r.kind === 'button' && (r.role === 'pages' || r.role === 'pageStep')) || null;
   const pageLamps = () => {
     for (const d of midi._order) {
       const row = pageRow(d);
       if (!row || !(d.profile.feedback && d.profile.feedback.lamp)) continue;
       const n = pagesOf(d);
+      if (row.role === 'pageStep') { d.lamp([row.group, row.step[0]], d.page > 1 ? 1 : 0); d.lamp([row.group, row.step[1]], d.page < n ? 1 : 0); continue; }
       for (let i = 1; i <= (row.count || 8); i++) d.lamp([row.group, i], i === d.page ? 1 : (i <= n ? 0.3 : 0));
     }
   };
   for (const d of midi._order) {
     const row = pageRow(d);
     if (!row) continue;
-    for (let i = 1; i <= (row.count || 8); i++) d.note([row.group, i]);
+    for (let i = 1; i <= (row.count || 8); i++) if (row.role === 'pages' || row.step.includes(i)) d.note([row.group, i]);
     d.onPage(pageLamps);
   }
   midi.onEvent(ev => {
@@ -423,7 +425,12 @@ export async function installParm (options = {}) {
     const d = midi.device(ev.device); const row = d && pageRow(d);
     if (!row) return;
     const at = d.profile.locate ? d.profile.locate(ev.number, ev.channel) : null;
-    if (at && at[0] === row.group && at[1] <= pagesOf(d)) d.setPage(at[1]);
+    if (!at || at[0] !== row.group) return;
+    const n = pagesOf(d);
+    if (row.role === 'pageStep') {
+      if (at[1] === row.step[0] && d.page > 1) d.setPage(d.page - 1);
+      if (at[1] === row.step[1] && d.page < n) d.setPage(d.page + 1);
+    } else if (at[1] <= n) d.setPage(at[1]);
   });
   /** The slot a controller event belongs to, or undefined. */
   parm.slotOf = ev => (ev && ev.device !== undefined ? byKey.get(keyOf({ id: ev.device }, ev.channel, ev.number)) ?? byKey.get(keyOf({ id: ev.device }, null, ev.number)) : undefined);
