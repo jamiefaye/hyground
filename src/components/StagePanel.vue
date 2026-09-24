@@ -10,6 +10,7 @@
     syphonAvailable: Boolean,
     openEditors: Function,
     openSettings: Function,
+    openKnobs: Function,
     isFullscreen: Boolean,
     toggleFullscreen: Function,
     openDocumentation: Function,
@@ -58,6 +59,11 @@
       :update-script="props.updateScript"
     />
   </v-col><v-col cols="auto" class="d-flex align-center ga-2">
+    <v-tooltip text="Knobs: the controllers on screen, each in its own shape, with what parm put on them (Cmd/Ctrl-Shift-K)">
+      <template #activator="{ props: tooltipProps }">
+        <IMdiKnob v-bind="tooltipProps" @click="props.openKnobs && props.openKnobs()" />
+      </template>
+    </v-tooltip>
     <v-tooltip text="Settings: stage modes and editor options">
       <template #activator="{ props: tooltipProps }">
         <IMdiCogOutline v-bind="tooltipProps" @click="props.openSettings && props.openSettings()" />

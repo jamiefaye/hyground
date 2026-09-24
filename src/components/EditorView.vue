@@ -369,8 +369,8 @@
     let timer = null;
     parmUnlisten = window.midi.onEvent((ev) => {
       if (ev.type !== 'cc' || !ev.registered || ev.number === undefined) return;
-      const slot = ev.number + 1;   // PARM profile: CC (slot - 1)
-      if (!assignSlots.has(slot) || timer) return;
+      const slot = window.parm ? window.parm.slotOf(ev) : undefined;   // whichever device the knob is on
+      if (slot === undefined || !assignSlots.has(slot) || timer) return;
       timer = setTimeout(() => { timer = null; reevalParmed(); }, 150);
     });
   }

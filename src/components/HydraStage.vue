@@ -9,6 +9,7 @@
   import { useAppStore } from '@/stores/app';
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
   import { portal } from 'hydra-synth/src/lib/windows.js';
+  import { installParm } from '../Parm.js';
   const props = defineProps({
     show: Boolean,
     // from the page: fullscreen and help, shown at the end of the stage's row now the app bar is gone
@@ -94,9 +95,35 @@
     p.onClose(() => { settingsRoot.value = null; settingsPortal = null; });
     settingsRoot.value = p.root;
   }
+  // ---- knobs: the on-screen key to the controllers (every device in its own shape, labels live from parm)
+  let knobsPortal: any = null;
+  let knobsPanel: any = null;
+  async function toggleKnobs () {
+    if (knobsPortal && !knobsPortal.closed) { knobsPortal.close(); return; }
+    // the controllers are installed with parm; before any parm, install them now
+    if (!(window as any).midi) await installParm();
+    const midi = (window as any).midi;
+    if (!midi) { console.warn('knobs: no MIDI controller'); return; }
+    // a box over the picture (bottom left) for now; a window of its own on the panel screen is the next step
+    const p = await portal('hyg-knobs', { box: 'always', keys: false, title: 'Hydra knobs', boxStyle: 'position: fixed; left: 8px; bottom: 8px; max-width: calc(100vw - 16px); max-height: 60vh; overflow: auto; z-index: 1500; padding: 6px; background: rgba(0,0,0,0.85); border: 1px solid #555; border-radius: 4px; box-sizing: border-box;' });
+    if (!p) return;
+    knobsPortal = p;
+    const { mountPanel } = await import('hydra-synth/extensions/midi/ui/panel.js');
+    const profile = midi.profile;
+    // the default device's groups (the EC4 PARM setup: 8 groups of 16) while it is plugged in, labels live; every other device from its layout
+    // the default device takes every port the others left, so "plugged in" is a port whose name the profile knows
+    const plugged = midi.default.inputs.some((n: string) => (profile && profile.match instanceof RegExp ? profile.match.test(n) : true));
+    const groups = profile && profile.encoder && plugged && !(profile.layout || []).some((r: any) => r.group)
+      ? Array.from({ length: Math.min(profile.groups || 1, 8) }, (_, i) => ({ group: i + 1, title: profile.setup ? `setup ${profile.setup}` : '' }))
+      : [];
+    knobsPanel = mountPanel(p.root, midi, { groups, devices: true });
+    p.onClose(() => { if (knobsPanel) knobsPanel.destroy(); knobsPanel = null; knobsPortal = null; });
+  }
   const stageKeys = (e: KeyboardEvent) => {
     // Mod-Shift-H shows and hides the live editor from anywhere on the page (as on hydra.ojack.xyz)
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); showLive(); }
+    // Mod-Shift-K: the knobs box, the on-screen key to the controllers
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); toggleKnobs(); }
   };
   onMounted(() => document.addEventListener('keydown', stageKeys));
   onBeforeUnmount(() => { document.removeEventListener('keydown', stageKeys); if (editorsPortal && !editorsPortal.closed) editorsPortal.close(); });
@@ -558,6 +585,7 @@
         :open-documentation="openDocumentation"
         :open-editors="toggleEditors"
         :open-settings="toggleSettings"
+        :open-knobs="toggleKnobs"
         :toggle-fullscreen="toggleFullscreen"
         :params="panelParams"
         :report-in-actor-state="reportInActorState"
