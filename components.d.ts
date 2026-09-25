@@ -28,7 +28,6 @@ declare module 'vue' {
     IFa6SolidGear: typeof import('~icons/fa6-solid/gear')['default']
     IFa6SolidPlay: typeof import('~icons/fa6-solid/play')['default']
     IFa6SolidShuffle: typeof import('~icons/fa6-solid/shuffle')['default']
-    IFa6SolidSliders: typeof import('~icons/fa6-solid/sliders')['default']
     IFa6SolidTrashCan: typeof import('~icons/fa6-solid/trash-can')['default']
     ILetsIconsBoxRefreshAltRight: typeof import('~icons/lets-icons/box-refresh-alt-right')['default']
     Image: typeof import('./src/components/Image.vue')['default']
