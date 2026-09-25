@@ -24,13 +24,15 @@
  *
  * @return {!Promise<FileSystemFileHandle>} Handle to the existing file.
  */
-function getFileHandle () {
+// `win` is the window the user's click happened in (a popup's, when the panel lives there): the
+// picker only opens from a window holding the user activation, the opener's would refuse silently
+function getFileHandle (win = window) {
   // For Chrome 86 and later...
-  if ('showOpenFilePicker' in window) {
-    return window.showOpenFilePicker().then(handles => handles[0]);
+  if ('showOpenFilePicker' in win) {
+    return win.showOpenFilePicker().then(handles => handles[0]);
   }
   // For Chrome 85 and earlier...
-  return window.chooseFileSystemEntries();
+  return win.chooseFileSystemEntries();
 }
 
 /**
@@ -38,16 +40,16 @@ function getFileHandle () {
  *
  * @return {!Promise<FileSystemFileHandle>} Handle to the new file.
  */
-function getNewFileHandle () {
+function getNewFileHandle (win = window) {
   // For Chrome 86 and later...
-  if ('showSaveFilePicker' in window) {
+  if ('showSaveFilePicker' in win) {
     const opts = {
       types: [{
         description: 'Text file',
         accept: { 'text/plain': ['.txt'] },
       }],
     };
-    return window.showSaveFilePicker(opts);
+    return win.showSaveFilePicker(opts);
   }
   // For Chrome 85 and earlier...
   const opts = {
@@ -58,7 +60,7 @@ function getNewFileHandle () {
       mimeTypes: ['text/plain'],
     }],
   };
-  return window.chooseFileSystemEntries(opts);
+  return win.chooseFileSystemEntries(opts);
 }
 
 /**

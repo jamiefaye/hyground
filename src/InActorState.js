@@ -66,9 +66,9 @@ class InActorState {
   }
 
 
-  doFileImport ()
+  doFileImport (e)
   {
-    this.openFile();
+    this.openFile(e);
   }
 
 
@@ -188,11 +188,12 @@ class InActorState {
 
 
   // Saves a recording to disk.
+  // (e is the click: its window is where the file picker may open, the editors popup or this page)
   async saveFile (e)
   {
     let fileHandle;
     try {
-      fileHandle = await getNewFileHandle();
+      fileHandle = await getNewFileHandle((e && e.view) || window);
     } catch (ex) {
       if (ex.name === 'AbortError') {
         return;
@@ -217,7 +218,13 @@ class InActorState {
 
   async openFile (e)
   {
-    const fhand = await getFileHandle();
+    let fhand;
+    try {
+      fhand = await getFileHandle((e && e.view) || window);
+    } catch (ex) {
+      if (ex.name !== 'AbortError') console.error('InAct: could not open the file picker', ex);
+      return;
+    }
     const file = await fhand.getFile();
     const text = await readFile(file);
 
