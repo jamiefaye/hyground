@@ -37,6 +37,7 @@ declare module 'vue' {
     IMdiFullscreenExit: typeof import('~icons/mdi/fullscreen-exit')['default']
     IMdiHelpCircleOutline: typeof import('~icons/mdi/help-circle-outline')['default']
     IMdiKnob: typeof import('~icons/mdi/knob')['default']
+    IMdiTuneVertical: typeof import('~icons/mdi/tune-vertical')['default']
     InActorPanel: typeof import('./src/components/InActorPanel.vue')['default']
     LiveEditor: typeof import('./src/components/LiveEditor.vue')['default']
     MainView: typeof import('./src/components/MainView.vue')['default']

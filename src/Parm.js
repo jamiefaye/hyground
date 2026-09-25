@@ -16,7 +16,13 @@
  * a label of '=' and the name (=spe): a variable holds a number, read once at eval, so a host
  * that wants those knobs live re-evaluates the sketch when one moves (controls[].kind ===
  * 'assign' says which).
- * Array subscripts, sequences ([1, 2, 3]) and calls that are not Hydra functions (out,
+ * The vertex extension's functions are parmed too (its table, extensions/vertex/vertex-functions.js):
+ * a chain transform's argument (rotateY(0.5), perspective(60), a geometry's scale(2)) is a live
+ * uniform and becomes parm(...) like a Hydra argument; a geometry primitive's (sphere(0.1, 32)) or
+ * a CPU layout's (grid(3, 3, 1)) is read when the sketch runs, so it becomes parm(...)() with kind
+ * 'eval', re-evaluated like an assignment. scale, offset, rotate and repeat are both Hydra's and the
+ * extension's: the chain's root decides (osc().scale() is Hydra's, sphere().scale() the extension's).
+ * Array subscripts, sequences ([1, 2, 3]) and calls that are not in either table (out,
  * setResolution, ...) are left alone. The knob's home value is the literal: the picture is
  * the same until a knob turns. parm.begin() at the top marks the previous sketch's slots
  * stale so their labels clear; parm(slot, label, init, min, max, curve) re-registers the
@@ -34,7 +40,7 @@
 import { Parser } from 'acorn';
 import { generate } from 'astring';
 import { attachComments } from 'astravel';
-import { hydraFunctions } from './hydra-functions.js';
+import { hydraFunctions, vertexFunctions } from './hydra-functions.js';
 
 // Three-letter codes for labels; anything not listed takes its first three letters.
 const ABBREV = {
@@ -47,16 +53,44 @@ const ABBREV = {
   opaque: 'opq', age: 'age', colormat: 'cmt', knee: 'kne', brightness: 'bri', mask: 'msk', luma: 'lum', thresh: 'thr',
   color: 'col', saturate: 'sat', hue: 'hue', colorama: 'cor', blur: 'blr', blurb: 'blb', prev: 'prv', sum: 'sum',
   r: 'chr', g: 'chg', b: 'chb', a: 'cha', diffuse: 'dfs', specular: 'spc', fresnel: 'frs', halfLambert: 'hlb',
+  // the vertex extension (cone and grid avoid contrast's con and gradient's grd)
+  tri: 'tri', quad: 'qud', poly: 'ply', circle: 'cir', line: 'lin', ring: 'rng', cube: 'cub', sphere: 'sph', plane: 'pln',
+  torus: 'tor', cylinder: 'cyl', cone: 'cne', rotateX: 'rtx', rotateY: 'rty', rotateZ: 'rtz', translate: 'trn', perspective: 'per',
+  grid: 'gri', scatter: 'sct',
 };
 
 // Argument classes for ranges (see the header)
-const MULT = new Set(['frequency', 'scale', 'multiple', 'radius', 'speed', 'sync', 'headroom', 'shininess', 'power', 'dist']);
-const INT = new Set(['nSides', 'sides', 'repeatX', 'repeatY', 'reps', 'pixelX', 'pixelY', 'bins']);
+const MULT = new Set(['frequency', 'scale', 'multiple', 'radius', 'speed', 'sync', 'headroom', 'shininess', 'power', 'dist', 'tubeRadius', 'innerRadius', 'outerRadius', 'size']);
+const INT = new Set(['nSides', 'sides', 'repeatX', 'repeatY', 'reps', 'pixelX', 'pixelY', 'bins',
+  'segments', 'rings', 'radialSegments', 'tubularSegments', 'heightSegments', 'subdivisionsX', 'subdivisionsY', 'nx', 'ny', 'nz', 'count', 'seed']);
 const UNIT = new Set(['r', 'g', 'b', 'a', 'alpha', 'threshold', 'tolerance', 'amount', 'blending', 'smoothing', 'gamma', 'hue',
   'keep', 'intensity', 'ambient', 'xMult', 'yMult', 'offsetX', 'offsetY', 'scrollX', 'scrollY', 'x', 'y', 'offset']);
 
 const table = {};
 for (const f of hydraFunctions) table[f.name] = f;
+const vtable = {};
+for (const f of vertexFunctions) vtable[f.name] = f;
+const GEOMETRY = new Set(vertexFunctions.filter(f => f.type === 'geometry').map(f => f.name));
+
+/** Is this chain rooted in a geometry primitive (sphere(0.5).scale(2)) rather than a texture (osc().scale(2))? */
+function rootIsGeometry (callee) {
+  let n = callee;
+  while (n) {
+    if (n.type === 'MemberExpression') n = n.object;
+    else if (n.type === 'CallExpression') { if (n.callee.type === 'Identifier') return GEOMETRY.has(n.callee.name); n = n.callee; }
+    else return false;
+  }
+  return false;
+}
+
+/** The table entry a call names, or null: the vertex extension's for a name only it has, or on a geometry chain. */
+export function metaFor (callee) {
+  const name = callee.type === 'MemberExpression' ? (!callee.computed && callee.property && callee.property.name) : (callee.type === 'Identifier' ? callee.name : null);
+  if (!name) return null;
+  const v = vtable[name];
+  if (v && (!table[name] || table[name].type === v.type || rootIsGeometry(callee))) return v;
+  return table[name] || null;
+}
 
 export function abbrev (name) { return ABBREV[name] || String(name).slice(0, 3).toLowerCase(); }
 
@@ -108,7 +142,7 @@ export function unparmSketch (text) {
 /** Range for a literal from its function and argument: { min, max, curve } with curve linear | log | int. */
 export function rangeFor (fn, argName, value) {
   const v = Number(value);
-  const mult = MULT.has(argName) || (fn === 'scale' && argName === 'amount');
+  const mult = MULT.has(argName) || (fn === 'scale' && ['amount', 'x', 'y', 'z'].includes(argName));
   if (INT.has(argName) && v >= 1) return { min: 1, max: Math.max(Math.round(2 * v), 8), curve: 'int' };
   if (mult && v > 0) return { min: sig(v / 8), max: sig(v * 8), curve: 'log' };
   if (v > 0) return { min: 0, max: sig(2 * v), curve: 'linear' };
@@ -143,15 +177,17 @@ export function parmSketch (text, options = {}) {
     return key;
   };
 
-  // A control for a Hydra argument ({ fn, index }) or an assignment ({ name })
-  const control = ({ fn, index, name }, value, raw, start, end) => {
+  // A control for a function argument ({ meta, fn, index }) or an assignment ({ name }). kind: 'arg' is
+  // sampled every frame (a Hydra argument, a vertex transform's uniform); 'eval' is read once when the
+  // sketch runs (a geometry primitive's size, a grid's counts), so a host re-evaluates when it moves;
+  // 'assign' likewise, a variable's value
+  const control = ({ meta, fn, index, name }, value, raw, start, end) => {
     if (controls.length >= opts.slots) return null;
     let label, arg, kind;
     if (name !== undefined) {
       kind = 'assign'; arg = name; label = '=' + name.slice(0, 3);
     } else {
-      kind = 'arg';
-      const meta = table[fn];
+      kind = meta.live === false ? 'eval' : 'arg';
       // combine / combineCoord functions take the other texture as their first argument, unlisted in the table
       const offset = (meta.type === 'combine' || meta.type === 'combineCoord') ? 1 : 0;
       const input = meta.inputs[index - offset];
@@ -180,10 +216,6 @@ export function parmSketch (text, options = {}) {
     }
     return null;
   };
-  const hydraName = callee => {
-    const name = callee.type === 'MemberExpression' ? (callee.property && callee.property.name) : (callee.type === 'Identifier' ? callee.name : null);
-    return name && table[name] ? name : null;
-  };
   const visitChildren = (node, ctx) => {
     for (const key of Object.keys(node)) {
       if (SKIP_KEYS.has(key)) continue;
@@ -193,7 +225,7 @@ export function parmSketch (text, options = {}) {
     }
   };
 
-  // ctx: { fn, index } = the Hydra call and argument we are inside; direct = this node is the argument itself.
+  // ctx: { meta, fn, index } = the call and argument we are inside; direct = this node is the argument itself.
   // Returns a replacement node or undefined.
   const visit = (node, ctx, direct) => {
     if (!node || typeof node.type !== 'string') return undefined;
@@ -203,7 +235,7 @@ export function parmSketch (text, options = {}) {
       const c = ctx && control(ctx, num.value, num.raw, node.start, node.end);
       if (!c) return undefined;
       const call = callNode(c);
-      return direct ? call : { type: 'CallExpression', callee: call, arguments: [], optional: false };
+      return direct && c.kind === 'arg' ? call : { type: 'CallExpression', callee: call, arguments: [], optional: false };
     }
     // let x = 0.5 / x = 0.5: the value is read where it sits, so the call form
     if (node.type === 'VariableDeclarator' && node.id.type === 'Identifier' && node.init) {
@@ -215,10 +247,10 @@ export function parmSketch (text, options = {}) {
       return undefined;
     }
     if (node.type === 'CallExpression') {
-      const name = hydraName(node.callee);
+      const meta = metaFor(node.callee);
       visit(node.callee, null, false);
       node.arguments.forEach((arg, i) => {
-        const r = visit(arg, name ? { fn: name, index: i } : null, !!name);
+        const r = visit(arg, meta ? { meta, fn: meta.name, index: i } : null, !!meta);
         if (r) node.arguments[i] = r;
       });
       return undefined;

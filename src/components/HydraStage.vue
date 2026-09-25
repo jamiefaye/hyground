@@ -122,7 +122,7 @@
   const stageKeys = (e: KeyboardEvent) => {
     // Mod-Shift-H shows and hides the live editor from anywhere on the page (as on hydra.ojack.xyz)
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); showLive(); }
-    // Mod-Shift-K: the knobs box, the on-screen key to the controllers
+    // Mod-Shift-K (or the faders icon on the stage row): the knobs box, the on-screen key to the controllers
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); toggleKnobs(); }
   };
   onMounted(() => document.addEventListener('keydown', stageKeys));

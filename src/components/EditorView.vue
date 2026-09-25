@@ -315,7 +315,7 @@
     if (!s) return;
     s.fn.set(v);
     if (parmed.value.toStage && !props.stage) stageChannel.postMessage({ type: 'parm-set', slot: c.slot, value: v });
-    if (c.kind === 'assign') reevalParmed();
+    if (c.kind !== 'arg') reevalParmed();   // a variable's or a geometry's value is read at eval
   }
 
   // A variable's knob is read once at eval: run the parmed sketch again, here and on the stage if it is there
@@ -359,12 +359,13 @@
     watchAssigns(r);
   }
 
-  // A variable's knob (let x = 0.5 -> parm(...)()) is read once at eval, so a turn on one of
-  // those re-evaluates the parmed sketch, at most every 150 ms. Argument knobs are live anyway.
+  // A variable's knob (let x = 0.5 -> parm(...)()) or a geometry's (sphere(0.5), grid(3, 3)) is read
+  // once at eval, so a turn on one of those re-evaluates the parmed sketch, at most every 150 ms.
+  // Argument knobs are live anyway (Hydra's and a vertex transform's).
   let parmUnlisten = null;
   function watchAssigns (r) {
     if (parmUnlisten) { parmUnlisten(); parmUnlisten = null; }
-    const assignSlots = new Set(r.controls.filter(c => c.kind === 'assign').map(c => c.slot));
+    const assignSlots = new Set(r.controls.filter(c => c.kind !== 'arg').map(c => c.slot));
     if (!assignSlots.size || !window.midi) return;
     let timer = null;
     parmUnlisten = window.midi.onEvent((ev) => {

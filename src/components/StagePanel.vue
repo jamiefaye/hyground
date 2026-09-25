@@ -59,9 +59,10 @@
       :update-script="props.updateScript"
     />
   </v-col><v-col cols="auto" class="d-flex align-center ga-2">
-    <v-tooltip text="Knobs: the controllers on screen, each in its own shape, with what parm put on them (Cmd/Ctrl-Shift-K)">
+    <!-- faders, not the knob: the knob in an editor's row parms a sketch; this shows and hides the controllers on screen -->
+    <v-tooltip text="Controllers on screen: each device in its own shape, with what parm put on it; again hides it (Cmd/Ctrl-Shift-K)">
       <template #activator="{ props: tooltipProps }">
-        <IMdiKnob v-bind="tooltipProps" @click="props.openKnobs && props.openKnobs()" />
+        <IMdiTuneVertical v-bind="tooltipProps" @click="props.openKnobs && props.openKnobs()" />
       </template>
     </v-tooltip>
     <v-tooltip text="Settings: stage modes and editor options">

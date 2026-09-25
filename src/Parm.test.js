@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isParmed, unparmSketch, abbrev, describeControls, firstDigit, formatValue, parmSketch, rangeFor, renderValues } from './Parm.js';
+import { Parser } from 'acorn';
+import { isParmed, unparmSketch, abbrev, describeControls, firstDigit, formatValue, metaFor, parmSketch, rangeFor, renderValues } from './Parm.js';
 
 test('labels: abbreviation plus first digit, unique keys, index mode', () => {
   assert.equal(abbrev('colorama'), 'cor'); assert.equal(abbrev('modulateScrollX'), 'msx'); assert.equal(abbrev('zzz'), 'zzz');
@@ -71,3 +72,27 @@ test('re-parm: a parmed sketch is unparmed first, so parm.begin() never repeats 
   const own = 'osc(parm(1, 2, 3)).out(o0)'
   assert.equal(parmSketch(own).code.includes('parm(1, 2, 3)'), true)
 })
+
+test('the vertex extension: transforms are live, geometry and layouts are read at eval, scale by the chain root', () => {
+  const src = 'osc(10).scale(1.5).out(o0, sphere(0.1, 32).grid(3, 3, 1).perspective(60).rotateY(0.5).scale(2));';
+  const r = parmSketch(src);
+  assert.deepEqual(r.controls.map(c => c.key), ['osc1', 'scl1', 'sph1', 'sph2', 'gri1', 'gri2', 'gri3', 'per1', 'rty1', 'scl1b']);
+  assert.deepEqual(r.controls.map(c => c.kind), ['arg', 'arg', 'eval', 'eval', 'eval', 'eval', 'eval', 'arg', 'arg', 'arg']);
+  assert.deepEqual(r.controls.map(c => c.arg), ['frequency', 'amount', 'radius', 'segments', 'nx', 'ny', 'nz', 'fov', 'angle', 'x']);
+  assert.match(r.code, /sphere\(parm\(3, "sph1", 0\.1, 0\.0125, 0\.8, "log"\)\(\), parm\(4, "sph2", 32, 1, 64, "int"\)\(\)\)/);
+  assert.match(r.code, /grid\(parm\(5, "gri1", 3, 1, 8, "int"\)\(\), /);
+  assert.match(r.code, /perspective\(parm\(8, "per1", 60, 0, 120\)\)\.rotateY\(parm\(9, "rty1", 0\.5, 0, 1\)\)\.scale\(parm\(10, "scl1b", 2, 0\.25, 16, "log"\)\)/);
+  assert.equal(r.code.split('\n')[0], "parm.begin('aaaaaaaaaa')");
+  assert.equal(unparmSketch(r.code), src);
+  // the same name, two tables: Hydra's scale on a texture, the extension's on a geometry; a name only one has needs no root
+  const callee = (text) => Parser.parse(text, { ecmaVersion: 'latest' }).body[0].expression.callee;
+  assert.equal(metaFor(callee('osc().scale(2)')).type, 'coord');
+  assert.equal(metaFor(callee('cube(0.5).rotateX(1).scale(2)')).type, 'vertexScale');
+  assert.equal(metaFor(callee('m.scale(2)')).type, 'coord');
+  assert.equal(metaFor(callee('m.rotateY(2)')).type, 'vertexRotate');
+  assert.equal(metaFor(callee('torus(0.4)')).type, 'geometry');
+  // a strip line reads: a geometry's constant is marked as one read at eval
+  const d = parmSketch('src(o0).out(o0, cube(0.5).rotateY(() => time * 0.2))', { label: 'digit' });
+  assert.deepEqual(d.controls.map(c => [c.key, c.kind]), [['cub5', 'eval'], ['rty2', 'arg']]);
+  assert.match(d.code, /rotateY\(\(\) => time \* parm\(2, "rty2", 0\.2, 0, 0\.4\)\(\)\)/);
+});

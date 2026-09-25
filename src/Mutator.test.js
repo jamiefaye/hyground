@@ -10,12 +10,13 @@ test('the dice parses sketches with top-level await', () => {
   assert.match(out, /await loadGlb\("x\.glb"\)/)
 })
 
-test('only arguments of Hydra functions are rerolled: out() level, setResolution, initCam, .fast stay', () => {
+// (the cube's size is a geometry constant, in the table since the vertex functions joined it: the dice may roll it)
+test('only arguments of table functions are rerolled: out() level, setResolution, initCam, .fast stay', () => {
   const m = new Mutator()
   const src = 'setResolution(1920, 1080)\ns0.initCam(1)\nshape([4,5,6].fast(0.1), 0.3).out(o0, cube(0.5), 2)'
   for (let i = 0; i < 40; i++) {
     const out = quiet(() => m.mutate({}, src))
-    assert.match(out, /setResolution\(1920, 1080\)/); assert.match(out, /initCam\(1\)/); assert.match(out, /fast\(0\.1\)/); assert.match(out, /cube\(0\.5\), 2\)/)
+    assert.match(out, /setResolution\(1920, 1080\)/); assert.match(out, /initCam\(1\)/); assert.match(out, /fast\(0\.1\)/); assert.match(out, /cube\([0-9.]+\), 2\)/)
   }
 })
 
