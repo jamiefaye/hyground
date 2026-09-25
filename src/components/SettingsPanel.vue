@@ -7,6 +7,7 @@
   const props = defineProps({
     params: Object,
     syphonAvailable: Boolean,
+    openGenerator: Function,   // shows and hides the generator's own box (HydraStage)
   });
   const prefs = useAppStore().prefs;
 </script>
@@ -26,6 +27,10 @@
     <label title="Whatever is pulled into a monitor goes to the stage too"><input v-model="prefs.autoStage" type="checkbox"> Auto stage</label>
     <label title="Parm sends the parmed sketch to the stage (as Shift does)"><input v-model="prefs.parmsToStage" type="checkbox"> Parms to stage</label>
     <label title="Whatever is pulled in (a monitor, or the stage when live) is parmed on arrival: constants to knobs"><input v-model="prefs.autoParm" type="checkbox"> Auto parm</label>
+    <label title="A parmed constant shows the knob's label (osc1) beside its value; off, the value alone"><input v-model="prefs.parmLabels" type="checkbox"> Parm labels</label>
+    <h4>Generator</h4>
+    <label title="The shuffle makes a sketch with the generator instead of loading a random example (Alt-click does either way)"><input v-model="prefs.generate" type="checkbox"> Generate</label>
+    <button class="settings-button" title="The generator's settings: how many functions, argument ranges, which sources and functions" @click="props.openGenerator && props.openGenerator()">Generator settings…</button>
   </div>
 </template>
 
@@ -33,4 +38,6 @@
 .settings { display: flex; flex-direction: column; gap: 4px; font: 13px sans-serif; color: #111; padding: 4px 8px 8px; }
 .settings h4 { margin: 6px 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #666; }
 .settings label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.settings-button { align-self: flex-start; font: inherit; padding: 2px 8px; margin-top: 2px; background: #f4f4f4; border: 1px solid #aaa; border-radius: 3px; cursor: pointer; }
+.settings-button:hover { background: #e8e8e8; }
 </style>

@@ -6,6 +6,8 @@
   import Editors from './Editors.vue'
   import EditorView from './EditorView.vue';
   import SettingsPanel from './SettingsPanel.vue';
+  import GenPanel from './GenPanel.vue';
+  import { RandomHydra } from '../RandomHydra.js';
   import { useAppStore } from '@/stores/app';
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
   import { portal } from 'hydra-synth/src/lib/windows.js';
@@ -94,6 +96,19 @@
     settingsPortal = p;
     p.onClose(() => { settingsRoot.value = null; settingsPortal = null; });
     settingsRoot.value = p.root;
+  }
+  // ---- the generator's settings: a box of its own beside the settings box (settings > Generator settings…),
+  // editing the app's one set (appStore.gen); the RandomHydra here only lists the sources and functions
+  const generatorRoot = ref<HTMLElement | null>(null);
+  let generatorPortal: any = null;
+  const generatorLists = new RandomHydra(appStore.gen);
+  async function toggleGenerator () {
+    if (generatorPortal && !generatorPortal.closed) { generatorPortal.close(); return; }
+    const p = await portal('hyg-generator', { box: 'always', keys: false, boxStyle: 'position: fixed; right: 256px; top: 40px; width: 360px; max-width: calc(100vw - 16px); max-height: calc(100vh - 56px); overflow: auto; z-index: 1500; padding: 4px; background: rgba(255,255,255,0.96); border: 1px solid #888; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); box-sizing: border-box;' });
+    if (!p) return;
+    generatorPortal = p;
+    p.onClose(() => { generatorRoot.value = null; generatorPortal = null; });
+    generatorRoot.value = p.root;
   }
   // ---- knobs: the on-screen key to the controllers (every device in its own shape, labels live from parm)
   let knobsPortal: any = null;
@@ -616,6 +631,8 @@
         ref="liveEditor"
         :index="0"
         :auto-parm="appStore.prefs.autoParm"
+        :parm-labels="appStore.prefs.parmLabels"
+        :generate="appStore.prefs.generate"
         live
         :renderer="stageRenderer"
         :stage="runLive"
@@ -628,7 +645,10 @@
       <div class="v-application v-theme--light editors-popup"><Editors /></div>
     </Teleport>
     <Teleport v-if="settingsRoot" :to="settingsRoot">
-      <SettingsPanel :params="panelParams" :syphon-available="syphonAvailable" />
+      <SettingsPanel :open-generator="toggleGenerator" :params="panelParams" :syphon-available="syphonAvailable" />
+    </Teleport>
+    <Teleport v-if="generatorRoot" :to="generatorRoot">
+      <div class="v-application v-theme--light editors-popup"><h4 class="generator-title">Generator</h4><GenPanel :obj="generatorLists" :state="appStore.gen" /></div>
     </Teleport>
   </div>
 </template>
@@ -649,4 +669,5 @@
 <style>
 /* the Editors panel in its popup or box: Vuetify's theme variables come from these classes */
 .editors-popup { display: block; min-height: 0; background: #fff; color: #000; padding: 4px; }
+.generator-title { margin: 2px 4px 0; font: 12px sans-serif; text-transform: uppercase; letter-spacing: 0.05em; color: #666; }
 </style>

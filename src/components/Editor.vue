@@ -9,10 +9,12 @@ import { javascript } from '@codemirror/lang-javascript';
 import type { LanguageSupport } from '@codemirror/language';
 import type { Extension } from '@codemirror/state';
 import type { ViewUpdate } from '@codemirror/view';
+import { parmScrub, setParm } from '../parm-scrub.js';
   
   const props = defineProps({
   	text: String,
-  	limit: Boolean
+  	limit: Boolean,
+  	parm: Object,   // a parmed sketch's controls and hooks (parm-scrub.js): cells over the constants; null = plain text
 	});
 	
 const emit = defineEmits(['textChanged'])
@@ -33,15 +35,22 @@ const dark: Ref<boolean> = ref(
  * @see {@link https://codemirror.net/6/docs/ref/#language | @codemirror/language}
  */
 const lang: LanguageSupport = javascript();
+const extensions: Extension[] = [parmScrub()];
+
+// The parm cells: told to the view after the text it indexes is in (the text watcher runs first)
+const cm = ref<any>(null);
+watch(() => props.parm, p => { const view = cm.value && cm.value.view; if (view) view.dispatch({ effects: setParm.of(p || null) }); }, { flush: 'post' });
 
 </script>
 
 <template>
 
   <code-mirror
+    ref="cm"
     v-model="valRef"
     basic
     :dark="dark"
+    :extensions="extensions"
     :lang="lang"
   />
 

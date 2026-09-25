@@ -27,6 +27,8 @@
       :auto-stage="prefs.autoStage"
       :parms-to-stage="prefs.parmsToStage"
       :auto-parm="prefs.autoParm"
+      :parm-labels="prefs.parmLabels"
+      :generate="prefs.generate"
     />
   </template>
   <div class="d-flex align-center ga-3">

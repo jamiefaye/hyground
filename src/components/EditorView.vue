@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-  import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import Hyground from './Hyground.vue';
   import Hydra from './Hydra.vue';
   import Editor from './Editor.vue';
@@ -11,7 +11,7 @@
   import { describeControls, parmSketch, renderValues } from '../Parm.js';
   import InActorPanel from './InActorPanel.vue';
   import { RandomHydra } from '../RandomHydra.js';
-  import GenPanel from './GenPanel.vue';
+  import { useAppStore } from '@/stores/app';
 
   const props = defineProps({
     index: Number,
@@ -20,6 +20,8 @@
     autoStage: Boolean,    // every sketch shown in the monitor goes to the stage too
     parmsToStage: Boolean, // parm sends the parmed sketch to the stage, as Shift does
     autoParm: Boolean,     // every sketch pulled into the monitor is parmed on arrival
+    parmLabels: { type: Boolean, default: true },   // the cells show the knob's label beside the value
+    generate: Boolean,     // the shuffle makes a sketch with the generator instead of loading an example
     // On the stage: the stage is this view's monitor. `stage(text, info)` runs a sketch there, `renderer`
     // is the stage's Hydra (for parm re-evals), `live` lays the view over the picture with the live
     // editor as its text area, `text` is the sketch playing there (followed while not being typed in).
@@ -51,22 +53,7 @@
   const mutator = new Mutator;
   const filmOpen = ref(false);
   const sketchInfoRef = ref({});
-  const genPopupOpen = ref(false);
   const previousSketch = ref(''); // Track the previous sketch sent to stage
-
-  const stateObject = reactive({
-    minFunctions: 3,
-    maxFunctions: 8,
-    minValue: 0, // Set your minValue
-    maxValue: 5, // Set your maxValue
-
-    arrowFunctionProb: 10, // Set your arrowFunctionProb
-    mouseFunctionProb: 0, // Set your mouseFunctionProb
-    mouseFunctionProb: 0, // Probabilities of generating an arrow function that uses mouse position (ex.: ():> mouse.x)
-    modulateItselfProb: 20, // Probabilities of generating a modulation function with "o0" as argument (ex.: modulate(o0,1))
-    exclusiveSourceList: [],
-    exclusiveFunctionList: [],
-    ignoredList: ['solid', 'brightness', 'luma', 'invert', 'posterize', 'thresh', 'layer', 'modulateScrollX', 'modulateScrollY'] });
 
 
   let hydraRenderer;
@@ -250,16 +237,17 @@
   }
 
 
-  const hydraGen = new RandomHydra(stateObject);
+  // The generator's settings are the app's (settings > Generator), one set for every editor
+  const hydraGen = new RandomHydra(useAppStore().gen);
 
   function getRandomInt (max) {
     return Math.floor(Math.random() * max);
   }
-  // Connected to the crossing arrows icon.
-  // shiftKey means call the generator.
+  // Connected to the crossing arrows icon: a random example, or with the Generate setting (or Alt)
+  // a sketch from the generator. Shift sends it to the stage.
   function randomHydra (evt) {
     let ska;
-    if (genPopupOpen.value || evt.altKey) {
+    if (props.generate || evt.altKey) {
       ska = hydraGen.generateCode();
     } else {
       const sketchX = getRandomInt(examples.length);
@@ -272,12 +260,6 @@
     nextSketch.value = ska;
     if (evt.shiftKey) sendTargetHydra(); else showSketch(ska);
   }
-
-
-  function openGen (evt) {
-    genPopupOpen.value = !genPopupOpen.value;
-  }
-
 
 
   // Parmed: the dice turns a knob instead (no recompile; Shift: the same knob again). Meta still
@@ -315,7 +297,14 @@
     if (!s) return;
     s.fn.set(v);
     if (parmed.value.toStage && !props.stage) stageChannel.postMessage({ type: 'parm-set', slot: c.slot, value: v });
-    if (c.kind !== 'arg') reevalParmed();   // a variable's or a geometry's value is read at eval
+    if (c.kind !== 'arg') scheduleReeval();   // a variable's or a geometry's value is read at eval
+  }
+
+  // A re-eval at most every 150 ms: a drag on a geometry's cell or a turn of its knob sends many steps
+  let reevalTimer = null;
+  function scheduleReeval () {
+    if (reevalTimer) return;
+    reevalTimer = setTimeout(() => { reevalTimer = null; reevalParmed(); }, 150);
   }
 
   // A variable's knob is read once at eval: run the parmed sketch again, here and on the stage if it is there
@@ -367,45 +356,25 @@
     if (parmUnlisten) { parmUnlisten(); parmUnlisten = null; }
     const assignSlots = new Set(r.controls.filter(c => c.kind !== 'arg').map(c => c.slot));
     if (!assignSlots.size || !window.midi) return;
-    let timer = null;
     parmUnlisten = window.midi.onEvent((ev) => {
       if (ev.type !== 'cc' || !ev.registered || ev.number === undefined) return;
       const slot = window.parm ? window.parm.slotOf(ev) : undefined;   // whichever device the knob is on
-      if (slot === undefined || !assignSlots.has(slot) || timer) return;
-      timer = setTimeout(() => { timer = null; reevalParmed(); }, 150);
+      if (slot !== undefined && assignSlots.has(slot)) scheduleReeval();
     });
   }
 
-  // Live view of the parmed sketch with the knobs' values written in place of its constants
+  // The parmed sketch: the editor keeps the sketch as written and shows each constant as a cell
+  // (parm-scrub.js) with the knob's live value, which turns when dragged; bake writes the values in
   const parmed = ref(null);
-  const parmView = ref('');
-  const editorWrap = ref(null);
-  const overlayStyle = ref({});
-  // Copy CodeMirror's font and offsets so the overlay's characters land on the editor's
-  function measureOverlay () {
-    const wrap = editorWrap.value;
-    const content = wrap && wrap.querySelector('.cm-content');
-    const line = wrap && wrap.querySelector('.cm-line');
-    if (!content) return;
-    const cs = getComputedStyle(content);
-    const wrapBox = wrap.getBoundingClientRect();
-    const contentBox = content.getBoundingClientRect();
-    overlayStyle.value = {
-      font: cs.font,
-      lineHeight: cs.lineHeight,
-      paddingTop: (contentBox.top - wrapBox.top) + 'px',
-      paddingLeft: (contentBox.left - wrapBox.left + (line ? parseFloat(getComputedStyle(line).paddingLeft) || 0 : 0)) + 'px',
-    };
-  }
-  const parmTimer = setInterval(() => {
-    if (!parmed.value) return;
-    measureOverlay();
-    const p = window.parm;
-    const valueOf = (c) => { const s = p && p.slots.get(c.slot); return s ? s.fn() : undefined; };
-    const v = renderValues(parmed.value.source, parmed.value.controls, valueOf);
-    if (v !== parmView.value) parmView.value = v;
-  }, 100);
-  onBeforeUnmount(() => clearInterval(parmTimer));
+  const knobValue = (c) => { const s = window.parm && window.parm.slots.get(c.slot); return s ? s.fn() : undefined; };
+  const parmHooks = computed(() => (parmed.value ? {
+    source: parmed.value.source,
+    controls: parmed.value.controls,
+    valueOf: knobValue,
+    set: setKnob,
+    describe: (c) => describeControls([c]).trim(),
+    labels: props.parmLabels,
+  } : null));
 
   // The knobs let go: their slots lose their labels once nothing re-registers them
   // If the parmed sketch went to the stage, its release (baked or as written) follows it there
@@ -422,7 +391,7 @@
   // Bake: the live values become the sketch text
   function bakeParm () {
     if (!parmed.value) return;
-    const baked = parmView.value;
+    const baked = renderValues(parmed.value.source, parmed.value.controls, knobValue);
     nextSketch.value = baked;
     releaseParm(baked);
   }
@@ -522,11 +491,6 @@
             <ICarbonSendActionUsage v-bind="tooltipProps" @click="sendTargetHydra" />
           </template>
         </v-tooltip>
-        <v-tooltip text="Generator Settings">
-          <template #activator="{ props: tooltipProps }">
-            <IFa6SolidSliders v-bind="tooltipProps" @click="(e)=>openGen(e)" />
-          </template>
-        </v-tooltip>
         <v-tooltip text="Record/Play Controls">
           <template #activator="{ props: tooltipProps }">
             <IFa6SolidFilm v-bind="tooltipProps" @click="toggleFilm" />
@@ -534,10 +498,6 @@
         </v-tooltip>
       </v-row>
       </v-container>
-      <template v-if="genPopupOpen">
-        <GenPanel :obj="hydraGen" :state="stateObject" />
-      </template>
-
       <InActorPanel
         :hidden="!filmOpen"
         :report-in-actor-state="reportInActorState"
@@ -547,37 +507,33 @@
 
       {{ title }}
     </td></tr></tbody></table>
-  <div ref="editorWrap" class="editor-wrap" :class="{ parmed: !!parmed }">
+  <div class="editor-wrap" :class="{ parmed: !!parmed }">
     <LiveEditor
       v-if="live"
       ref="liveEditorRef"
+      :parm="parmHooks"
       :text="nextSketch"
       @focus-changed="v => emit('focusChanged', v)"
       @hide="emit('hide')"
       @run="runLive"
       @text-changed="changed"
     />
-    <Editor v-else :limit="limit" :text="nextSketch" @text-changed="changed" />
-    <div v-if="parmed" class="parm-overlay" :style="overlayStyle">
-      <pre>{{ parmView }}</pre>
-      <span class="parm-actions"><button @click="bakeParm">bake</button> <button @click="closeParm">close</button></span>
-    </div>
+    <Editor v-else :limit="limit" :parm="parmHooks" :text="nextSketch" @text-changed="changed" />
+    <span v-if="parmed" class="parm-actions"><button @click="bakeParm">bake</button> <button @click="closeParm">close</button></span>
   </div>
   </div>
 </template>
 
 <style scoped>
 .editor-wrap { position: relative; }
-.editor-wrap.parmed :deep(.cm-editor) { opacity: 0.3; }
-/* Over the text area of the editor, same font and offsets (set at runtime from CodeMirror's own), so the
-   values sit where the constants are and the layout does not move */
-.parm-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; color: #063; z-index: 6; }   /* above the live editor (5), or CodeMirror takes the bake/close clicks */
-.parm-overlay pre { margin: 0; white-space: pre; font: inherit; }
-.parm-actions { position: absolute; top: 2px; right: 6px; pointer-events: auto; font: 12px monospace; }
+/* Parmed: the constants are cells (parm-scrub.js) and the rest of the text steps back */
+.editor-wrap.parmed :deep(.cm-content) { color: #999; }
+.editor-wrap.parmed :deep(.cm-line > span:not(.parm-cell)) { opacity: 0.55; }
+.editorview.live .editor-wrap.parmed :deep(.cm-content) { color: rgba(255, 255, 255, 0.6); }
+.parm-actions { position: absolute; top: 2px; right: 6px; z-index: 6; font: 12px monospace; }   /* above the live editor (5), or CodeMirror takes the clicks */
 .parm-actions button { font: inherit; background: #333; color: #ddd; border: 1px solid #666; padding: 0 6px; margin-left: 4px; }
 /* On the stage: the icon row on a dark strip at the top left, the live editor filling the rest of the picture */
 .editorview.live { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; }
 .editorview.live > table { background: rgba(0, 0, 0, 0.55); color: #fff; width: fit-content; border-radius: 0 0 6px 0; }
 .editorview.live .editor-wrap { flex: 1; min-height: 0; }
-.editorview.live .parm-overlay { color: #8f8; }
 </style>

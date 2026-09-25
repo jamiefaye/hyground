@@ -8,9 +8,13 @@
   import { javascript } from '@codemirror/lang-javascript';
   import { EditorView, keymap } from '@codemirror/view';
   import { Prec } from '@codemirror/state';
+  import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+  import { tags } from '@lezer/highlight';
+  import { parmScrub, setParm } from '../parm-scrub.js';
 
   const props = defineProps({
     text: String,
+    parm: Object,   // a parmed sketch's controls and hooks (parm-scrub.js): cells over the constants; null = plain text
   });
   const emit = defineEmits(['run', 'hide', 'textChanged', 'focusChanged']);
 
@@ -19,7 +23,17 @@
   watch(() => props.text, t => { if (typeof t === 'string' && t !== val.value) val.value = t; });
 
   const lang = javascript();
+  // The default highlight colours are for a light page (numbers a dark green, strings a dark red):
+  // over the picture the code sits on black, so these tags get colours that read there
+  const liveColours = syntaxHighlighting(HighlightStyle.define([
+    { tag: tags.number, color: '#ffd166' },
+    { tag: tags.string, color: '#f5a3a3' },
+    { tag: tags.keyword, color: '#c9a0ff' },
+    { tag: [tags.lineComment, tags.blockComment], color: '#9aa4ad' },
+    { tag: tags.bool, color: '#ffd166' },
+  ]));
   const extensions = [
+    Prec.high(liveColours),
     Prec.highest(keymap.of([
       { key: 'Mod-Enter', run: () => { emit('run', val.value); return true; } },
       { key: 'Shift-Mod-Enter', run: () => { emit('run', val.value); return true; } },
@@ -28,7 +42,11 @@
       { key: 'Escape', run: (view: EditorView) => { view.contentDOM.blur(); return true; } },
     ])),
     EditorView.lineWrapping,
+    parmScrub(),
   ];
+  // The parm cells: told to the view after the text it indexes is in (the text watcher runs first)
+  const cm = ref<any>(null);
+  watch(() => props.parm, p => { const view = cm.value && cm.value.view; if (view) view.dispatch({ effects: setParm.of(p || null) }); }, { flush: 'post' });
 
   const wrap = ref<HTMLElement | null>(null);
   const onFocusIn = () => emit('focusChanged', true);
@@ -46,7 +64,7 @@
 
 <template>
   <div ref="wrap" class="live-editor">
-    <code-mirror v-model="val" dark :extensions="extensions" :lang="lang" minimal />
+    <code-mirror ref="cm" v-model="val" dark :extensions="extensions" :lang="lang" minimal />
   </div>
 </template>
 
