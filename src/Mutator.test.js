@@ -36,3 +36,9 @@ test('initial values follow the sketch shape, not the literal count', () => {
   quiet(() => m.mutate({}, 'noise(3, 0.5).out()'))   // same count, different sketch
   assert.deepEqual(m.initialVector, [3, 0.5])
 })
+
+test('the dice parses a sketch with yields and keeps them', () => {
+  const m = new Mutator()
+  const out = quiet(() => m.mutate({}, 'osc(10).out(o0)\nyield 2\nosc(40).out(o0)'))
+  assert.match(out, /yield 2/); assert.match(out, /osc\([0-9.]+\)\.out\(o0\)/)
+})

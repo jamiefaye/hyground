@@ -96,3 +96,13 @@ test('the vertex extension: transforms are live, geometry and layouts are read a
   assert.deepEqual(d.controls.map(c => [c.key, c.kind]), [['cub5', 'eval'], ['rty2', 'arg']]);
   assert.match(d.code, /rotateY\(\(\) => time \* parm\(2, "rty2", 0\.2, 0, 0\.4\)\(\)\)/);
 });
+
+test('a sketch with yields (a timed sequence) parms, and its spans index the text as written', () => {
+  const src = 'osc(10).out(o0)\nyield 2\nosc(40).out(o0)\nyield 2\nosc(4, 0.5, 1).out(o0)';
+  const r = parmSketch(src);
+  assert.deepEqual(r.controls.map(c => c.key), ['osc1', 'osc1b', 'osc1c', 'osc2', 'osc3']);
+  assert.deepEqual(r.controls.map(c => src.slice(c.start, c.end)), ['10', '40', '4', '0.5', '1']);
+  assert.match(r.code, /yield 2;\nosc\(parm\(2, "osc1b", 40/);
+  assert.equal(renderValues(src, r.controls, c => c.value * 2), 'osc(20).out(o0)\nyield 2\nosc(80).out(o0)\nyield 2\nosc(8, 1, 2).out(o0)');
+  assert.equal(unparmSketch(r.code), 'osc(10).out(o0);\nyield 2;\nosc(40).out(o0);\nyield 2;\nosc(4, 0.5, 1).out(o0);');   // astring's spelling of the sketch
+});

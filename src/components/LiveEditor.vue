@@ -39,6 +39,7 @@
       { key: 'Shift-Mod-Enter', run: () => { emit('run', val.value); return true; } },
       { key: 'Mod-Shift-h', run: () => { emit('hide'); return true; } },
       { key: 'Mod-Shift-k', run: () => { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, shiftKey: true })); return true; } },
+      { key: 'Mod-.', run: () => { document.dispatchEvent(new KeyboardEvent('keydown', { key: '.', metaKey: true })); return true; } },   // halt a running sequence
       { key: 'Escape', run: (view: EditorView) => { view.contentDOM.blur(); return true; } },
     ])),
     EditorView.lineWrapping,

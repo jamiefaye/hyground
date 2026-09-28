@@ -1,4 +1,4 @@
-import { Parser } from 'acorn';
+import { parseSketch } from './sketch-parse.js';
 import { generate } from 'astring';
 import { attachComments, defaultTraveler, makeTraveler } from 'astravel';
 import { hydraFunctions } from './hydra-functions.js';
@@ -56,13 +56,7 @@ class Mutator {
     while (needToRun && tryCounter-- >= 0) {
       // Parse to AST
       const comments = [];
-      const ast = Parser.parse(text, {
-        locations: true,
-        ecmaVersion: 'latest',
-        allowAwaitOutsideFunction: true,   // sketches may await (loadGlb, ...) and return at top level
-        allowReturnOutsideFunction: true,
-        onComment: comments }
-      );
+      const { ast } = parseSketch(text, comments);   // as the engine compiles it: await, yield and return allowed
 
       // Modify the AST.
       this.transform(ast, options);

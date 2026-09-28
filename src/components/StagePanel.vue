@@ -31,7 +31,7 @@
         <v-btn v-bind="tooltipProps" size="x-small" @click="openEditor">Edit</v-btn>
       </template>
     </v-tooltip>
-    <v-tooltip text="Live editor over the picture (Cmd/Ctrl-Shift-H; Cmd/Ctrl-Enter runs)">
+    <v-tooltip text="Live editor over the picture (Cmd/Ctrl-Shift-H; Cmd/Ctrl-Enter runs, Cmd/Ctrl-. halts a running sequence)">
       <template #activator="{ props: tooltipProps }">
         <v-checkbox
           v-bind="tooltipProps"

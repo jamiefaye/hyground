@@ -37,7 +37,7 @@
  * turned down approaches zero without reaching it; a count keeps its floor of 1. Push and
  * turn moves a tenth of a detent (the EC4's push sends a note on the encoder's number).
  */
-import { Parser } from 'acorn';
+import { parseSketch } from './sketch-parse.js';
 import { generate } from 'astring';
 import { attachComments } from 'astravel';
 import { hydraFunctions, vertexFunctions } from './hydra-functions.js';
@@ -112,7 +112,7 @@ export function isParmed (text) { return /\bparm\s*\.\s*begin\s*\(/.test(text); 
  */
 export function unparmSketch (text) {
   const comments = [];
-  const ast = Parser.parse(text, { ecmaVersion: 'latest', allowAwaitOutsideFunction: true, allowReturnOutsideFunction: true, locations: true, onComment: comments });
+  const { ast } = parseSketch(text, comments);
   const isParmCall = n => n && n.type === 'CallExpression' && n.callee.type === 'Identifier' && n.callee.name === 'parm' && n.arguments.length >= 3 && n.arguments[2].type === 'Literal';
   const isBegin = n => n && n.type === 'ExpressionStatement' && n.expression.type === 'CallExpression' && n.expression.callee.type === 'MemberExpression'
     && n.expression.callee.object.type === 'Identifier' && n.expression.callee.object.name === 'parm' && n.expression.callee.property.name === 'begin';
@@ -166,7 +166,7 @@ export function parmSketch (text, options = {}) {
   // the sketch as written, so a re-parm gives the same knobs back.
   if (isParmed(text)) text = unparmSketch(text);
   const comments = [];
-  const ast = Parser.parse(text, { ecmaVersion: 'latest', allowAwaitOutsideFunction: true, allowReturnOutsideFunction: true, locations: true, onComment: comments });
+  const { ast, offset } = parseSketch(text, comments); // positions are offset by the generator wrapper
   const controls = [];
   const taken = new Set();
 
@@ -232,7 +232,7 @@ export function parmSketch (text, options = {}) {
     if (node.type === 'ArrayExpression') return undefined; // sequences are patterns, not constants
     const num = numberOf(node);
     if (num) {
-      const c = ctx && control(ctx, num.value, num.raw, node.start, node.end);
+      const c = ctx && control(ctx, num.value, num.raw, node.start - offset, node.end - offset);
       if (!c) return undefined;
       const call = callNode(c);
       return direct && c.kind === 'arg' ? call : { type: 'CallExpression', callee: call, arguments: [], optional: false };

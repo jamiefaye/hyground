@@ -1,4 +1,4 @@
-import { Parser } from 'acorn';
+import { parseSketch } from './sketch-parse.js';
 import { generate } from 'astring';
 import { attachComments, makeTraveler } from 'astravel';
 import { hydraFunctions } from './hydra-functions.js';
@@ -30,13 +30,7 @@ class HydraSketchMorpher {
   parseSketch (sketchCode) {
     try {
       const comments = [];
-      const ast = Parser.parse(sketchCode, {
-        locations: true,
-        ecmaVersion: 'latest',
-        allowAwaitOutsideFunction: true,
-        allowReturnOutsideFunction: true,
-        onComment: comments,
-      });
+      const { ast } = parseSketch(sketchCode, comments);   // as the engine compiles it: await, yield and return allowed
 
       const structure = this._extractSketchStructure(ast);
       return { ast, comments, structure };

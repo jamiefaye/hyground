@@ -134,7 +134,13 @@
     knobsPanel = mountPanel(p.root, midi, { groups, devices: true });
     p.onClose(() => { if (knobsPanel) knobsPanel.destroy(); knobsPanel = null; knobsPortal = null; });
   }
+  // Halt: end a running sequence (a sketch stepping through yields) where it is, picture kept.
+  // Mod-. as in SuperCollider and Xcode; halt() in a sketch or the console does the same
+  function haltStage () {
+    for (const h of [stageRenderer.value, ...sourceHydras]) if (h && typeof h.halt === 'function') h.halt();
+  }
   const stageKeys = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === '.') { e.preventDefault(); haltStage(); }
     // Mod-Shift-H shows and hides the live editor from anywhere on the page (as on hydra.ojack.xyz)
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); showLive(); }
     // Mod-Shift-K (or the faders icon on the stage row): the knobs box, the on-screen key to the controllers
