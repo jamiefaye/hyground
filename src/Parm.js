@@ -323,36 +323,46 @@ const levelFor = pos => (pos < 0.25 ? 3 : pos < 0.5 ? 2 : pos < 0.75 ? 1 : 0); /
  * the picture is the sketch as written.
  *
  * Where a sketch's knobs land (decided at each parm.begin('aa=a'), by slot number):
- * the endless rows of every device that has ports, the ones added after the default first (an
- * XL3's three encoder rows before the EC4's groups), then the default device's groups; a named
- * constant (let x = 0.5, label '=x..') goes to a bounded row (the XL3's faders, soft pickup)
- * while there are any, else in with the rest. A device without ports is skipped, so a sketch
- * parmed with the EC4 alone puts everything on the EC4.
+ * the rows of every device that has ports, the ones added after the default first (an XL3
+ * before the EC4's groups), then the default device's groups. With parm.faders on (the default,
+ * the Parm faders setting) a device's faders come first, then its encoders (the XL3: slots 1..8
+ * on the faders, 9..32 on the three encoder rows); off, only encoders take the knobs. A named
+ * constant (let x = 0.5, label '=x..') goes to a fader while one is free either way. A device
+ * without ports is skipped, so a sketch parmed with the EC4 alone puts everything on the EC4.
  */
 export async function installParm (options = {}) {
   if (_parm) return _parm;
   const { install, parm: profile, xl3daw, nano, palette } = await import('hydra-synth/extensions/midi');
-  const midi = await install(null, Object.assign({ profile, sysex: true, log: false, devices: [xl3daw, nano] }, options));
+  const { faders = true, ...midiOptions } = options;
+  const midi = await install(null, Object.assign({ profile, sysex: true, log: false, devices: [xl3daw, nano] }, midiOptions));
   const slots = new Map(); // slot -> { label, init, min, max, curve, fn, device, id, row }
   const byKey = new Map(); // 'device:channel:number' -> slot, for events coming back
   let live = new Set();
   let plan = null;
-  let used = { endless: 0, bounded: 0 };
+  let taken = new Set();   // the targets this sketch has placed (a fader is in both lists)
   const placed = new Map();
 
   // Every knob a sketch could land on, in order: page 1 of each paged device (an XL3's rows), the
-  // default device's groups, then pages 2.. of the paged devices until `need` knobs are found
+  // default device's groups, then pages 2.. of the paged devices until `need` knobs are found.
+  // `pool` is every target in fill order, `bounded` the faders alone (named constants look there first)
   const MAX_PAGES = 8;
   const targets = (need = 0) => {
-    const endless = []; const bounded = []; const paged = [];
+    const pool = []; const bounded = []; const paged = [];
     const devs = [...midi._order.filter(d => d !== midi.default), midi.default];
     const pageOf = (d, rows, page) => {
       // a surface with no endless rows at all (the nano: knobs and faders, all bounded) gives its bounded rows to every knob
       const onlyBounded = !rows.some(r => r.kind === 'endless');
-      const inFillOrder = rows.slice().sort((a, b) => (a.fill ?? 99) - (b.fill ?? 99)); // a row's `fill` says who goes first (the nano: faders before knobs)
+      // a row's `fill` says who goes first (the nano: knobs before faders); without one, faders before encoders
+      const inFillOrder = rows.slice().sort((a, b) => (a.fill ?? (a.kind === 'bounded' ? 0 : 1)) - (b.fill ?? (b.kind === 'bounded' ? 0 : 1)));
       for (const r of inFillOrder) {
-        const list = r.kind === 'endless' || (onlyBounded && r.kind === 'bounded') ? endless : r.kind === 'bounded' && page === 1 ? bounded : null;
-        if (list) for (let n = 1; n <= (r.count || 8); n++) list.push({ device: d, id: [r.group, n], row: r, page });
+        const isFader = r.kind === 'bounded' && !onlyBounded && page === 1;
+        const inPool = r.kind === 'endless' || (onlyBounded && r.kind === 'bounded') || (isFader && parm.faders);
+        if (!inPool && !isFader) continue;
+        for (let n = 1; n <= (r.count || 8); n++) {
+          const t = { device: d, id: [r.group, n], row: r, page };
+          if (inPool) pool.push(t);
+          if (isFader) bounded.push(t);
+        }
       }
     };
     // plugged in = a port whose name the profile knows (the default device also takes every port the others left)
@@ -364,16 +374,17 @@ export async function installParm (options = {}) {
       const rows = (d.profile.layout || []).filter(r => r.group);
       if (rows.length) { pageOf(d, rows, 1); paged.push({ d, rows }); } else if (d.profile.encoder) {
         const groups = d.profile.groups || 1; const per = d.profile.encodersPerGroup || 16;
-        for (let g = 1; g <= groups; g++) for (let n = 1; n <= per; n++) endless.push({ device: d, id: [g, n], row: { kind: 'endless', closed: false } });
+        for (let g = 1; g <= groups; g++) for (let n = 1; n <= per; n++) pool.push({ device: d, id: [g, n], row: { kind: 'endless', closed: false } });
       }
     }
-    for (let page = 2; page <= MAX_PAGES && endless.length < need; page++) for (const { d, rows } of paged) pageOf(d, rows, page);
-    return { endless, bounded, paged: paged.map(x => x.d) };
+    for (let page = 2; page <= MAX_PAGES && pool.length < need; page++) for (const { d, rows } of paged) pageOf(d, rows, page);
+    return { pool, bounded, paged: paged.map(x => x.d) };
   };
+  // the first target of a list no slot of this sketch has yet
+  const take = list => { for (const t of list) if (!taken.has(t)) { taken.add(t); return t; } return null; };
   const placeOne = (slot, label) => {
     if (!plan) plan = targets();
-    const kind = label.startsWith('=') && plan.bounded.length > used.bounded ? 'bounded' : 'endless';
-    const t = plan[kind][used[kind]++] || null;
+    const t = (label.startsWith('=') && take(plan.bounded)) || take(plan.pool);
     placed.set(slot, t);
     return t;
   };
@@ -413,7 +424,7 @@ export async function installParm (options = {}) {
   };
   /** Start of a parmed sketch: the knobs are placed afresh; slots it does not use again lose their labels after the eval. */
   parm.begin = (kinds = '') => {
-    live = new Set(); used = { endless: 0, bounded: 0 }; placed.clear();
+    live = new Set(); taken = new Set(); placed.clear();
     plan = targets(String(kinds).length);
     Array.from(String(kinds)).forEach((k, i) => placeOne(i + 1, k === '=' ? '=' : 'a'));
     for (const d of plan.paged) if (d.page !== 1) d.setPage(1); // a new sketch starts on page 1
@@ -468,6 +479,8 @@ export async function installParm (options = {}) {
   parm.slotOf = ev => (ev && ev.device !== undefined ? byKey.get(keyOf({ id: ev.device }, ev.channel, ev.number)) ?? byKey.get(keyOf({ id: ev.device }, null, ev.number)) : undefined);
   parm.slots = slots;
   parm.midi = midi;
+  /** Faders take knobs too (before the encoders); off, named constants alone. Read at the next parm.begin(). */
+  parm.faders = faders;
   parm.familyFor = familyFor;
 
   // A knob turned or set: its LED level and its display page follow (devices that have them)

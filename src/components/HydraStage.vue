@@ -350,6 +350,14 @@
   // Announce stage presence
   stageChannel.postMessage({ type: 'stage-ready' });
 
+  // The Parm faders setting reaches this window's parm and, over the channel, the editor popup's
+  // (each window places its own knobs); read at the next parm
+  watch(() => appStore.prefs.parmFaders, on => {
+    const parm = (window as any).parm;
+    if (parm) parm.faders = on;
+    stageChannel.postMessage({ type: 'parm-faders', value: on });
+  });
+
   function openEditor () {
     window.open('/index.html?edit=t', 'editor', 'width=500,height=1080,left=20');
     //  	window.open("/hyground/index.html?edit=t", "editor", "width=500,height=1080,left=20");

@@ -12,6 +12,7 @@ export const useAppStore = defineStore('app', {
       parmsToStage: false,  // parm sends the parmed sketch to the stage (as Shift does)
       autoParm: false,      // whatever lands in a monitor (or on the stage, live) is parmed on arrival
       parmLabels: true,     // a parmed constant's cell shows the knob's label (osc1) beside the value
+      parmFaders: true,     // parm puts knobs on a controller's faders too (the XL3: faders first, then encoders); off, named constants alone
       generate: false,      // the shuffle makes a sketch with the generator instead of loading an example (Alt does either way)
     },
     // The random sketch generator's settings (RandomHydra reads them live), one set for every editor;

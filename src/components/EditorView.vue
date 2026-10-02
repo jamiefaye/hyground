@@ -44,6 +44,9 @@
     if (event.data.type === 'stage-ready') {
       stageReady = true;
       console.log('Stage is ready');
+    } else if (event.data.type === 'parm-faders') {
+      // the stage's Parm faders setting: this window's parm places its own knobs
+      if (window.parm) window.parm.faders = event.data.value;
     }
   };
 

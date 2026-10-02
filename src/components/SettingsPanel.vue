@@ -28,6 +28,7 @@
     <label title="Parm sends the parmed sketch to the stage (as Shift does)"><input v-model="prefs.parmsToStage" type="checkbox"> Parms to stage</label>
     <label title="Whatever is pulled in (a monitor, or the stage when live) is parmed on arrival: constants to knobs"><input v-model="prefs.autoParm" type="checkbox"> Auto parm</label>
     <label title="A parmed constant shows the knob's label (osc1) beside its value; off, the value alone"><input v-model="prefs.parmLabels" type="checkbox"> Parm labels</label>
+    <label title="Parm puts knobs on the controller's faders too, faders first (the XL3: 1-8 on the faders, then the encoders); off, only named constants (let x = ...) go to a fader"><input v-model="prefs.parmFaders" type="checkbox"> Parm faders</label>
     <h4>Generator</h4>
     <label title="The shuffle makes a sketch with the generator instead of loading a random example (Alt-click does either way)"><input v-model="prefs.generate" type="checkbox"> Generate</label>
     <button class="settings-button" title="The generator's settings: how many functions, argument ranges, which sources and functions" @click="props.openGenerator && props.openGenerator()">Generator settings…</button>
