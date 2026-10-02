@@ -110,8 +110,14 @@
 
   // Show a sketch in the monitor; with Auto Stage on (or toStage) it goes to the stage too.
   // On the stage the monitor is the stage: the sketch runs there and nothing goes over the channel.
+  // A sketch that is not the parmed code (random, InAct, Mod-Enter, a morph step) ends a running
+  // parm: the knobs let go, and the next click of the knob icon parms this sketch, not the old one.
   function setLocalSketch (text, toStage = props.autoStage) {
     //console.log("Set Local Sketch to: " + text);
+    if (parmed.value && text !== parmed.value.code) {
+      dropParm();
+      if (window.parm) window.parm.begin();
+    }
     sketch.value = text;
     if (props.stage) {
       props.stage(text, { ...sketchInfoRef.value });
@@ -380,7 +386,7 @@
   // If the parmed sketch went to the stage, its release (baked or as written) follows it there
   function releaseParm (text) {
     const toStage = props.autoStage || parmed.value.toStage;
-    dropParm();
+    dropParm();   // here, not left to setLocalSketch: a sketch with no constants parms to its own text
     if (window.parm) window.parm.begin();
     setLocalSketch(text, toStage);
   }
