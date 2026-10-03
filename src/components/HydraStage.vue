@@ -11,7 +11,7 @@
   import { useAppStore } from '@/stores/app';
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
   import { portal } from 'hydra-synth/src/lib/windows.js';
-  import { installParm, touchParm } from '../Parm.js';
+  import { installParm, isParmed, touchParm } from '../Parm.js';
   const props = defineProps({
     show: Boolean,
     // from the page: fullscreen and help, shown at the end of the stage's row now the app bar is gone
@@ -414,7 +414,7 @@
         console.log('Source Hydra not set up');
         return;
       }
-      if (sketchInfo.key) await sourceHydras[flipper].eval('hush()');
+      if (sketchInfo.key || isParmed(newV)) await sourceHydras[flipper].eval('hush()');   // a parmed sketch leaves no ghosts on the knobs
       await sourceHydras[flipper].eval(newV);
 
       // If coming out of a "direct to fxSketch" activation, we don't want to do a blend-in since it would reference the wrong source.

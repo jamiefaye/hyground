@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { installParm } from '../Parm.js';
+import { installParm, isParmed } from '../Parm.js';
 import { useAppStore } from '@/stores/app';
   import {onMounted, onBeforeUnmount, Ref, ref, watch, computed} from "vue";
   import { useToastStore } from '@/stores/toast'
@@ -61,6 +61,7 @@ onBeforeUnmount(() => {
 
 let h; // hydra instance for this Hydra Vue object.
 let creatingHydra = false; // Guard against concurrent creation
+let lastEvaled = null; // the text last evaluated: a new parmed sketch hushes, a repeat of it does not
 
 // For the hydra-synth tick timer. Used instead of RAF.
 let frameTime = 16.6;
@@ -186,7 +187,11 @@ async function render() {
     	// Re-read sketch in case it changed while we were creating Hydra
     	text = props.sketch;
     }
-    if (props.sketchInfo?.key) h.synth.hush(); // hush if a key frame is requested.
+    // hush if a key frame is requested. A new parmed sketch hushes too: chains an earlier sketch left on
+    // other outputs keep calling parm() each frame, fight the new sketch for its slots and hold the knobs
+    // (the same parmed code again, a re-eval for a variable's knob, keeps its feedback)
+    if (props.sketchInfo?.key || (isParmed(text) && text !== lastEvaled)) h.synth.hush();
+    lastEvaled = text;
     //console.log("Eval: " + text);
     // Skip eval if sketch is empty
     if (!text || text.trim() === '') return;
