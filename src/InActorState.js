@@ -1,5 +1,6 @@
 import { getFileHandle, getNewFileHandle, readFile, verifyPermission, writeFile } from './fs-helpers.js';
 import { beeper } from './Beeper.js';
+import { lastParmTouch } from './Parm.js';
 
 const beepsEnabled = false;
 
@@ -117,11 +118,31 @@ class InActorState {
   }
 
 
+  // Seconds this sketch has yet to stay because someone is adjusting it: statusObj.holdDur after
+  // the last touch of a parm control (0 = the option is off). A touch from before the sketch came
+  // up does not count.
+  holdRemaining ()
+  {
+    const hold = Number(this.statusObj.holdDur) || 0
+    const touched = lastParmTouch()
+    if (hold <= 0 || touched < (this.shownAt || 0)) return 0
+    return Math.max(0, (touched + hold * 1000 - Date.now()) / 1000)
+  }
+
+
   timerHandler (e)
   {
     this.activeTimer = null
     if(this.realTimePlayback)
     {
+      // Someone is on the knobs: stay, and look again when their hold runs out
+      const wait = this.holdRemaining()
+      if (wait > 0)
+      {
+        this.holding = true
+        this.startTimer(wait)
+        return
+      }
       this.moveDown(e, 'play');
     }
   }
@@ -130,7 +151,10 @@ class InActorState {
   updateCountDownClock ()
   {
     const nowTime = Date.now()
-    let tMinus = nowTime - this.blastOffTime;
+    // a hold in force shows in the countdown before the timer comes round to it
+    const heldUntil = this.realTimePlayback ? nowTime + this.holdRemaining() * 1000 : 0
+    this.statusObj.holding = this.realTimePlayback && (this.holding === true || heldUntil > this.blastOffTime)
+    let tMinus = nowTime - Math.max(this.blastOffTime, heldUntil);
     if (tMinus > 0) tMinus = 0;
     const tPlus = Math.abs(tMinus);
     let timeAsString = '';
@@ -404,6 +428,8 @@ class InActorState {
     sketchInfo.mark = entry.mark === true;
     sketchInfo.dur = entry.dur;
     this.updateText(entry.sketch, sketchInfo, e, what);
+    this.shownAt = Date.now()
+    this.holding = false
     if (this.realTimePlayback)
     {
       this.clearTimer()

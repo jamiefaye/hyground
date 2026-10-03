@@ -8,7 +8,7 @@
   import examples from '../examples.json';
   import { Mutator } from '../Mutator.js';
   import { Parser } from 'acorn';
-  import { describeControls, parmSketch, renderValues } from '../Parm.js';
+  import { describeControls, parmSketch, renderValues, touchParm } from '../Parm.js';
   import InActorPanel from './InActorPanel.vue';
   import { RandomHydra } from '../RandomHydra.js';
   import { useAppStore } from '@/stores/app';
@@ -301,11 +301,13 @@
 
   // Set a parmed knob's value here and, if the parmed sketch is on the stage, there too (the
   // stage has its own window.parm; the EC4 reaches both, a set from here does not)
-  function setKnob (c, v) {
+  // (touch: a person's drag on a cell, not the dice; InAct holds a sketch for it, here and on the stage)
+  function setKnob (c, v, touch = false) {
     const s = window.parm && window.parm.slots.get(c.slot);
     if (!s) return;
     s.fn.set(v);
-    if (parmed.value.toStage && !props.stage) stageChannel.postMessage({ type: 'parm-set', slot: c.slot, value: v });
+    if (touch) touchParm();
+    if (parmed.value.toStage && !props.stage) stageChannel.postMessage({ type: 'parm-set', slot: c.slot, value: v, touch });
     if (c.kind !== 'arg') scheduleReeval();   // a variable's or a geometry's value is read at eval
   }
 
@@ -380,7 +382,7 @@
     source: parmed.value.source,
     controls: parmed.value.controls,
     valueOf: knobValue,
-    set: setKnob,
+    set: (c, v) => setKnob(c, v, true),
     describe: (c) => describeControls([c]).trim(),
     labels: props.parmLabels,
   } : null));

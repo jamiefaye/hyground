@@ -330,6 +330,13 @@ const levelFor = pos => (pos < 0.25 ? 3 : pos < 0.5 ? 2 : pos < 0.75 ? 1 : 0); /
  * constant (let x = 0.5, label '=x..') goes to a fader while one is free either way. A device
  * without ports is skipped, so a sketch parmed with the EC4 alone puts everything on the EC4.
  */
+// When a person last moved a control: a knob, fader or button on a controller or in the knobs box,
+// a drag on a parmed cell. A host that waits on people reads it (InAct holds a sketch while someone
+// is adjusting it). A value set by code (a new sketch's home values, the dice) is not a touch.
+let _touched = 0;
+export function touchParm () { _touched = Date.now(); }
+export function lastParmTouch () { return _touched; }
+
 export async function installParm (options = {}) {
   if (_parm) return _parm;
   const { install, parm: profile, xl3daw, nano, palette } = await import('hydra-synth/extensions/midi');
@@ -482,6 +489,9 @@ export async function installParm (options = {}) {
   /** Faders take knobs too (before the encoders); off, named constants alone. Read at the next parm.begin(). */
   parm.faders = faders;
   parm.familyFor = familyFor;
+
+  // A hand on a controller (the knobs box feeds the same messages); 'set' is code, not a person
+  midi.onEvent(ev => { if (ev.type === 'cc' || ev.type === 'noteon') touchParm(); });
 
   // A knob turned or set: its LED level and its display page follow (devices that have them)
   midi.onEvent(ev => {

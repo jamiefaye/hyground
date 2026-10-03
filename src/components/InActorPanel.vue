@@ -9,7 +9,8 @@ import {ref, type Ref, reactive, onMounted, watch} from "vue"
   	hidden: Boolean
 	}); 
 
-let info = reactive({countdown: " 0.0", playerIndex: "", defaultDur: 2.0, maxDur: 0.0});
+// holdDur: while playing, a sketch stays this long after the last touch of a parm control (0 = off)
+let info = reactive({countdown: " 0.0", playerIndex: "", defaultDur: 2.0, maxDur: 0.0, holdDur: 0.0, holding: false});
 
 let state = new InActorState(props.updateScript, info);
 if (props.reportInActorState) props.reportInActorState(state);
@@ -124,9 +125,27 @@ function openStateMenu(state, e) {
          hide-details
        />
      </v-col>
+     <v-col>
+       <v-tooltip text="While someone is adjusting the knobs, play waits: the sketch stays this long after the last touch (0 = off)">
+         <template v-slot:activator="{ props: tooltipProps }">
+           <v-text-field
+             v-bind="tooltipProps"
+             v-model.number="info.holdDur"
+             label="Hold While Adjusting"
+             type="number"
+             min="0"
+             max="300"
+             step="1"
+             suffix="sec"
+             density="compact"
+             hide-details
+           />
+         </template>
+       </v-tooltip>
+     </v-col>
    </v-row>
   </template>
-&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}} {{info.filename}}
+&nbsp;{{info.playerIndex}}&nbsp;{{info.countdown}}<span v-if="info.holding" title="Someone is adjusting: holding this sketch">&nbsp;hold</span> {{info.filename}}
 </template>
 </v-row>
 </v-container>

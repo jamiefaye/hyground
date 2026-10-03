@@ -11,7 +11,7 @@
   import { useAppStore } from '@/stores/app';
   import { HydraSketchMorpher } from '../HydraSketchMorpher.js';
   import { portal } from 'hydra-synth/src/lib/windows.js';
-  import { installParm } from '../Parm.js';
+  import { installParm, touchParm } from '../Parm.js';
   const props = defineProps({
     show: Boolean,
     // from the page: fullscreen and help, shown at the end of the stage's row now the app bar is gone
@@ -337,13 +337,14 @@
   const stageChannel = new BroadcastChannel('hydra-stage');
 
   stageChannel.onmessage = (event) => {
-    const { type, sketch, sketchInfo, slot, value } = event.data;
+    const { type, sketch, sketchInfo, slot, value, touch } = event.data;
     if (type === 'update') {
       updater(sketch, sketchInfo || {});
     } else if (type === 'parm-set') {
       // The editor set a parmed knob (the dice): mirror it on this window's parm, which the EC4 alone reaches
       const s = window.parm && window.parm.slots.get(slot);
       if (s) s.fn.set(value);
+      if (touch) touchParm();   // a drag on a cell over there: InAct here holds the sketch for it
     }
   };
 
