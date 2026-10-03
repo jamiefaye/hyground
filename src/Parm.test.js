@@ -13,6 +13,14 @@ test('labels: abbreviation plus first digit, unique keys, index mode', () => {
   assert.deepEqual(i.controls.map(c => c.key), ['osc1', 'noi1', 'noi2', 'col1', 'col2', 'col3', 'cor1']);
 });
 
+test('more than 26 controls on one label: the keys go on to two letters (this used to hang)', () => {
+  const r = parmSketch(Array.from({ length: 60 }, () => 'osc(5).out()').join('\n'));
+  const keys = r.controls.map(c => c.key);
+  assert.equal(keys.length, 60); assert.equal(new Set(keys).size, 60);
+  assert.deepEqual([keys[0], keys[1], keys[25], keys[26], keys[27], keys[50], keys[51]], ['osc1', 'osc1b', 'osc1z', 'osc1bb', 'osc1bc', 'osc1bz', 'osc1cb']);
+  assert.ok(r.controls.every(c => c.label === 'osc1'));
+});
+
 test('the transformed sketch: begin, direct args become parm(...), out() and subscripts stay', () => {
   const r = parmSketch('osc(5).add(noise(5, 2)).color(0, 0, 3).colorama(0.4).out(o0)', { label: 'digit' });
   assert.equal(r.code, 'parm.begin(\'aaaaaaa\')\nosc(parm(1, "osc5", 5, 0.625, 40, "log")).add(noise(parm(2, "noi5", 5, 0.625, 40, "log"), parm(3, "noi2", 2, 0, 4))).color(parm(4, "col0", 0, 0, 1), parm(5, "col0b", 0, 0, 1), parm(6, "col3", 3, 0, 6)).colorama(parm(7, "cor4", 0.4, 0, 0.8)).out(o0);');

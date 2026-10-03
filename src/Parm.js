@@ -170,9 +170,13 @@ export function parmSketch (text, options = {}) {
   const controls = [];
   const taken = new Set();
 
+  // osc1, osc1b .. osc1z, then osc1bb, osc1bc ..: the letters never run out (27 controls on one
+  // label used to go round b..z for ever)
+  const LETTERS = 'bcdefghijklmnopqrstuvwxyz';
+  const suffix = n => { let t = ''; for (; n > 0; n = Math.floor((n - 1) / 25)) t = LETTERS[(n - 1) % 25] + t; return t; };
   const uniqueKey = base => {
     let key = base;
-    for (let i = 0; taken.has(key); i++) key = base + 'bcdefghijklmnopqrstuvwxyz'[i % 25];
+    for (let i = 1; taken.has(key); i++) key = base + suffix(i);
     taken.add(key);
     return key;
   };
