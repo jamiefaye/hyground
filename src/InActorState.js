@@ -324,7 +324,12 @@ class InActorState {
     let ix = 0
     let working = []
     let runL = 0;
-    let lastDur = 0; let marked = false; let keyFlag = false;
+    // A //+ line belongs to the sketch below it. head: what the last //+ line said, waiting for
+    // that sketch's first line; info: the same for the sketch being gathered.
+    // (Both used to be one set of variables, so a sketch was pushed with the next one's line:
+    // every duration and mark sat one sketch early and the last sketch had none.)
+    const noHead = () => ({ dur: 0, mark: false, key: false });
+    let head = noHead(); let info = noHead();
     for (ix = 0; ix < aSize; ++ix) {
       const ln = textA[ix]
       if (ln.trim() === '' || ln.startsWith ('----')) {
@@ -342,20 +347,19 @@ class InActorState {
           const tokens = restOfLine.split(' ');
 
           let dur;
-          keyFlag = false;
-          marked = false;
+          head = noHead();
           if (tokens.length > 0) {
             dur = Number.parseFloat(tokens[0]);
             if (isNaN(dur)) dur = 1.0;
           }
           for (let i = 1; i < tokens.length; ++i) {
             const s = tokens[i];
-            if (s === 'key') keyFlag = true;
-            else if (s === 'mark') marked = true;
+            if (s === 'key') head.key = true;
+            else if (s === 'mark') head.mark = true;
           }
           if (dur !== undefined && dur >= 0)
           {
-            lastDur = dur;
+            head.dur = dur;
           }
         } else
         {
@@ -363,21 +367,21 @@ class InActorState {
             // we have a split
             if (working.length > 0) {
               const sketch = working.join('\n')
-              this.playA.push({ dur: lastDur, mark: marked, key: keyFlag, sketch })
+              this.playA.push({ dur: info.dur, mark: info.mark, key: info.key, sketch })
               working = []
             }
           }
+          // a sketch's first line: the //+ line above it is its own
+          if (working.length === 0) { info = head; head = noHead(); }
           // no split yet, reset count.
           runL = 0;
           working.push(ln)
-          lastDur = 0
-          marked = false
         }
     }
     // Deal with last entry if we must.
     if (working.length > 0) {
       const lastSketch = working.join('\n')
-      this.playA.push({ dur: lastDur, mark: marked, key: keyFlag, sketch: lastSketch })
+      this.playA.push({ dur: info.dur, mark: info.mark, key: info.key, sketch: lastSketch })
     }
     this.statusObj.hasplay = this.playA.length > 0;
 
