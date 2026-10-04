@@ -113,10 +113,12 @@ export function isParmed (text) { return /\bparm\s*\.\s*begin\s*\(/.test(text); 
 export function unparmSketch (text) {
   const comments = [];
   const { ast } = parseSketch(text, comments);
-  const isParmCall = n => n && n.type === 'CallExpression' && n.callee.type === 'Identifier' && n.callee.name === 'parm' && n.arguments.length >= 3 && n.arguments[2].type === 'Literal';
+  // the init is a number as written: 0.5, or -0.5, which parses as a minus sign on a literal
+  const isNegative = n => n.type === 'UnaryExpression' && n.operator === '-' && n.argument.type === 'Literal';
+  const isParmCall = n => n && n.type === 'CallExpression' && n.callee.type === 'Identifier' && n.callee.name === 'parm' && n.arguments.length >= 3 && (n.arguments[2].type === 'Literal' || isNegative(n.arguments[2]));
   const isBegin = n => n && n.type === 'ExpressionStatement' && n.expression.type === 'CallExpression' && n.expression.callee.type === 'MemberExpression'
     && n.expression.callee.object.type === 'Identifier' && n.expression.callee.object.name === 'parm' && n.expression.callee.property.name === 'begin';
-  const literalOf = n => { const init = n.arguments[2]; return lit(init.value, init.raw); };
+  const literalOf = n => { const init = n.arguments[2]; return isNegative(init) ? lit(-init.argument.value, '-' + init.argument.raw) : lit(init.value, init.raw); };
   // Returns a replacement node or undefined
   const visit = node => {
     if (!node || typeof node.type !== 'string') return undefined;

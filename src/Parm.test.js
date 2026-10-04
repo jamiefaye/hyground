@@ -81,6 +81,14 @@ test('re-parm: a parmed sketch is unparmed first, so parm.begin() never repeats 
   assert.equal(parmSketch(own).code.includes('parm(1, 2, 3)'), true)
 })
 
+test('unparm brings negative constants back too (they used to stay parmed)', () => {
+  const src = 'osc(60, -0.023, 0.3).rotate(-0.5).scrollX(() => time * -0.1).out()';
+  const r = parmSketch(src);
+  assert.equal(r.controls.length, 5);
+  assert.equal(unparmSketch(r.code), src + ';');   // the generator ends the statement
+  assert.equal(parmSketch(r.code).code, r.code);   // a re-parm gives the same knobs
+});
+
 test('the vertex extension: transforms are live, geometry and layouts are read at eval, scale by the chain root', () => {
   const src = 'osc(10).scale(1.5).out(o0, sphere(0.1, 32).grid(3, 3, 1).perspective(60).rotateY(0.5).scale(2));';
   const r = parmSketch(src);
