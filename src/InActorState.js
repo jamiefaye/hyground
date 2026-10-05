@@ -151,10 +151,18 @@ class InActorState {
   updateCountDownClock ()
   {
     const nowTime = Date.now()
-    // a hold in force shows in the countdown before the timer comes round to it
-    const heldUntil = this.realTimePlayback ? nowTime + this.holdRemaining() * 1000 : 0
-    this.statusObj.holding = this.realTimePlayback && (this.holding === true || heldUntil > this.blastOffTime)
-    let tMinus = nowTime - Math.max(this.blastOffTime, heldUntil);
+    let tMinus
+    if (this.realTimePlayback)
+    {
+      // a hold in force shows in the countdown before the timer comes round to it
+      const heldUntil = nowTime + this.holdRemaining() * 1000
+      this.statusObj.holding = this.holding === true || heldUntil > this.blastOffTime
+      tMinus = nowTime - Math.max(this.blastOffTime, heldUntil);
+    } else {
+      // paused: the time the sketch has left, standing still (0.0 with no sketch of the player's up)
+      this.statusObj.holding = false
+      tMinus = -(this.pausedLeft || 0)
+    }
     if (tMinus > 0) tMinus = 0;
     const tPlus = Math.abs(tMinus);
     let timeAsString = '';
@@ -183,12 +191,24 @@ class InActorState {
     if (this.realTimePlayback)
     {
       this.statusObj.playing = true;
-      this.moveDown(e, 'play')
+      // Released: the sketch that is up carries on with the time it had left (a step forward is
+      // the way to move on at once). With none up yet, play starts by stepping.
+      if (this.pausedLeft !== undefined)
+      {
+        this.startTimer(this.pausedLeft / 1000)
+        this.pausedLeft = undefined
+      } else {
+        this.moveDown(e, 'play')
+      }
       this.startCountdownClock()
       this.statusObj.playing = true;
     } else {
+      // Paused: the sketch stays, and the clock stands at the time it had left
       this.clearTimer();
       this.statusObj.playing = false;
+      this.pausedLeft = Math.max(0, this.blastOffTime - Date.now())
+      this.holding = false
+      this.updateCountDownClock()
     }
   }
 
@@ -314,7 +334,10 @@ class InActorState {
   loadPlayer (text) {
 
     this.playA = [];
-    this.playerIndex = 0;
+    // None of the new file's sketches is up yet: the first play or step forward shows the first one
+    // (the index stood at 0, so they went to the second and the first waited for the loop to come round)
+    this.playerIndex = -1;
+    this.pausedLeft = undefined;
     const textA = text.split(/\r\n|\n/)
     const aSize = textA.length
     if (aSize > 0 && textA[0].startsWith('{"code":'))
@@ -413,7 +436,7 @@ class InActorState {
         }
       }
     }
-    this.playerIndex = 0
+    this.playerIndex = -1
     this.statusObj.hasplay = this.playA.length > 0;
     //	this.recordA = this.playA; // Used to export compressed hydra to uncompressed hydra.
 
@@ -434,16 +457,20 @@ class InActorState {
     this.updateText(entry.sketch, sketchInfo, e, what);
     this.shownAt = Date.now()
     this.holding = false
+    let dur = entry.dur
+    if (!(dur > 0)){dur = this.statusObj.defaultDur}
+    if (this.statusObj.maxDur && dur > this.statusObj.maxDur) dur = this.statusObj.maxDur;
     if (this.realTimePlayback)
     {
       this.clearTimer()
-      let dur = entry.dur
-      if (dur <= 0){dur = this.statusObj.defaultDur}
-      if (this.statusObj.maxDur && dur > this.statusObj.maxDur) dur = this.statusObj.maxDur;
       this.startTimer(dur)
+    } else {
+      // stepped to while paused: its whole time waits for play
+      this.pausedLeft = (Number(dur) || 0) * 1000
     }
     const xStr = this.playerIndex.toString();
     this.statusObj.playerIndex = xStr;
+    this.updateCountDownClock()
   }
 
 
